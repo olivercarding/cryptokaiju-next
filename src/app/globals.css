@@ -1,26 +1,122 @@
+/* src/app/globals.css */
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  /* Primary Brand Colors (from style guide) */
+  --color-kaiju-pink: oklch(0.65 0.35 0);        /* #ff005c - Bright pink */
+  --color-kaiju-navy: oklch(0.32 0.10 265);      /* #1f2760 - Navy blue */
+  --color-kaiju-red: oklch(0.53 0.27 25);        /* Red from logo */
+  --color-kaiju-black: oklch(0.10 0.01 0);       /* Black from logo */
+  
+  /* Secondary Brand Colors */
+  --color-kaiju-light-pink: oklch(0.96 0.02 10); /* #fff0f2 - Very light pink */
+  --color-kaiju-light-gray: oklch(0.97 0 0);     /* #f5f5f5 - Light gray/off-white */
+  --color-kaiju-mid-gray: oklch(0.54 0 0);       /* #707070 - Medium gray */
+  --color-kaiju-white: oklch(0.99 0 0);          /* Pure white */
+  
+  /* Gradient Colors (from background image) */
+  --color-kaiju-purple-light: oklch(0.55 0.25 330); /* Lighter purple from gradient */
+  --color-kaiju-purple-dark: oklch(0.40 0.18 280);  /* Darker purple from gradient */
+  
+  /* Accent Colors (from dots in background) */
+  --color-kaiju-accent-dot-pink: oklch(0.65 0.35 0);   /* Pink dot */
+  --color-kaiju-accent-dot-blue: oklch(0.25 0.15 265); /* Dark blue dot */
+  
+  /* Typography */
+  --font-primary: "Open Sans", sans-serif;         /* The official brand font */
+  
+  /* Border radius */
+  --radius-kaiju-sm: 0.5rem;
+  --radius-kaiju-md: 1.5rem; 
+  --radius-kaiju-pill: 9999px;
+  
+  /* Spacing */
+  --spacing: 0.25rem;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+/* Custom gradient utility classes */
+@layer utilities {
+  .bg-kaiju-gradient {
+    background: linear-gradient(135deg, 
+      var(--color-kaiju-purple-dark), 
+      var(--color-kaiju-purple-light));
+  }
+  
+  .text-kaiju-gradient {
+    background: linear-gradient(135deg, 
+      var(--color-kaiju-purple-dark), 
+      var(--color-kaiju-purple-light));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  .kaiju-pixel-border {
+    border-style: solid;
+    border-width: 3px;
+    border-image-slice: 3;
+    border-image-width: 3;
+    border-image-outset: 0;
+    border-image-repeat: stretch;
+    border-image-source: url("data:image/svg+xml,%3Csvg width='8' height='8' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h2v2H0V0zm2 2h2v2H2V2zm2-2h2v2H4V0zm4 0v2h-2V0h2zm-2 4h2v2H6V4zm-2 2v2h2V6H4zm-2 0H0v2h2V6z' fill='%23ff005c' fill-rule='evenodd'/%3E%3C/svg%3E");
   }
 }
 
+/* Button styles to match the style guide */
+@layer components {
+  .btn-primary {
+    background-color: var(--color-kaiju-pink);
+    color: var(--color-kaiju-white);
+    border-radius: var(--radius-kaiju-pill);
+    padding: calc(var(--spacing) * 4) calc(var(--spacing) * 8);
+    font-weight: 600;
+    transition: all 150ms ease;
+  }
+  .btn-primary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+  
+  .btn-secondary {
+    background-color: var(--color-kaiju-light-pink);
+    color: var(--color-kaiju-navy);
+    border-radius: var(--radius-kaiju-pill);
+    padding: calc(var(--spacing) * 4) calc(var(--spacing) * 8);
+    font-weight: 600;
+    transition: all 150ms ease;
+  }
+  .btn-secondary:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+}
+
+/* Font configuration */
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-primary);
+  background-color: var(--color-kaiju-white);
+  color: var(--color-kaiju-navy);
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 0px;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-kaiju-pill);
+  background: var(--color-kaiju-pink);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-kaiju-red);
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
 }
