@@ -4,45 +4,47 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 
-interface PolaroidCardProps {
+interface VideoPolaroidCardProps {
   step: number
   title: string
   description: string
-  imageSrc: string
+  mediaSrc: string
+  mediaType?: 'image' | 'video'
   backgroundColor: string
   rotation?: string
   size?: 'small' | 'medium' | 'large'
 }
 
-export default function PolaroidCard({
+export default function VideoPolaroidCard({
   step,
   title,
   description,
-  imageSrc,
+  mediaSrc,
+  mediaType = 'video',
   backgroundColor,
   rotation = '0deg',
   size = 'medium'
-}: PolaroidCardProps) {
+}: VideoPolaroidCardProps) {
   
   const sizeConfig = {
     small: {
-      container: 'w-[240px] sm:w-[260px]',
-      imageHeight: 'h-36',
-      imageSize: 100,
+      container: 'w-[280px] sm:w-[300px]',
+      videoHeight: 'h-72',
+      textPadding: 'p-4',
       textSize: 'text-lg',
-      descSize: 'text-xs'
+      descSize: 'text-sm'
     },
     medium: {
-      container: 'w-[280px] sm:w-[300px]',
-      imageHeight: 'h-48',
-      imageSize: 120,
+      container: 'w-[320px] sm:w-[340px]',
+      videoHeight: 'h-80',
+      textPadding: 'p-5',
       textSize: 'text-xl',
       descSize: 'text-sm'
     },
     large: {
-      container: 'w-[320px] sm:w-[340px]',
-      imageHeight: 'h-56',
-      imageSize: 140,
+      container: 'w-[360px] sm:w-[380px]',
+      videoHeight: 'h-96',
+      textPadding: 'p-6',
       textSize: 'text-2xl',
       descSize: 'text-base'
     }
@@ -55,29 +57,47 @@ export default function PolaroidCard({
       style={{ rotate: rotation }}
       whileHover={{ y: -4, rotate: '0deg' }}
       transition={{ duration: 0.3 }}
-      className={`relative ${config.container} bg-kaiju-white border-[3px] border-kaiju-light-gray rounded-[18px] pt-6 pb-8 px-5 shadow-xl hover:shadow-2xl transition-shadow duration-300`}
+      className={`relative ${config.container} bg-kaiju-white border-[3px] border-kaiju-light-gray rounded-[18px] pt-6 pb-6 px-4 shadow-xl hover:shadow-2xl transition-shadow duration-300`}
     >
       {/* Step badge */}
-      <span className="absolute -top-4 -left-4 w-10 h-10 flex items-center justify-center rounded-full bg-kaiju-white border-[3px] border-kaiju-light-gray text-lg font-bold z-10">
+      <span className="absolute -top-4 -left-4 w-12 h-12 flex items-center justify-center rounded-full bg-kaiju-white border-[3px] border-kaiju-light-gray text-lg font-bold z-10 shadow-lg">
         {step}
       </span>
 
-      {/* Image area */}
+      {/* Large Video/Media area - takes up most of the card */}
       <div
-        className={`${config.imageHeight} w-full mb-6 rounded-[10px] flex items-center justify-center overflow-hidden ${backgroundColor}`}
+        className={`${config.videoHeight} w-full mb-4 rounded-[12px] overflow-hidden ${backgroundColor} relative`}
       >
-        <Image
-          src={imageSrc}
-          alt={title}
-          width={config.imageSize}
-          height={config.imageSize}
-          className="object-contain"
-        />
+        {mediaType === 'video' ? (
+          <video
+            src={mediaSrc}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            Your browser does not support the video tag.
+          </video>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Image
+              src={mediaSrc}
+              alt={title}
+              width={280}
+              height={280}
+              className="object-contain max-w-full max-h-full"
+            />
+          </div>
+        )}
+        
+        {/* Optional overlay for better text contrast on videos */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/20 to-transparent h-16 rounded-b-[12px]" />
       </div>
 
-      {/* Text content */}
-      <div className="text-center">
-        <h3 className={`${config.textSize} font-extrabold mb-2 uppercase tracking-tight text-kaiju-navy`}>
+      {/* Compact text content */}
+      <div className={`text-center ${config.textPadding}`}>
+        <h3 className={`${config.textSize} font-extrabold mb-2 uppercase tracking-tight text-kaiju-navy leading-tight`}>
           {title}
         </h3>
         <p className={`${config.descSize} text-kaiju-navy/70 leading-relaxed`}>

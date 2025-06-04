@@ -1,8 +1,8 @@
 // src/components/shared/MysteryBox.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
 
 interface MysteryBoxProps {
   mysteryDesigns: Array<{
@@ -50,6 +50,12 @@ export default function MysteryBox({
   const [particlePositions, setParticlePositions] = useState<Array<{top: string, left: string}>>([])
   const [isMounted, setIsMounted] = useState(false)
 
+  const ref = useRef<HTMLDivElement>(null)
+  const mouseX = useMotionValue(0)
+  const mouseY = useMotionValue(0)
+  const rotateX = useTransform(mouseY, [0, 300], [8, -8])
+  const rotateY = useTransform(mouseX, [0, 300], [-8, 8])
+
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentSilhouette(prev => (prev + 1) % mysteryDesigns.length)
@@ -74,62 +80,64 @@ export default function MysteryBox({
     setParticlePositions(positions)
   }, [config.particleCount])
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const rect = ref.current?.getBoundingClientRect()
+    if (rect) {
+      mouseX.set(e.clientX - rect.left)
+      mouseY.set(e.clientY - rect.top)
+    }
+  }
+
   return (
-    <div className={`relative h-[400px] md:h-[500px] flex items-center justify-center ${className}`}>
-      <motion.div 
+    <div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      className={`relative h-[400px] md:h-[500px] flex items-center justify-center ${className} bg-kaiju-light-pink`}
+    >
+      <motion.div
+        style={{ rotateX, rotateY }}
         className={`relative ${config.container}`}
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
-        animate={{ 
-          y: [0, -8, 0],
-          rotateX: isHovered ? 5 : 0,
-          rotateY: isHovered ? -5 : 0
-        }}
-        transition={{ 
-          y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-          rotateX: { duration: 0.3 },
-          rotateY: { duration: 0.3 }
-        }}
       >
         {isMounted && particlePositions.map((position, i) => (
           <motion.div
             key={i}
-            className={`absolute ${config.particleSize} rounded-full`}
+            className={`absolute ${config.particleSize} rounded-full blur-sm`}
             style={{
               top: position.top,
               left: position.left,
-              backgroundColor: ['#FF69B4', '#FFD700', '#FF6347', '#98FB98', '#87CEEB', '#DDA0DD'][i % 6]
+              backgroundColor: ['#FF69B4', '#F8CB36', '#C39BD3'][i % 3]
             }}
             animate={{
-              opacity: [0.4, 0.9, 0.4],
-              scale: [0.5, 1.2, 0.5],
-              rotate: 360,
-              y: [0, -15, 0]
+              opacity: [0.3, 0.8, 0.3],
+              scale: [0.6, 1.1, 0.6],
+              y: [0, -12, 0]
             }}
             transition={{
               duration: 3,
               repeat: Infinity,
-              delay: i * 0.5,
+              delay: i * 0.4,
               ease: "easeInOut"
             }}
           />
         ))}
 
-        <motion.div 
+        <motion.div
           className="relative w-full h-full flex items-center justify-center"
           animate={{ scale: isHovered ? [1, 1.05, 1] : 1 }}
           transition={{ scale: { duration: 0.6, repeat: isHovered ? Infinity : 0 } }}
         >
-          <div className="absolute bottom-8 w-52 h-8 bg-black/20 rounded-full blur-md"></div>
+          <div className="absolute bottom-8 w-52 h-8 bg-black/10 rounded-full blur-sm"></div>
 
-          <div className="relative w-48 h-48 bg-[#E33232]">
-            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-full h-[40px] bg-[#F8CB36] z-10"></div>
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[40px] h-full bg-[#F8CB36] z-10"></div>
+          <div className="relative w-48 h-48 bg-[#E33232] border-[3px] border-[#222] shadow-lg">
+            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-full h-[36px] bg-[#F8CB36] z-10 rounded-sm"></div>
+            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[36px] h-full bg-[#F8CB36] z-10 rounded-sm"></div>
 
             <motion.div
-              className="absolute top-0 left-0 w-full h-12 bg-[#E33232] z-20"
-              animate={{ rotate: isHovered ? [0, -2, 2, 0] : 0 }}
-              transition={{ duration: 0.4, repeat: isHovered ? Infinity : 0, repeatType: 'loop' }}
+              className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-[208px] h-12 bg-[#E33232] border-[3px] border-[#222] shadow-sm z-20"
+              animate={isHovered ? { rotate: [0, -2, 2, 0], y: [-1, 1, -1] } : { rotate: 0, y: 0 }}
+              transition={{ duration: 0.4 }}
             />
 
             <div className="absolute inset-0 flex items-center justify-center">
@@ -148,63 +156,15 @@ export default function MysteryBox({
             </div>
           </div>
 
-          <motion.div 
-            className="absolute bottom-0 bg-gradient-to-r from-purple-600 to-purple-700 backdrop-blur-sm px-6 py-3 rounded-full text-white text-sm font-bold shadow-xl border border-purple-500"
+          <motion.div
+            className="absolute bottom-0 bg-kaiju-pink px-6 py-3 rounded-full text-white text-sm font-bold shadow-xl border border-kaiju-navy"
             animate={{ opacity: [0.9, 1, 0.9], scale: [1, 1.02, 1] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
             {mysteryDesigns[currentSilhouette]?.probability} chance
           </motion.div>
         </motion.div>
-
-        {isHovered && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute -inset-4 border-2 border-dashed border-kaiju-pink/50 rounded-lg"
-          />
-        )}
       </motion.div>
-
-      {isMounted && [...Array(config.questionMarks)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-4xl"
-          style={{
-            top: `${30 + i * 120}px`,
-            left: i % 2 === 0 ? '20px' : 'calc(100% - 60px)'
-          }}
-          animate={{
-            y: [0, -25, 0],
-            opacity: [0.4, 0.8, 0.4],
-            rotate: [0, 15, -15, 0]
-          }}
-          transition={{
-            duration: 4,
-            repeat: Infinity,
-            delay: i * 1.5,
-            ease: "easeInOut"
-          }}
-        >
-          {['✨', '🎉', '⭐', '🎊'][i % 4]}
-        </motion.div>
-      ))}
-
-      {showBreakdown && (
-        <div className="absolute -bottom-20 left-1/2 transform -translate-x-1/2 w-full max-w-sm">
-          <div className="bg-white/60 backdrop-blur-sm rounded-xl p-4 border border-kaiju-light-gray">
-            <h3 className="text-center font-bold text-kaiju-navy mb-3">Mystery Box Contents</h3>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              {mysteryDesigns.map((design, idx) => (
-                <div key={idx} className="flex justify-between items-center p-2 bg-white rounded-lg">
-                  <span className="text-kaiju-navy">{design.type} ({design.rarity})</span>
-                  <span className="text-kaiju-pink font-bold">{design.probability}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

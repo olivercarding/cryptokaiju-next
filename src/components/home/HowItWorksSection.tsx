@@ -6,8 +6,11 @@ import PolaroidCard from '../shared/PolaroidCard'
 interface Step {
   title: string
   description: string
-  imageSrc: string
+  mediaSrc: string
+  mediaType?: 'image' | 'video'
   backgroundColor: string
+  // Legacy support
+  imageSrc?: string
 }
 
 interface HowItWorksSectionProps {
@@ -22,19 +25,22 @@ export default function HowItWorksSection({
     {
       title: "Connect Wallet",
       description: "Link your ETH wallet to participate in the blind mint.",
-      imageSrc: "/images/kaiju-coin.png",
+      mediaSrc: "/videos/connect-wallet.mp4",
+      mediaType: "video",
       backgroundColor: "bg-kaiju-light-pink"
     },
     {
       title: "Open Mystery Box",
       description: "Mint your box to reveal which of the 4 exclusive designs you received.",
-      imageSrc: "/images/kaiju-box.png",
+      mediaSrc: "/videos/open-box.mp4",
+      mediaType: "video",
       backgroundColor: "bg-kaiju-purple-light/20"
     },
     {
       title: "Claim Physical",
       description: "If you got a plush design, we'll ship your NFC‑chipped Kaiju to your door.",
-      imageSrc: "/images/kaiju-mystery.png",
+      mediaSrc: "/videos/claim-physical.mp4",
+      mediaType: "video",
       backgroundColor: "bg-kaiju-navy/10"
     }
   ],
@@ -53,10 +59,13 @@ export default function HowItWorksSection({
               step={i + 1}
               title={step.title}
               description={step.description}
-              imageSrc={step.imageSrc}
+              mediaSrc={step.mediaSrc}
+              mediaType={step.mediaType}
               backgroundColor={step.backgroundColor}
               rotation={rotations[i] || '0deg'}
               size="medium"
+              // Legacy support for imageSrc
+              imageSrc={step.imageSrc}
             />
           ))}
         </div>

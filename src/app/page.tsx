@@ -22,26 +22,55 @@ export default function Home() {
     ultraRareChance: '5%'
   }
 
+  // Updated to use videos instead of images
   const howItWorksSteps = [
     {
       title: "Connect Wallet",
       description: "Link your ETH wallet to participate in the blind mint.",
-      imageSrc: "/images/kaiju-coin.png",
+      mediaSrc: "/videos/connect-wallet.mp4",
+      mediaType: "video" as const,
       backgroundColor: "bg-kaiju-light-pink"
     },
     {
       title: "Open Mystery Box",
       description: "Mint your box to reveal which of the 4 exclusive designs you received.",
-      imageSrc: "/images/kaiju-box.png",
+      mediaSrc: "/videos/open-mystery-box.mp4",
+      mediaType: "video" as const,
       backgroundColor: "bg-kaiju-purple-light/20"
     },
     {
       title: "Claim Physical",
       description: "If you got a plush design, we'll ship your NFC‑chipped Kaiju to your door.",
-      imageSrc: "/images/kaiju-mystery.png",
+      mediaSrc: "/videos/claim-physical.mp4",
+      mediaType: "video" as const,
       backgroundColor: "bg-kaiju-navy/10"
     }
   ]
+
+  // You can also mix images and videos:
+  // const howItWorksStepsMixed = [
+  //   {
+  //     title: "Connect Wallet",
+  //     description: "Link your ETH wallet to participate in the blind mint.",
+  //     mediaSrc: "/videos/connect-wallet.mp4",
+  //     mediaType: "video" as const,
+  //     backgroundColor: "bg-kaiju-light-pink"
+  //   },
+  //   {
+  //     title: "Open Mystery Box", 
+  //     description: "Mint your box to reveal which of the 4 exclusive designs you received.",
+  //     mediaSrc: "/images/kaiju-box.png",
+  //     mediaType: "image" as const,
+  //     backgroundColor: "bg-kaiju-purple-light/20"
+  //   },
+  //   {
+  //     title: "Claim Physical",
+  //     description: "If you got a plush design, we'll ship your NFC‑chipped Kaiju to your door.",
+  //     mediaSrc: "/videos/shipping.mp4",
+  //     mediaType: "video" as const,
+  //     backgroundColor: "bg-kaiju-navy/10"
+  //   }
+  // ]
 
   const mysteries = [
     {
@@ -102,6 +131,7 @@ export default function Home() {
         title="How it works"
         steps={howItWorksSteps}
         rotations={['-3deg', '2deg', '-2deg']}
+        useVideoCards={true}
       />
       
       <MysteriesSection 
