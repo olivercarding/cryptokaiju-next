@@ -27,7 +27,7 @@ export default function Home() {
     {
       title: "Connect Wallet",
       description: "Link your ETH wallet to participate in the blind mint.",
-      mediaSrc: "/videos/connect-wallet.mp4",
+      mediaSrc: "/videos/Comp 1_8.webm",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-light-pink"
     },

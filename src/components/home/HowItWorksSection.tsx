@@ -25,9 +25,9 @@ export default function HowItWorksSection({
     {
       title: "Connect Wallet",
       description: "Link your ETH wallet to participate in the blind mint.",
-      mediaSrc: "/videos/connect-wallet.mp4",
+      mediaSrc: "/videos/Comp 1_8.webm",
       mediaType: "video",
-      backgroundColor: "bg-kaiju-light-pink"
+      backgroundColor: "bg-kaiju-purple-light/20"
     },
     {
       title: "Open Mystery Box",

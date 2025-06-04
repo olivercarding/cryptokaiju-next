@@ -2,6 +2,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import MysteryBox from '../shared/MysteryBox'
 
 interface HeroSectionProps {
@@ -35,107 +36,228 @@ export default function HeroSection({
   onViewPossibilities
 }: HeroSectionProps) {
   
+  const [recentMints] = useState([
+    "0x1a2b...minted Rare Plush",
+    "0x3c4d...minted Ultra Rare Vinyl",
+    "0x5e6f...minted Common Vinyl"
+  ])
+  
+  const [currentMintIndex, setCurrentMintIndex] = useState(0)
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentMintIndex((prev) => (prev + 1) % recentMints.length)
+    }, 3000)
+    return () => clearInterval(interval)
+  }, [recentMints.length])
+  
   return (
-    <section className="relative min-h-screen bg-white overflow-hidden">
-      {/* Background elements */}
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,theme(colors.kaiju-light-pink)_0%,theme(colors.kaiju-white)_70%)]" />
+    <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden py-8 lg:py-12">
+      {/* Animated background elements */}
+      <div className="absolute inset-0">
+        <motion.div 
+          className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.6, 0.3]
+          }}
+          transition={{ duration: 8, repeat: Infinity }}
+        />
+        <motion.div 
+          className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_30%,theme(colors.kaiju-purple-light/30)_0%,transparent_50%)]"
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            opacity: [0.4, 0.2, 0.4]
+          }}
+          transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+        />
+      </div>
+
+      {/* Floating particles */}
+      {[...Array(20)].map((_, i) => (
+        <motion.div
+          key={i}
+          className="absolute w-1 h-1 bg-kaiju-pink rounded-full opacity-60"
+          style={{
+            left: `${Math.random() * 100}%`,
+            top: `${Math.random() * 100}%`,
+          }}
+          animate={{
+            y: [0, -100, 0],
+            opacity: [0, 1, 0],
+            scale: [0, 1, 0]
+          }}
+          transition={{
+            duration: Math.random() * 3 + 2,
+            repeat: Infinity,
+            delay: Math.random() * 2,
+          }}
+        />
+      ))}
       
-      {/* Animated gradient blobs */}
-      <motion.div 
-        className="absolute top-[10%] right-[10%] w-[600px] h-[600px] opacity-50 pointer-events-none"
-        animate={{ 
-          scale: [1, 1.1, 1],
-          rotate: [0, 10, 0],
-          y: [0, -20, 0]
-        }}
-        transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse' }}
-      >
-        <div className="absolute inset-0 bg-kaiju-gradient rounded-full blur-3xl" />
-      </motion.div>
-      
-      <motion.div 
-        className="absolute bottom-[20%] left-[5%] w-[300px] h-[300px] opacity-30 pointer-events-none"
-        animate={{ 
-          scale: [1, 1.2, 1],
-          rotate: [0, -5, 0],
-          y: [0, 30, 0]
-        }}
-        transition={{ duration: 15, repeat: Infinity, repeatType: 'reverse', delay: 2 }}
-      >
-        <div className="absolute inset-0 bg-kaiju-gradient rounded-full blur-3xl" />
-      </motion.div>
-      
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-12 pb-24">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
-          {/* Left column: Text content */}
-          <div className="text-center lg:text-left mt-8 lg:mt-0 order-2 lg:order-1">
+      <div className="relative z-10 max-w-7xl mx-auto px-6">
+        {/* Top status bar */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-between items-center mb-6 text-white/80 text-sm"
+        >
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+              <span>LIVE MINT</span>
+            </div>
+            <div className="hidden sm:block">
+              {recentMints[currentMintIndex]}
+            </div>
+          </div>
+          <div className="text-right">
+            <span className="text-kaiju-pink font-bold">{stats.boxesLeft}</span> boxes remaining
+          </div>
+        </motion.div>
+
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Left column: Aggressive mint-focused content */}
+          <div className="text-center lg:text-left order-2 lg:order-1">
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.8 }}
             >
-              <div className="inline-block mb-4 px-4 py-1 rounded-full bg-kaiju-pink/10 text-kaiju-pink text-sm font-medium">
-                Blind Mint • 4 Unique Designs
-              </div>
+              {/* Urgent mint badge */}
+              <motion.div 
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-kaiju-pink text-white text-sm font-bold mb-6"
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                MINTING NOW • {stats.ultraRareChance} ULTRA RARE CHANCE
+              </motion.div>
               
-              <h1 className="text-5xl md:text-6xl font-bold mb-6 tracking-tight">
-                <span className="block text-kaiju-navy">Which Kaiju</span>
-                <span className="block text-kaiju-pink">Awaits You?</span>
+              <h1 className="text-4xl md:text-5xl xl:text-6xl font-black mb-4 tracking-tight text-white leading-tight">
+                <span className="block">MINT YOUR</span>
+                <span className="block bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light bg-clip-text text-transparent">
+                  MYSTERY KAIJU
+                </span>
               </h1>
               
-              <p className="text-lg text-kaiju-navy/70 mb-8 max-w-lg mx-auto lg:mx-0">
-                Every mystery box contains one of four exclusive CryptoKaiju designs. 
-                Plush or vinyl? Rare or common? Only one way to find out...
+              <p className="text-lg text-white/90 mb-8 max-w-lg mx-auto lg:mx-0 font-medium">
+                4 exclusive designs. Physical + Digital. Only <span className="text-kaiju-pink font-bold">{stats.boxesLeft}</span> boxes left.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                <motion.button 
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.97 }}
-                  onClick={onMint}
-                  className="btn-primary text-base inline-flex items-center gap-2"
-                >
-                  <span>Reveal Your Kaiju</span>
-                  <svg width="20" height="20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M15 12L12 15L9 12M12 3V15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </motion.button>
+              {/* Prominent mint section */}
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+                  <div className="text-center sm:text-left">
+                    <div className="text-3xl font-black text-white">{stats.price}</div>
+                    <div className="text-white/60 text-sm">per mystery box</div>
+                  </div>
+                  <div className="text-center sm:text-right">
+                    <div className="text-white/60 text-sm">You might get</div>
+                    <div className="text-xl font-bold text-kaiju-pink">Ultra Rare Vinyl ({stats.ultraRareChance})</div>
+                  </div>
+                </div>
                 
-                <button 
-                  onClick={onViewPossibilities}
-                  className="btn-secondary text-base"
+                <motion.button 
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={onMint}
+                  className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-black text-xl py-4 px-8 rounded-xl shadow-2xl border-2 border-kaiju-pink/50 hover:shadow-kaiju-pink/25 transition-all duration-300"
                 >
-                  View Possibilities
-                </button>
+                  🎲 MINT MYSTERY BOX NOW
+                </motion.button>
               </div>
               
-              {/* Collection stats */}
-              <div className="mt-12 grid grid-cols-3 gap-6 max-w-md mx-auto lg:mx-0">
-                <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg px-2 py-3 text-center">
-                  <div className="text-2xl font-bold text-kaiju-pink">{stats.price}</div>
-                  <div className="text-xs text-kaiju-navy/70 mt-1">Per Box</div>
+              {/* Quick stats */}
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="text-2xl font-bold text-kaiju-pink">{mysteryDesigns.length}</div>
+                  <div className="text-xs text-white/60">Designs</div>
                 </div>
-                <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg px-2 py-3 text-center">
+                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
                   <div className="text-2xl font-bold text-kaiju-pink">{stats.boxesLeft}</div>
-                  <div className="text-xs text-kaiju-navy/70 mt-1">Boxes Left</div>
+                  <div className="text-xs text-white/60">Left</div>
                 </div>
-                <div className="bg-white bg-opacity-60 backdrop-blur-sm rounded-lg px-2 py-3 text-center">
-                  <div className="text-2xl font-bold text-kaiju-pink">{stats.ultraRareChance}</div>
-                  <div className="text-xs text-kaiju-navy/70 mt-1">Ultra Rare</div>
+                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
+                  <div className="text-2xl font-bold text-kaiju-pink">∞</div>
+                  <div className="text-xs text-white/60">Utility</div>
                 </div>
               </div>
+              
+              {/* Secondary action */}
+              <motion.button 
+                onClick={onViewPossibilities}
+                className="mt-4 text-white/80 hover:text-white text-sm underline transition-colors"
+                whileHover={{ scale: 1.05 }}
+              >
+                View all possible rewards →
+              </motion.button>
             </motion.div>
           </div>
           
-          {/* Right column: Mystery Box */}
-          <div className="order-1 lg:order-2">
-            <MysteryBox 
-              mysteryDesigns={mysteryDesigns}
-              size="medium"
-              showBreakdown={true}
-            />
+          {/* Right column: Enhanced Mystery Box */}
+          <div className="order-1 lg:order-2 flex justify-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              whileHover={{ scale: 1.05 }}
+              className="relative"
+            >
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/50 to-kaiju-purple-light/50 rounded-full blur-3xl scale-110 opacity-75 animate-pulse"></div>
+              
+              <div className="relative">
+                <MysteryBox 
+                  mysteryDesigns={mysteryDesigns}
+                  size="medium"
+                  showBreakdown={true}
+                  className="!bg-transparent"
+                />
+              </div>
+              
+              {/* Floating chance indicators */}
+              <motion.div
+                className="absolute -top-4 -left-4 bg-kaiju-pink text-white px-3 py-1 rounded-full text-sm font-bold"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                {mysteryDesigns[0]?.probability}
+              </motion.div>
+              <motion.div
+                className="absolute -top-4 -right-4 bg-kaiju-purple-light text-white px-3 py-1 rounded-full text-sm font-bold"
+                animate={{ y: [0, -5, 0] }}
+                transition={{ duration: 2, repeat: Infinity, delay: 1 }}
+              >
+                {mysteryDesigns[3]?.probability}
+              </motion.div>
+            </motion.div>
           </div>
         </div>
+        
+        {/* Bottom urgency bar */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1 }}
+          className="mt-8 text-center"
+        >
+          <div className="inline-flex items-center gap-2 bg-white/5 backdrop-blur-sm rounded-full px-6 py-3 border border-white/10">
+            <div className="flex items-center gap-1">
+              {[...Array(5)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="w-1.5 h-1.5 bg-kaiju-pink rounded-full"
+                  animate={{ opacity: [0.3, 1, 0.3] }}
+                  transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+                />
+              ))}
+            </div>
+            <span className="text-white/80 text-sm font-medium">
+              Join 2,847 holders • Mint before they're gone
+            </span>
+          </div>
+        </motion.div>
       </div>
     </section>
   )
