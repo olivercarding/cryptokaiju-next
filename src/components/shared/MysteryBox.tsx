@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion'
+import { motion, useMotionValue, useTransform } from 'framer-motion'
 
 interface MysteryBoxProps {
   mysteryDesigns: Array<{
@@ -15,6 +15,68 @@ interface MysteryBoxProps {
   className?: string
 }
 
+// Complete Box SVG Component
+const CompleteBox = ({ className = "" }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 1889.72 1335.81" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <style>{`
+        .cls-1 { fill: #ee2a2b; }
+        .cls-2, .cls-3 { fill: #231f20; }
+        .cls-4 { fill: #1a1818; }
+        .cls-5 { fill: #d62728; }
+        .cls-6 { fill: #c72627; }
+        .cls-7 { fill: #fff; }
+        .cls-8 { fill: #b33426; }
+        .cls-9 { fill: #ef4244; }
+        .cls-10 { fill: #c73b29; }
+        .cls-3 { opacity: .2; }
+      `}</style>
+    </defs>
+    <g>
+      {/* Drop shadow */}
+      <ellipse className="cls-3" cx="944.86" cy="1229.79" rx="944.86" ry="106.02"/>
+      
+      {/* Main box body */}
+      <g>
+        <path className="cls-1" d="M1701.5,230.29v938.89c0,33.47-27.14,60.61-60.61,60.61H248.83c-33.48,0-60.61-27.14-60.61-60.61V230.29c0-33.48,27.13-60.61,60.61-60.61h1392.06c33.47,0,60.61,27.13,60.61,60.61Z"/>
+        <path className="cls-6" d="M1701.5,230.29v938.89c0,33.47-27.14,60.61-60.61,60.61H248.83c-33.48,0-60.61-27.14-60.61-60.61v-11.86h1184.08c66.48,0,120.37-53.9,120.37-120.38V373.75c0-30.86-25.01-55.88-55.87-55.88H188.22v-87.58c0-33.48,27.13-60.61,60.61-60.61h1392.06c33.47,0,60.61,27.13,60.61,60.61Z"/>
+        <path className="cls-2" d="M1640.89,1238.79H248.83c-38.38,0-69.61-31.23-69.61-69.61V230.28c0-38.38,31.23-69.61,69.61-69.61h1392.06c38.38,0,69.61,31.23,69.61,69.61v938.89c0,38.38-31.23,69.61-69.61,69.61ZM248.83,178.67c-28.46,0-51.61,23.15-51.61,51.61v938.89c0,28.46,23.15,51.61,51.61,51.61h1392.06c28.46,0,51.61-23.15,51.61-51.61V230.28c0-28.46-23.15-51.61-51.61-51.61H248.83Z"/>
+      </g>
+      
+      {/* Lid (static) */}
+      <g>
+        <path className="cls-1" d="M1833.74,23.74v228.31c0,8.14-31.8,14.74-71.01,14.74H131.78c-39.23,0-71.01-6.6-71.01-14.74V23.74c0-8.14,31.79-14.74,71.01-14.74h1630.95c39.21,0,71.01,6.6,71.01,14.74Z"/>
+        <path className="cls-9" d="M1833.73,23.73v37.03c-4.1-.15-8.32-.23-12.63-.23H190.15c-39.22,0-71.01,6.59-71.01,14.74v191.28c-33.19-1.24-58.37-7.26-58.37-14.51V23.73c0-8.14,31.78-14.73,71.01-14.73h1630.94c39.22,0,71.01,6.59,71.01,14.73Z"/>
+        <path className="cls-5" d="M1833.73,225.36v26.68c0,8.14-31.79,14.74-71.01,14.74H131.78c-4.31,0-8.54-.08-12.64-.23v-41.19h1714.59Z"/>
+        <path className="cls-2" d="M1762.73,275.79H131.78c-19.57,0-38.05-1.6-52.04-4.5-7.65-1.59-27.97-5.81-27.97-19.23V23.74c0-13.43,20.32-17.65,27.97-19.23C93.73,1.6,112.21,0,131.78,0h1630.95c19.56,0,38.04,1.6,52.04,4.5,7.65,1.59,27.97,5.8,27.97,19.23v228.31c0,13.43-20.32,17.65-27.97,19.23-14,2.9-32.48,4.5-52.04,4.5ZM69.77,249.49c5.86,3.27,27.3,8.3,62.01,8.3h1630.95c34.71,0,56.15-5.03,62.01-8.3V26.3c-5.86-3.27-27.3-8.3-62.01-8.3H131.78c-34.71,0-56.15,5.03-62.01,8.3v223.19Z"/>
+      </g>
+      
+      {/* Eyes */}
+      <g>
+        <ellipse className="cls-7" cx="651.02" cy="583.37" rx="189.86" ry="131.13" transform="translate(-26.84 1135.32) rotate(-81.02)"/>
+        <path d="M706.46,656.69c-16.79,65.83-58.31,110.1-102.2,107.38-10.31-.64-20.1-3.82-29.2-9.18-23.17-13.62-41.69-41.29-51.97-76.42-3.85-23.54-4.42-46.91-2.77-66.81,2.11-41.12,13.15-85.23,31.46-126.11,12.05-16.61,26.33-29.05,41.74-35.83,9.81-4.32,20.07-6.35,30.52-5.7,26.31,1.63,50.45,19.96,67.18,50.68,2.75,5.02,2.15,11.23-1.45,15.69l-63.85,79.06c-5.91,7.32-3.19,18.28,5.46,21.99l66.89,28.71c6.42,2.75,9.92,9.77,8.19,16.52Z"/>
+        <path d="M635.95,784.65c-5.51,0-11.03-.43-16.54-1.3-38.81-6.13-71.59-33.27-92.3-76.4-19.96-41.57-26.38-93.43-18.06-146.02,8.31-52.59,30.41-99.95,62.22-133.33,33-34.64,72.55-50.34,111.36-44.2,38.81,6.13,71.59,33.27,92.3,76.4,19.96,41.57,26.38,93.43,18.06,146.02-8.31,52.59-30.41,99.95-62.22,133.33-28.32,29.73-61.47,45.5-94.82,45.5ZM666.25,407.3c-26.47,0-53.3,13.07-76.74,37.67-28.31,29.72-48.05,72.29-55.57,119.88-7.52,47.59-1.88,94.18,15.89,131.18,17.02,35.44,43.13,57.61,73.52,62.41,30.39,4.81,62.06-8.23,89.18-36.7,28.31-29.72,48.05-72.3,55.57-119.89,7.52-47.59,1.88-94.18-15.89-131.18-17.02-35.45-43.13-57.61-73.52-62.41-4.13-.65-8.28-.98-12.45-.98Z"/>
+      </g>
+      <g>
+        <ellipse className="cls-7" cx="1238.7" cy="583.37" rx="189.86" ry="131.13" transform="translate(469.09 1715.79) rotate(-81.02)"/>
+        <path d="M1294.14,656.69c-16.79,65.83-58.31,110.1-102.2,107.38-10.31-.64-20.1-3.82-29.2-9.18-23.17-13.62-41.69-41.29-51.97-76.42-3.85-23.54-4.42-46.91-2.77-66.81,2.11-41.12,13.15-85.23,31.46-126.11,12.05-16.61,26.33-29.05,41.74-35.83,9.81-4.32,20.07-6.35,30.52-5.7,26.31,1.63,50.45,19.96,67.18,50.68,2.75,5.02,2.15,11.23-1.45,15.69l-63.85,79.06c-5.91,7.32-3.19,18.28,5.46,21.99l66.89,28.71c6.42,2.75,9.92,9.77,8.19,16.52Z"/>
+        <path d="M1223.63,784.65c-5.51,0-11.03-.43-16.54-1.3-38.81-6.13-71.59-33.27-92.3-76.4-19.96-41.57-26.38-93.43-18.06-146.02,8.31-52.59,30.41-99.95,62.22-133.33,33-34.64,72.55-50.34,111.36-44.2,38.81,6.13,71.59,33.27,92.3,76.4,19.96,41.57,26.38,93.43,18.06,146.02-8.31,52.59-30.41,99.95-62.22,133.33-28.32,29.73-61.47,45.5-94.82,45.5ZM1253.93,407.3c-26.47,0-53.3,13.07-76.74,37.67-28.31,29.72-48.05,72.29-55.57,119.88-7.52,47.59-1.88,94.18,15.89,131.18,17.02,35.44,43.13,57.61,73.52,62.41,30.39,4.81,62.06-8.23,89.18-36.7,28.31-29.72,48.05-72.3,55.57-119.89,7.52-47.59,1.88-94.18-15.89-131.18-17.02-35.45-43.13-57.61-73.52-62.41-4.13-.65-8.28-.98-12.45-.98Z"/>
+      </g>
+      
+      {/* Mouth */}
+      <g>
+        <path className="cls-4" d="M1222.25,901.79c12.22-37.03-16.98-71.47-52.34-79.95-20.86-5.5-42.7-.81-62.23,7.09-13.16,5.23-24.65,11.14-38.18,16.32-50.42,21.04-126.23,29.98-185.9,17.92-26.06-4.87-45.34-10.74-67.41-19.48-14.13-5.63-26.65-12.29-41-17.31-10.52-3.74-23.53-6.98-35.7-6.94-30.86-.43-62.83,19.31-72.09,47.61-6.41,18-.84,37.81,8.38,54.07,12.76,22.93,28.74,44,46.6,62.59,59.32,62,144.63,97.49,230.52,94.91,112.72-2.59,224.93-71.99,269.28-176.62l.06-.21Z"/>
+        <path className="cls-10" d="M1158.87,995.46c-6.13,3.81-12.36,7.46-18.68,10.96,2.16-12.08-34.43-33.66-44.13-37.76-39.05-16.52-85.53-16.06-124.08-.32-5.18,2.11-10.08,4.49-14.76,7.11,10.16-8.08,21.42-15.04,34.36-20.31,38.56-15.75,85.04-16.2,124.08.32,10.33,4.37,51.17,28.56,43.2,40Z"/>
+        <path className="cls-10" d="M941.55,963.48c-.85-6.26-21.14-8.4-27.26-9.03-34.41-3.56-69.02,7.78-94.5,28.67,22.33-12.24,48.66-18.19,74.9-15.47,6.12.63,39.4,6.38,34.56,11.56l12.3-15.73Z"/>
+        <path className="cls-8" d="M1140.2,1006.42c-106.3,58.77-237.52,71.65-355.19,25.49,6.57-19.1,18.91-35.8,34.79-48.79,22.33-12.24,48.66-18.19,74.9-15.47,6.12.63,26.4,2.79,27.26,9.04.52,3.74-35.46,39.14-36.9,49.07-.5,2.06-14.22,27.34-4.31,24.71,5.64-6.85,11.19-13.78,16.8-20.59-1.36,4.82-1.29,8.46,2.8,7.38,17.98-21.81,34.9-44.38,56.9-61.81,4.68-2.62,9.58-5,14.76-7.11,38.56-15.74,85.04-16.2,124.08.32,9.7,4.1,46.28,25.68,44.13,37.76Z"/>
+        <path d="M944.22,1091.35c-40.89,0-82.67-8.35-121.35-24.32-41.32-17.06-79.21-42.86-109.59-74.61-19.29-20.08-35.61-42.01-48.5-65.17-12.69-22.4-16-45.24-9.29-64.26,10.72-32.51,46.78-56.59,84.09-56.15h.11c15.02,0,29.89,4.17,39.74,7.67,8.82,3.09,16.99,6.76,24.88,10.31,5.37,2.42,10.93,4.92,16.56,7.16,22.87,9.05,41.12,14.33,65.06,18.8l.18.03c54.48,11.01,127.9,3.94,178.55-17.2l.35-.14c6.91-2.65,13.21-5.47,19.88-8.46,5.79-2.59,11.78-5.28,18.15-7.81,25.78-10.43,49.34-13,69.95-7.6,23.67,5.71,44.52,21.19,55.79,41.42,9.49,17.03,11.44,36.4,5.49,54.55l-.22.72-.26.61c-22.47,53-61.82,98.73-113.78,132.24-50,32.24-109.24,50.73-166.82,52.05-2.98.09-5.97.13-8.97.13ZM738.49,832.04c-26.07,0-51.92,16.97-59.11,38.94l-.11.31c-5.79,16.27,2.19,34.32,7.47,43.63,11.89,21.35,26.92,41.53,44.72,60.07,56.9,59.47,139.53,93.5,221.05,91.04,53.08-1.22,107.68-18.28,153.83-48.04,47.52-30.65,83.48-72.26,104.01-120.36,4.72-14.54.65-26.67-3.6-34.31-7.81-14.01-23.05-25.2-39.78-29.22l-.27-.07c-15.27-4.03-33.53-1.81-54.29,6.59-5.94,2.36-11.42,4.82-17.23,7.42-6.64,2.97-13.5,6.05-21,8.93-55.68,23.18-133.19,30.65-192.98,18.59-25.29-4.73-45.47-10.57-69.64-20.14-6.17-2.45-11.98-5.07-17.6-7.6-7.75-3.49-15.07-6.78-22.93-9.53-11.39-4.05-22.54-6.26-31.51-6.24h-.21c-.27,0-.55,0-.83,0Z"/>
+      </g>
+    </g>
+  </svg>
+)
+
+
+
 export default function MysteryBox({ 
   mysteryDesigns, 
   size = 'medium', 
@@ -26,56 +88,46 @@ export default function MysteryBox({
       container: 'w-[200px] h-[240px]',
       particleCount: 4,
       particleSize: 'w-1.5 h-1.5',
-      questionMarks: 2
     },
     medium: {
-      container: 'w-[280px] h-[320px] md:w-[320px] md:h-[360px]',
+      container: 'w-[300px] h-[360px] md:w-[350px] md:h-[420px]',
       particleCount: 6,
       particleSize: 'w-2 h-2',
-      questionMarks: 3
     },
     large: {
-      container: 'w-[360px] h-[420px] md:w-[400px] md:h-[460px]',
+      container: 'w-[400px] h-[480px] md:w-[450px] md:h-[540px]',
       particleCount: 8,
       particleSize: 'w-3 h-3',
-      questionMarks: 4
     }
   }
 
   const config = sizeConfig[size]
 
   const [isHovered, setIsHovered] = useState(false)
-  const [currentSilhouette, setCurrentSilhouette] = useState(0)
-  const [showPeek, setShowPeek] = useState(false)
+  const [isGlowing, setIsGlowing] = useState(false)
   const [particlePositions, setParticlePositions] = useState<Array<{top: string, left: string}>>([])
   const [isMounted, setIsMounted] = useState(false)
 
   const ref = useRef<HTMLDivElement>(null)
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
-  const rotateX = useTransform(mouseY, [0, 300], [8, -8])
-  const rotateY = useTransform(mouseX, [0, 300], [-8, 8])
+  const rotateX = useTransform(mouseY, [0, 400], [6, -6])
+  const rotateY = useTransform(mouseX, [0, 400], [-6, 6])
 
+  // Glow animation every 10 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentSilhouette(prev => (prev + 1) % mysteryDesigns.length)
-    }, 3000)
-    return () => clearInterval(interval)
-  }, [mysteryDesigns.length])
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setShowPeek(true)
-      setTimeout(() => setShowPeek(false), 800)
-    }, 8000)
+      setIsGlowing(true)
+      setTimeout(() => setIsGlowing(false), 2000) // 2s glow duration
+    }, 10000)
     return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
     setIsMounted(true)
     const positions = Array.from({ length: config.particleCount }, (_, i) => ({
-      top: `${20 + Math.sin(i * 60 * Math.PI / 180) * 150}px`,
-      left: `${160 + Math.cos(i * 60 * Math.PI / 180) * 120}px`,
+      top: `${20 + Math.sin(i * 60 * Math.PI / 180) * 80}px`,
+      left: `${50 + Math.cos(i * 60 * Math.PI / 180) * 80}px`,
     }))
     setParticlePositions(positions)
   }, [config.particleCount])
@@ -100,10 +152,11 @@ export default function MysteryBox({
         onHoverStart={() => setIsHovered(true)}
         onHoverEnd={() => setIsHovered(false)}
       >
+        {/* Magical particles */}
         {isMounted && particlePositions.map((position, i) => (
           <motion.div
             key={i}
-            className={`absolute ${config.particleSize} rounded-full blur-sm`}
+            className={`absolute ${config.particleSize} rounded-full blur-sm z-10`}
             style={{
               top: position.top,
               left: position.left,
@@ -125,44 +178,33 @@ export default function MysteryBox({
 
         <motion.div
           className="relative w-full h-full flex items-center justify-center"
-          animate={{ scale: isHovered ? [1, 1.05, 1] : 1 }}
+          animate={{ scale: isHovered ? [1, 1.03, 1] : 1 }}
           transition={{ scale: { duration: 0.6, repeat: isHovered ? Infinity : 0 } }}
         >
-          <div className="absolute bottom-8 w-52 h-8 bg-black/10 rounded-full blur-sm"></div>
-
-          <div className="relative w-48 h-48 bg-[#E33232] border-[3px] border-[#222] shadow-lg">
-            <div className="absolute top-1/2 left-0 transform -translate-y-1/2 w-full h-[36px] bg-[#F8CB36] z-10 rounded-sm"></div>
-            <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-[36px] h-full bg-[#F8CB36] z-10 rounded-sm"></div>
-
+          <div className="relative w-full h-full">
+            {/* The complete box with glow and hover wobble */}
             <motion.div
-              className="absolute -top-3 left-1/2 transform -translate-x-1/2 w-[208px] h-12 bg-[#E33232] border-[3px] border-[#222] shadow-sm z-20"
-              animate={isHovered ? { rotate: [0, -2, 2, 0], y: [-1, 1, -1] } : { rotate: 0, y: 0 }}
-              transition={{ duration: 0.4 }}
-            />
+              className="w-full h-full"
+              animate={{
+                filter: isGlowing 
+                  ? "drop-shadow(0 0 30px rgba(255, 105, 180, 0.8)) drop-shadow(0 0 60px rgba(248, 203, 54, 0.6))"
+                  : "drop-shadow(0 8px 25px rgba(0, 0, 0, 0.15))",
+                rotateZ: isHovered ? [-0.5, 0.5, -0.5, 0.5, 0] : 0,
+                y: isHovered ? [-1, 1, -1, 1, 0] : 0
+              }}
+              transition={{ 
+                filter: { duration: 1, ease: "easeInOut" },
+                rotateZ: { duration: 0.5, ease: "easeInOut", repeat: isHovered ? Infinity : 0 },
+                y: { duration: 0.5, ease: "easeInOut", repeat: isHovered ? Infinity : 0 }
+              }}
+            >
+              <CompleteBox className="w-full h-full" />
+            </motion.div>
 
-            <div className="absolute inset-0 flex items-center justify-center">
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentSilhouette}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 0.3, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.5 }}
-                  className="text-5xl text-white/60 font-bold"
-                >
-                  ?
-                </motion.div>
-              </AnimatePresence>
-            </div>
+
           </div>
 
-          <motion.div
-            className="absolute bottom-0 bg-kaiju-pink px-6 py-3 rounded-full text-white text-sm font-bold shadow-xl border border-kaiju-navy"
-            animate={{ opacity: [0.9, 1, 0.9], scale: [1, 1.02, 1] }}
-            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-          >
-            {mysteryDesigns[currentSilhouette]?.probability} chance
-          </motion.div>
+
         </motion.div>
       </motion.div>
     </div>
