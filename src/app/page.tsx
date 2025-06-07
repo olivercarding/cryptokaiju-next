@@ -1,6 +1,7 @@
 // src/app/page.tsx
 'use client'
 
+import Header from '@/components/layout/Header'
 import HeroSection from '@/components/home/HeroSection'
 import HowItWorksSection from '@/components/home/HowItWorksSection'
 import MysteriesSection from '@/components/home/MysteriesSection'
@@ -46,31 +47,6 @@ export default function Home() {
       backgroundColor: "bg-kaiju-navy/10"
     }
   ]
-
-  // You can also mix images and videos:
-  // const howItWorksStepsMixed = [
-  //   {
-  //     title: "Connect Wallet",
-  //     description: "Link your ETH wallet to participate in the blind mint.",
-  //     mediaSrc: "/videos/connect-wallet.mp4",
-  //     mediaType: "video" as const,
-  //     backgroundColor: "bg-kaiju-light-pink"
-  //   },
-  //   {
-  //     title: "Open Mystery Box", 
-  //     description: "Mint your box to reveal which of the 4 exclusive designs you received.",
-  //     mediaSrc: "/images/kaiju-box.png",
-  //     mediaType: "image" as const,
-  //     backgroundColor: "bg-kaiju-purple-light/20"
-  //   },
-  //   {
-  //     title: "Claim Physical",
-  //     description: "If you got a plush design, we'll ship your NFC‑chipped Kaiju to your door.",
-  //     mediaSrc: "/videos/shipping.mp4",
-  //     mediaType: "video" as const,
-  //     backgroundColor: "bg-kaiju-navy/10"
-  //   }
-  // ]
 
   const mysteries = [
     {
@@ -118,36 +94,49 @@ export default function Home() {
     // Add CTA logic here
   }
 
+  const handleConnectWallet = () => {
+    console.log('Connect wallet clicked')
+    // Add wallet connection logic here
+  }
+
   return (
-    <main className="text-kaiju-navy overflow-x-hidden">
-      <HeroSection 
-        mysteryDesigns={mysteryDesigns}
-        stats={heroStats}
-        onMint={handleMint}
-        onViewPossibilities={handleViewPossibilities}
-      />
+    <>
+      <Header onConnectWallet={handleConnectWallet} />
       
-      <HowItWorksSection 
-        title="How it works"
-        steps={howItWorksSteps}
-        rotations={['-3deg', '2deg', '-2deg']}
-        useVideoCards={true}
-      />
-      
-      <MysteriesSection 
-        title="The Four Mysteries"
-        subtitle="Deep within the CryptoKaiju vault, four distinct design types await discovery. Some will be cuddly plush companions, others collectible vinyl figures. Which destiny calls to you?"
-        mysteries={mysteries}
-      />
-      
-      <CTASection 
-        title="Ready to Discover Your Kaiju?"
-        subtitle="Every mystery box is a surprise. Will you uncover a rare vinyl figure or a cuddly plush companion?"
-        buttonText="Open Mystery Box"
-        stats={ctaStats}
-        onAction={handleCTAAction}
-        variant="mystery"
-      />
-    </main>
+      <main className="text-kaiju-navy overflow-x-hidden">
+        <section id="hero">
+          <HeroSection 
+            mysteryDesigns={mysteryDesigns}
+            stats={heroStats}
+            onMint={handleMint}
+            onViewPossibilities={handleViewPossibilities}
+          />
+        </section>
+        
+        <HowItWorksSection 
+          title="How it works"
+          steps={howItWorksSteps}
+          rotations={['-3deg', '2deg', '-2deg']}
+          useVideoCards={true}
+        />
+        
+        <MysteriesSection 
+          title="The Four Mysteries"
+          subtitle="Deep within the CryptoKaiju vault, four distinct design types await discovery. Some will be cuddly plush companions, others collectible vinyl figures. Which destiny calls to you?"
+          mysteries={mysteries}
+        />
+        
+        <section id="community">
+          <CTASection 
+            title="Ready to Discover Your Kaiju?"
+            subtitle="Every mystery box is a surprise. Will you uncover a rare vinyl figure or a cuddly plush companion?"
+            buttonText="Open Mystery Box"
+            stats={ctaStats}
+            onAction={handleCTAAction}
+            variant="mystery"
+          />
+        </section>
+      </main>
+    </>
   )
 }
