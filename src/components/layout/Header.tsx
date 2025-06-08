@@ -119,7 +119,7 @@ export default function Header({ onConnectWallet }: HeaderProps) {
             {/* Connect Wallet Button */}
             <motion.button
               onClick={onConnectWallet}
-              className="px-6 py-2.5 bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+              className="px-4 py-2 sm:px-6 sm:py-2.5 bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
               whileHover={{ scale: 1.05, y: -1 }}
               whileTap={{ scale: 0.95 }}
               initial={{ opacity: 0, x: 20 }}

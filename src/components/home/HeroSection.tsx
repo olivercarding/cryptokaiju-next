@@ -2,7 +2,6 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
 import MysteryBox from '../shared/MysteryBox'
 
 interface HeroSectionProps {
@@ -36,8 +35,20 @@ export default function HeroSection({
   onViewPossibilities
 }: HeroSectionProps) {
   
+  // Handle navigation to mysteries section
+  const handleViewRewards = () => {
+    const element = document.querySelector('#mysteries')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
+    // Also call the passed function if provided
+    if (onViewPossibilities) {
+      onViewPossibilities()
+    }
+  }
+  
   return (
-    <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden py-8 lg:py-12">
+    <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <motion.div 
@@ -81,29 +92,72 @@ export default function HeroSection({
       ))}
       
       <div className="relative z-10 max-w-7xl mx-auto px-6">
-
-
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Left column: Aggressive mint-focused content */}
-          <div className="text-center lg:text-left order-2 lg:order-1">
+        <div className="lg:grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+          {/* Mobile: Title and subtitle first */}
+          <div className="text-center lg:hidden mb-8">
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
             >
-              
               <h1 className="text-4xl md:text-5xl xl:text-6xl font-black mb-4 tracking-tight text-white leading-tight">
-                <span className="block">MINT YOUR</span>
+                <span className="block">CryptoKaiju</span>
                 <span className="block bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light bg-clip-text text-transparent">
-                  MYSTERY KAIJU
+                  MYSTERY BOXES
                 </span>
               </h1>
               
-              <p className="text-lg text-white/90 mb-8 max-w-lg mx-auto lg:mx-0 font-medium">
-                4 exclusive designs. Physical + Digital.
+              <p className="text-lg text-white/90 mb-0 max-w-lg mx-auto font-medium">
+              4 Designs - 1 Chosen at Random on every mint.
               </p>
+            </motion.div>
+          </div>
+
+          {/* Mobile: Mystery Box */}
+          <div className="lg:hidden flex justify-center mb-8">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              whileHover={{ scale: 1.05 }}
+              className="relative"
+            >
+              {/* Glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/50 to-kaiju-purple-light/50 rounded-full blur-3xl scale-110 opacity-75 animate-pulse"></div>
               
-              {/* Prominent mint section */}
+              <div className="relative">
+                <MysteryBox 
+                  mysteryDesigns={mysteryDesigns}
+                  size="medium"
+                  showBreakdown={true}
+                  className="!bg-transparent"
+                />
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Desktop: Left column with all content */}
+          <div className="text-center lg:text-left order-1 lg:order-1">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+            >
+              {/* Desktop: Title and subtitle */}
+              <div className="hidden lg:block">
+                <h1 className="text-4xl md:text-5xl xl:text-6xl font-black mb-4 tracking-tight text-white leading-tight">
+                  <span className="block">CryptoKaiju</span>
+                  <span className="block bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light bg-clip-text text-transparent">
+                    MYSTERY BOXES
+                  </span>
+                </h1>
+                
+                <p className="text-lg text-white/90 mb-8 max-w-lg mx-auto lg:mx-0 font-medium">
+                  4 Designs - 1 Chosen at Random on every mint.
+                </p>
+              </div>
+              
+              {/* Prominent mint section - shows on both mobile and desktop */}
               <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
                   <div className="text-center sm:text-left">
@@ -126,21 +180,9 @@ export default function HeroSection({
                 </motion.button>
               </div>
               
-              {/* Quick stats */}
-              <div className="grid grid-cols-2 gap-3 text-center">
-                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                  <div className="text-2xl font-bold text-kaiju-pink">{mysteryDesigns.length}</div>
-                  <div className="text-xs text-white/60">Designs</div>
-                </div>
-                <div className="bg-white/5 rounded-lg p-3 border border-white/10">
-                  <div className="text-2xl font-bold text-kaiju-pink">∞</div>
-                  <div className="text-xs text-white/60">Utility</div>
-                </div>
-              </div>
-              
               {/* Secondary action */}
               <motion.button 
-                onClick={onViewPossibilities}
+                onClick={handleViewRewards}
                 className="mt-4 text-white/80 hover:text-white text-sm underline transition-colors"
                 whileHover={{ scale: 1.05 }}
               >
@@ -149,8 +191,8 @@ export default function HeroSection({
             </motion.div>
           </div>
           
-          {/* Right column: Enhanced Mystery Box */}
-          <div className="order-1 lg:order-2 flex justify-center">
+          {/* Desktop: Right column Mystery Box */}
+          <div className="hidden lg:flex order-2 lg:order-2 justify-center">
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
