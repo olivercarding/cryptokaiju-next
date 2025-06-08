@@ -2,6 +2,7 @@
 import './globals.css'
 import { Open_Sans } from 'next/font/google'
 import type { Metadata } from 'next'
+import { ThirdwebProvider } from "thirdweb/react"
 
 const openSans = Open_Sans({ 
   subsets: ['latin'],
@@ -22,7 +23,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={openSans.variable}>
       <body>
-        {children}
+        <ThirdwebProvider>
+          {children}
+        </ThirdwebProvider>
       </body>
     </html>
   )

@@ -27,7 +27,7 @@ export default function Home() {
   const howItWorksSteps = [
     {
       title: "Connect Wallet",
-      description: "Link your ETH wallet to participate in the blind mint.",
+      description: "Link your wallet to participate in the mystery box mint.",
       mediaSrc: "/videos/Comp 1_8.webm",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-light-pink"
@@ -79,9 +79,9 @@ export default function Home() {
   }
 
   // Event handlers
-  const handleMint = () => {
-    console.log('Mint button clicked')
-    // Add mint logic here
+  const handleMint = (quantity: number) => {
+    console.log(`Mint button clicked - Quantity: ${quantity}`)
+    // Mint logic will be handled in HeroSection with Thirdweb
   }
 
   const handleViewPossibilities = () => {
@@ -94,14 +94,9 @@ export default function Home() {
     // Add CTA logic here
   }
 
-  const handleConnectWallet = () => {
-    console.log('Connect wallet clicked')
-    // Add wallet connection logic here
-  }
-
   return (
     <>
-      <Header onConnectWallet={handleConnectWallet} />
+      <Header />
       
       <main className="text-kaiju-navy overflow-x-hidden">
         <section id="hero">

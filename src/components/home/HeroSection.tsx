@@ -1,8 +1,13 @@
 // src/components/home/HeroSection.tsx
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import MysteryBox from '../shared/MysteryBox'
+import { useActiveAccount, useSendTransaction } from "thirdweb/react"
+import { getContract, prepareContractCall, toWei } from "thirdweb"
+import { ethereum } from "thirdweb/chains"
+import { thirdwebClient, MERKLE_MINTER_ADDRESS, MERKLE_MINTER_ABI } from '@/lib/thirdweb'
 
 interface HeroSectionProps {
   mysteryDesigns?: Array<{
@@ -15,7 +20,7 @@ interface HeroSectionProps {
     boxesLeft: number
     ultraRareChance: string
   }
-  onMint?: () => void
+  onMint?: (quantity: number) => void
   onViewPossibilities?: () => void
 }
 
@@ -35,13 +40,77 @@ export default function HeroSection({
   onViewPossibilities
 }: HeroSectionProps) {
   
+  const [quantity, setQuantity] = useState(1)
+
+  // Thirdweb hooks
+  const account = useActiveAccount()
+  const { mutate: sendTransaction, isPending } = useSendTransaction()
+
+  // Calculate costs
+  const pricePerBox = parseFloat(stats.price.replace(' Ξ', ''))
+  const totalMintCost = pricePerBox * quantity
+
+  // Handle mint with Thirdweb Universal Bridge
+  const handleMintClick = async () => {
+    if (!account) {
+      alert('Please connect your wallet first')
+      return
+    }
+
+    if (!MERKLE_MINTER_ADDRESS) {
+      alert('Contract address not configured')
+      return
+    }
+
+    try {
+      // Contract setup
+      const contract = getContract({
+        client: thirdwebClient,
+        chain: ethereum,
+        address: MERKLE_MINTER_ADDRESS,
+        abi: MERKLE_MINTER_ABI,
+      })
+
+      // Generate mock DNA and merkle proof for now
+      const mockDNA = {
+        nfcId: "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+        birthday: Math.floor(Date.now() / 1000),
+        tokenUri: `https://api.cryptokaiju.com/mystery/${Date.now()}`
+      }
+      const mockMerkleProof: `0x${string}`[] = []
+
+      // Prepare the contract call
+      const transaction = prepareContractCall({
+        contract,
+        method: "openMint",
+        params: [account.address, mockDNA, mockMerkleProof],
+        value: toWei(pricePerBox.toString()),
+      })
+
+      // Send transaction with Universal Bridge
+      sendTransaction(transaction, {
+        onSuccess: (result) => {
+          console.log("Transaction successful:", result)
+          alert(`Success! Minted ${quantity} mystery box${quantity > 1 ? 'es' : ''}`)
+          if (onMint) onMint(quantity)
+        },
+        onError: (error) => {
+          console.error("Transaction failed:", error)
+          alert("Transaction failed. Please try again.")
+        },
+      })
+    } catch (error) {
+      console.error("Error preparing transaction:", error)
+      alert("Error preparing transaction. Please try again.")
+    }
+  }
+
   // Handle navigation to mysteries section
   const handleViewRewards = () => {
     const element = document.querySelector('#mysteries')
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' })
     }
-    // Also call the passed function if provided
     if (onViewPossibilities) {
       onViewPossibilities()
     }
@@ -122,7 +191,6 @@ export default function HeroSection({
               whileHover={{ scale: 1.05 }}
               className="relative"
             >
-              {/* Glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/50 to-kaiju-purple-light/50 rounded-full blur-3xl scale-110 opacity-75 animate-pulse"></div>
               
               <div className="relative">
@@ -157,27 +225,93 @@ export default function HeroSection({
                 </p>
               </div>
               
-              {/* Prominent mint section - shows on both mobile and desktop */}
-              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 mb-6 border border-white/20">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
-                  <div className="text-center sm:text-left">
-                    <div className="text-3xl font-black text-white">{stats.price}</div>
-                    <div className="text-white/60 text-sm">per mystery box</div>
+              {/* Enhanced mint section with real wallet integration */}
+              <div className="space-y-4">
+                {/* Wallet Status */}
+                {account ? (
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="text-white/70">Connected:</div>
+                      <div className="text-white font-mono">
+                        {account.address.slice(0, 6)}...{account.address.slice(-4)}
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between text-sm mt-1">
+                      <div className="text-white/70">Status:</div>
+                      <div className="text-green-400 font-semibold">Ready to mint</div>
+                    </div>
                   </div>
-                  <div className="text-center sm:text-right">
-                    <div className="text-white/60 text-sm">Discover your</div>
-                    <div className="text-xl font-bold text-kaiju-pink">Mystery Kaiju</div>
+                ) : (
+                  <div className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 text-center">
+                    <div className="text-white/70 text-sm">Connect wallet to mint</div>
+                  </div>
+                )}
+
+                {/* Main minting interface */}
+                <div className="bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 overflow-hidden">
+                  <div className="p-6">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+                      <div className="text-center sm:text-left">
+                        <div className="text-3xl font-black text-white">{stats.price}</div>
+                        <div className="text-white/60 text-sm">per mystery box</div>
+                      </div>
+                      <div className="text-center sm:text-right">
+                        <div className="text-white/60 text-sm">Discover your</div>
+                        <div className="text-xl font-bold text-kaiju-pink">Mystery Kaiju</div>
+                      </div>
+                    </div>
+
+                    {/* Quantity Selector */}
+                    <div className="mb-4">
+                      <div className="text-white/70 text-sm mb-2 text-center">Quantity</div>
+                      <div className="flex justify-center gap-2">
+                        {[1, 3, 5, 10].map((qty) => (
+                          <motion.button
+                            key={qty}
+                            onClick={() => setQuantity(qty)}
+                            className={`px-4 py-2 rounded-lg border transition-all ${
+                              quantity === qty
+                                ? 'bg-kaiju-pink text-white border-kaiju-pink'
+                                : 'bg-white/5 text-white/80 border-white/20 hover:bg-white/10'
+                            }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {qty === 10 ? 'Max' : qty}
+                          </motion.button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cost display */}
+                    <div className="bg-white/5 rounded-xl p-4 mb-4">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-white/70">Total Cost:</span>
+                        <span className="text-white font-semibold">{totalMintCost.toFixed(3)} ETH</span>
+                      </div>
+                    </div>
+
+                    {/* Main mint button */}
+                    <motion.button 
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleMintClick}
+                      disabled={!account || isPending}
+                      className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-black text-xl py-4 px-8 rounded-xl shadow-2xl border-2 border-kaiju-pink/50 hover:shadow-kaiju-pink/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isPending 
+                        ? '⏳ MINTING...' 
+                        : `⚡ REVEAL YOUR KAIJU ${quantity > 1 ? `(${quantity}x)` : ''}`
+                      }
+                    </motion.button>
+
+                    {!account && (
+                      <div className="text-center text-white/60 text-sm mt-2">
+                        Connect your wallet to start minting
+                      </div>
+                    )}
                   </div>
                 </div>
-                
-                <motion.button 
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={onMint}
-                  className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-black text-xl py-4 px-8 rounded-xl shadow-2xl border-2 border-kaiju-pink/50 hover:shadow-kaiju-pink/25 transition-all duration-300"
-                >
-                  🎲 MINT MYSTERY BOX NOW
-                </motion.button>
               </div>
               
               {/* Secondary action */}
@@ -200,7 +334,6 @@ export default function HeroSection({
               whileHover={{ scale: 1.05 }}
               className="relative"
             >
-              {/* Glow effect */}
               <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/50 to-kaiju-purple-light/50 rounded-full blur-3xl scale-110 opacity-75 animate-pulse"></div>
               
               <div className="relative">

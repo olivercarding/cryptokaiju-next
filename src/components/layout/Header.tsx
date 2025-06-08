@@ -4,12 +4,10 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { ConnectButton } from "thirdweb/react"
+import { thirdwebClient } from '@/lib/thirdweb'
 
-interface HeaderProps {
-  onConnectWallet?: () => void
-}
-
-export default function Header({ onConnectWallet }: HeaderProps) {
+export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { scrollY } = useScroll()
@@ -81,7 +79,7 @@ export default function Header({ onConnectWallet }: HeaderProps) {
               }}
             >
               <Image
-                src="/images/cryptokaiju-logo.png" // You'll need to add this PNG
+                src="/images/cryptokaiju-logo.png"
                 alt="CryptoKaiju"
                 width={isScrolled ? 160 : 180}
                 height={isScrolled ? 80 : 90}
@@ -114,20 +112,30 @@ export default function Header({ onConnectWallet }: HeaderProps) {
             ))}
           </nav>
 
-          {/* Connect Wallet Button + Mobile Menu */}
+          {/* Thirdweb Connect Button + Mobile Menu */}
           <div className="flex items-center space-x-4">
-            {/* Connect Wallet Button */}
-            <motion.button
-              onClick={onConnectWallet}
-              className="px-4 py-2 sm:px-6 sm:py-2.5 bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 text-sm sm:text-base"
-              whileHover={{ scale: 1.05, y: -1 }}
-              whileTap={{ scale: 0.95 }}
+            {/* Thirdweb Connect Button */}
+            <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.4 }}
             >
-              Connect Wallet
-            </motion.button>
+              <ConnectButton
+                client={thirdwebClient}
+                theme="dark"
+                connectModal={{
+                  size: "wide",
+                  title: "Connect to CryptoKaiju",
+                  showThirdwebBranding: false,
+                }}
+                appMetadata={{
+                  name: "CryptoKaiju",
+                  description: "Collectible NFTs Linked to Toys",
+                  url: "https://cryptokaiju.com",
+                  logoUrl: "/images/cryptokaiju-logo.png",
+                }}
+              />
+            </motion.div>
 
             {/* Mobile Menu Button */}
             <motion.button
