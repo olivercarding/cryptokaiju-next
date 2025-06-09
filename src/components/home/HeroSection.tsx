@@ -3,6 +3,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import axios from 'axios'
 import MysteryBox from '../shared/MysteryBox'
 import { useActiveAccount, useSendTransaction } from "thirdweb/react"
 import { getContract, prepareContractCall, toWei } from "thirdweb"
@@ -24,6 +25,12 @@ interface HeroSectionProps {
   onViewPossibilities?: () => void
 }
 
+interface UserClaim {
+  nfcId: string;
+  tokenUri: string;
+  birthday: number;
+}
+
 export default function HeroSection({ 
   mysteryDesigns = [
     { type: 'Plush', rarity: 'Common', probability: '40%' },
@@ -40,7 +47,12 @@ export default function HeroSection({
   onViewPossibilities
 }: HeroSectionProps) {
   
-  const [quantity, setQuantity] = useState(1)
+  const [numToMint, setNumToMint] = useState(0)
+  const [userClaims, setUserClaims] = useState<UserClaim[]>([])
+  const [proofs, setProofs] = useState<string[][]>([])
+  const [isReserving, setIsReserving] = useState(false)
+  const [minActive, setMinActive] = useState(false)
+  const [plusActive, setPlusActive] = useState(true)
 
   // Thirdweb hooks
   const account = useActiveAccount()
@@ -48,12 +60,72 @@ export default function HeroSection({
 
   // Calculate costs
   const pricePerBox = parseFloat(stats.price.replace(' Ξ', ''))
-  const totalMintCost = pricePerBox * quantity
+  const totalMintCost = pricePerBox * numToMint
 
-  // Handle mint with Thirdweb Universal Bridge
+  // Reserve function from the working older app
+  const reserve = async () => {
+    console.log('Reserve triggered...')
+    setIsReserving(true)
+    setPlusActive(false)
+
+    try {
+      const response = await axios.get('https://us-central1-merkle-minter.cloudfunctions.net/claim')
+      const { data } = response
+      const result = data.result
+      const canOpenMint = data.canOpenMint
+
+      if (!result || result.length === 0) {
+        console.log('No more available for the moment...')
+        alert('No more NFTs available at the moment')
+        return
+      }
+
+      if (!canOpenMint) {
+        console.log('Unable to open mint - try again')
+        alert('Unable to open mint - please try again')
+        return
+      }
+
+      setNumToMint(prev => prev + 1)
+      setMinActive(true)
+
+      const claim = result[0]
+      const { proof, nfcId, tokenUri, birthday } = claim
+
+      setUserClaims(arr => [...arr, { nfcId, tokenUri, birthday }])
+      setProofs(arr => [...arr, proof])
+
+    } catch (error) {
+      console.log('Failed to reserve:', error)
+      alert('Failed to reserve NFT. Please try again.')
+    } finally {
+      setIsReserving(false)
+      setPlusActive(true)
+    }
+  }
+
+  // Remove reservation
+  const removeReservation = () => {
+    if (numToMint > 0) {
+      setNumToMint(prev => prev - 1)
+      setUserClaims(prev => prev.slice(0, -1))
+      setProofs(prev => prev.slice(0, -1))
+      
+      if (numToMint === 1) {
+        setMinActive(false)
+      }
+    }
+  }
+
+  // Handle mint with proper multi-mint logic
   const handleMintClick = async () => {
     if (!account) {
       alert('Please connect your wallet first')
+      return
+    }
+
+    if (numToMint === 0) {
+      alert("Please click '+' to reserve at least one NFT")
       return
     }
 
@@ -71,28 +143,30 @@ export default function HeroSection({
         abi: MERKLE_MINTER_ABI,
       })
 
-      // Generate mock DNA and merkle proof for now
-      const mockDNA = {
-        nfcId: "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-        birthday: Math.floor(Date.now() / 1000),
-        tokenUri: `https://api.cryptokaiju.com/mystery/${Date.now()}`
-      }
-      const mockMerkleProof: `0x${string}`[] = []
-
-      // Prepare the contract call
+      // Use multiOpenMint for multiple NFTs like the working app
       const transaction = prepareContractCall({
         contract,
-        method: "openMint",
-        params: [account.address, mockDNA, mockMerkleProof],
-        value: toWei(pricePerBox.toString()),
+        method: "multiOpenMint",
+        params: [account.address, userClaims, proofs],
+        value: toWei((pricePerBox * userClaims.length).toString()),
       })
 
       // Send transaction with Universal Bridge
       sendTransaction(transaction, {
         onSuccess: (result) => {
           console.log("Transaction successful:", result)
-          alert(`Success! Minted ${quantity} mystery box${quantity > 1 ? 'es' : ''}`)
-          if (onMint) onMint(quantity)
+          alert(`Success! Minted ${numToMint} mystery box${numToMint > 1 ? 'es' : ''}`)
+          
+          // Reset state after successful mint
+          setNumToMint(0)
+          setUserClaims([])
+          setProofs([])
+          setMinActive(false)
+          
+          if (onMint) onMint(numToMint)
+          
+          // Redirect to claim page like the working app
+          window.location.href = 'https://cryptokaiju.io/plushclaim/'
         },
         onError: (error) => {
           console.error("Transaction failed:", error)
@@ -225,7 +299,7 @@ export default function HeroSection({
                 </p>
               </div>
               
-              {/* Enhanced mint section with real wallet integration */}
+              {/* Enhanced mint section with reservation system */}
               <div className="space-y-4">
                 {/* Wallet Status */}
                 {account ? (
@@ -261,47 +335,70 @@ export default function HeroSection({
                       </div>
                     </div>
 
-                    {/* Quantity Selector */}
+                    {/* Reservation System */}
                     <div className="mb-4">
-                      <div className="text-white/70 text-sm mb-2 text-center">Quantity</div>
-                      <div className="flex justify-center gap-2">
-                        {[1, 3, 5, 10].map((qty) => (
-                          <motion.button
-                            key={qty}
-                            onClick={() => setQuantity(qty)}
-                            className={`px-4 py-2 rounded-lg border transition-all ${
-                              quantity === qty
-                                ? 'bg-kaiju-pink text-white border-kaiju-pink'
-                                : 'bg-white/5 text-white/80 border-white/20 hover:bg-white/10'
-                            }`}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            {qty === 10 ? 'Max' : qty}
-                          </motion.button>
-                        ))}
+                      <div className="text-white/70 text-sm mb-2 text-center">Reserved Boxes</div>
+                      <div className="flex justify-center items-center gap-4">
+                        <motion.button
+                          onClick={removeReservation}
+                          disabled={!minActive || isPending}
+                          className="w-10 h-10 rounded-full bg-red-500/80 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-red-600/80 transition-colors"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          -
+                        </motion.button>
+                        
+                        <div className="w-16 h-16 rounded-xl bg-white/10 border border-white/20 flex items-center justify-center">
+                          <span className="text-2xl font-bold text-white">{numToMint}</span>
+                        </div>
+                        
+                        <motion.button
+                          onClick={reserve}
+                          disabled={!plusActive || isPending || isReserving}
+                          className="w-10 h-10 rounded-full bg-kaiju-pink text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-kaiju-red transition-colors flex items-center justify-center"
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {isReserving ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            '+'
+                          )}
+                        </motion.button>
                       </div>
+                      <p className="text-white/60 text-xs text-center mt-2">
+                        Click + to reserve available mystery boxes
+                      </p>
                     </div>
 
                     {/* Cost display */}
-                    <div className="bg-white/5 rounded-xl p-4 mb-4">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-white/70">Total Cost:</span>
-                        <span className="text-white font-semibold">{totalMintCost.toFixed(3)} ETH</span>
+                    {numToMint > 0 && (
+                      <div className="bg-white/5 rounded-xl p-4 mb-4">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-white/70">Total Cost:</span>
+                          <span className="text-white font-semibold">{totalMintCost.toFixed(3)} ETH</span>
+                        </div>
+                        <div className="flex justify-between text-xs mt-1">
+                          <span className="text-white/50">Reserved NFTs:</span>
+                          <span className="text-white/70">{userClaims.length}</span>
+                        </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Main mint button */}
                     <motion.button 
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={handleMintClick}
-                      disabled={!account || isPending}
+                      disabled={!account || isPending || numToMint === 0}
                       className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-black text-xl py-4 px-8 rounded-xl shadow-2xl border-2 border-kaiju-pink/50 hover:shadow-kaiju-pink/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isPending 
                         ? '⏳ MINTING...' 
-                        : `⚡ REVEAL YOUR KAIJU ${quantity > 1 ? `(${quantity}x)` : ''}`
+                        : numToMint === 0
+                        ? '⚡ RESERVE BOXES FIRST'
+                        : `⚡ MINT ${numToMint} MYSTERY BOX${numToMint > 1 ? 'ES' : ''}`
                       }
                     </motion.button>
 
@@ -367,7 +464,7 @@ export default function HeroSection({
               ))}
             </div>
             <span className="text-white/80 text-sm font-medium">
-              Join 2,847 holders • Mint before they're gone
+              Join 2,847 holders • Reserve before they're gone
             </span>
           </div>
         </motion.div>
