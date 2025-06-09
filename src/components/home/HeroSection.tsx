@@ -6,9 +6,11 @@ import { motion } from 'framer-motion'
 import axios from 'axios'
 import MysteryBox from '../shared/MysteryBox'
 import { useActiveAccount, useSendTransaction } from "thirdweb/react"
-import { getContract, prepareContractCall, toWei } from "thirdweb"
+import { getContract, prepareContractCall } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, MERKLE_MINTER_ADDRESS, MERKLE_MINTER_ABI } from '@/lib/thirdweb'
+import { useTotalSupply } from '@/lib/hooks/useTotalSupply'
+import { useMintPrice } from '@/lib/hooks/useMintPrice'
 
 interface HeroSectionProps {
   mysteryDesigns?: Array<{
@@ -17,7 +19,6 @@ interface HeroSectionProps {
     probability: string
   }>
   stats?: {
-    price: string
     boxesLeft: number
     ultraRareChance: string
   }
@@ -39,7 +40,6 @@ export default function HeroSection({
     { type: 'Vinyl', rarity: 'Ultra Rare', probability: '5%' },
   ],
   stats = {
-    price: '0.055 Ξ',
     boxesLeft: 427,
     ultraRareChance: '5%'
   },
@@ -57,9 +57,15 @@ export default function HeroSection({
   // Thirdweb hooks
   const account = useActiveAccount()
   const { mutate: sendTransaction, isPending } = useSendTransaction()
+  
+  // Fetch total supply from blockchain
+  const { totalSupply, isLoading: isLoadingSupply } = useTotalSupply()
+  
+  // Fetch current mint price from contract
+  const { priceInETH, priceInWei, priceFormatted, isLoading: isLoadingPrice } = useMintPrice()
 
-  // Calculate costs
-  const pricePerBox = parseFloat(stats.price.replace(' Ξ', ''))
+  // Calculate costs using dynamic price from contract
+  const pricePerBox = parseFloat(priceInETH)
   const totalMintCost = pricePerBox * numToMint
 
   // Reserve function from the working older app
@@ -148,7 +154,7 @@ export default function HeroSection({
         contract,
         method: "multiOpenMint",
         params: [account.address, userClaims, proofs],
-        value: toWei((pricePerBox * userClaims.length).toString()),
+        value: priceInWei * BigInt(userClaims.length), // Use exact wei amount from contract
       })
 
       // Send transaction with Universal Bridge
@@ -189,9 +195,30 @@ export default function HeroSection({
       onViewPossibilities()
     }
   }
+
+  // Handle shipping information
+  const handleEnterShipping = () => {
+    setShowSuccessModal(false)
+    // Redirect to the shipping page
+    window.location.href = 'https://cryptokaiju.io/plushclaim/'
+  }
+
+  // Handle closing modal
+  const handleCloseModal = () => {
+    setShowSuccessModal(false)
+  }
   
   return (
-    <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
+    <>
+      {/* Mint Success Modal */}
+      <MintSuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleCloseModal}
+        mintedNFTs={mintedNFTs}
+        onEnterShipping={handleEnterShipping}
+      />
+
+      <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
       {/* Animated background elements */}
       <div className="absolute inset-0">
         <motion.div 
@@ -326,7 +353,9 @@ export default function HeroSection({
                   <div className="p-6">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
                       <div className="text-center sm:text-left">
-                        <div className="text-3xl font-black text-white">{stats.price}</div>
+                        <div className="text-3xl font-black text-white">
+                          {isLoadingPrice ? 'Loading...' : priceFormatted}
+                        </div>
                         <div className="text-white/60 text-sm">per mystery box</div>
                       </div>
                       <div className="text-center sm:text-right">
@@ -445,7 +474,7 @@ export default function HeroSection({
           </div>
         </div>
         
-        {/* Bottom urgency bar */}
+        {/* Bottom urgency bar - Updated with blockchain data */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -464,11 +493,15 @@ export default function HeroSection({
               ))}
             </div>
             <span className="text-white/80 text-sm font-medium">
-              Join 2,847 holders • Reserve before they're gone
+              {isLoadingSupply 
+                ? "Loading minted count..." 
+                : `${totalSupply.toLocaleString()} Kaiju minted • Reserve before they're gone`
+              }
             </span>
           </div>
         </motion.div>
       </div>
     </section>
+    </>
   )
 }

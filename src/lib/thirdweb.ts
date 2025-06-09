@@ -13,8 +13,22 @@ export const thirdwebClient = createThirdwebClient({
 });
 
 // Contract configuration for your MerkleMinter
-export const MERKLE_MINTER_ADDRESS = process.env.NEXT_PUBLIC_MERKLE_MINTER_ADDRESS || "";
+export const MERKLE_MINTER_ADDRESS = process.env.NEXT_PUBLIC_MERKLE_MINTER_ADDRESS || "0x86153A0d9c060BE48A0cfc2daEed3Eee957C9DD7";
 export const CHAIN_ID = process.env.NEXT_PUBLIC_CHAIN_ID ? parseInt(process.env.NEXT_PUBLIC_CHAIN_ID) : 1; // Default to Ethereum mainnet
+
+// Kaiju NFT Contract configuration
+export const KAIJU_NFT_ADDRESS = "0x102c527714ab7e652630cac7a30abb482b041fd0";
+
+// Basic ERC721 ABI for totalSupply
+export const ERC721_ABI = [
+  {
+    "inputs": [],
+    "name": "totalSupply",
+    "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
 
 // Complete MerkleMinter ABI from the working app
 export const MERKLE_MINTER_ABI = [

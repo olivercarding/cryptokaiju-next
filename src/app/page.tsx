@@ -18,7 +18,6 @@ export default function Home() {
   ]
 
   const heroStats = {
-    price: '0.055 Ξ',
     boxesLeft: 427,
     ultraRareChance: '5%'
   }
@@ -73,7 +72,7 @@ export default function Home() {
 
   const ctaStats = {
     priceLabel: "Price per Box",
-    price: "0.055 ETH",
+    price: "Dynamic", // This will be fetched from contract
     countLabel: "Mystery Boxes Left",
     count: 427
   }
