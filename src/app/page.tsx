@@ -34,7 +34,7 @@ export default function Home() {
     {
       title: "Open Mystery Box",
       description: "Mint your box to reveal which of the 4 exclusive designs you received.",
-      mediaSrc: "/videos/open-mystery-box.mp4",
+      mediaSrc: "/videos/boxmovie2.webm",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-purple-light/20"
     },
