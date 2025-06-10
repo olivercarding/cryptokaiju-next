@@ -33,8 +33,8 @@ export default function Home() {
     },
     {
       title: "Open Mystery Box",
-      description: "Mint your box to reveal which of the 4 exclusive designs you received.",
-      mediaSrc: "/videos/boxmovie2.webm",
+      description: "Mint your box to reveal which of the 4 Kaiju you've found.",
+      mediaSrc: "/videos/Comp 1_9x.webm",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-purple-light/20"
     },
@@ -115,7 +115,7 @@ export default function Home() {
         />
         
         <MysteriesSection 
-          title="The Four Mysteries"
+          title="4 Kaiju Designs Await"
           subtitle="Deep within the CryptoKaiju vault, four distinct design types await discovery. Some will be cuddly plush companions, others collectible vinyl figures. Which destiny calls to you?"
           mysteries={mysteries}
         />

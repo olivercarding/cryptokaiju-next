@@ -19,7 +19,7 @@ interface MysteriesSectionProps {
 }
 
 export default function MysteriesSection({
-  title = "The Four Mysteries",
+  title = "Meet The Kaiju",
   subtitle = "Deep within the CryptoKaiju vault, four distinct design types await discovery. Some will be cuddly plush companions, others collectible vinyl figures. Which destiny calls to you?",
   mysteries = [
     {

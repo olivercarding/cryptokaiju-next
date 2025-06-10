@@ -27,7 +27,7 @@ export default function Header() {
   const navItems = [
     { label: 'Mint', href: '#hero' },
     { label: 'How It Works', href: '#how' },
-    { label: 'Mysteries', href: '#mysteries' },
+    { label: 'Designs', href: '#mysteries' },
     { label: 'Community', href: '#community' },
   ]
 
