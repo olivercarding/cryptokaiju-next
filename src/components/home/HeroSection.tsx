@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import axios from 'axios'
 import MysteryBox from '../shared/MysteryBox'
+import MintSuccessModal from '../shared/MintSuccessModal'
 import { useActiveAccount, useSendTransaction } from "thirdweb/react"
 import { getContract, prepareContractCall } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
@@ -32,6 +33,12 @@ interface UserClaim {
   birthday: number;
 }
 
+interface MintedNFT {
+  nfcId: string
+  tokenUri: string
+  birthday: number
+}
+
 export default function HeroSection({ 
   mysteryDesigns = [
     { type: 'Plush', rarity: 'Common', probability: '40%' },
@@ -53,6 +60,10 @@ export default function HeroSection({
   const [isReserving, setIsReserving] = useState(false)
   const [minActive, setMinActive] = useState(false)
   const [plusActive, setPlusActive] = useState(true)
+  
+  // Modal state
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [mintedNFTs, setMintedNFTs] = useState<MintedNFT[]>([])
 
   // Thirdweb hooks
   const account = useActiveAccount()
@@ -161,7 +172,16 @@ export default function HeroSection({
       sendTransaction(transaction, {
         onSuccess: (result) => {
           console.log("Transaction successful:", result)
-          alert(`Success! Minted ${numToMint} mystery box${numToMint > 1 ? 'es' : ''}`)
+          
+          // Set minted NFTs for the modal
+          setMintedNFTs(userClaims.map(claim => ({
+            nfcId: claim.nfcId,
+            tokenUri: claim.tokenUri,
+            birthday: claim.birthday
+          })))
+          
+          // Show success modal
+          setShowSuccessModal(true)
           
           // Reset state after successful mint
           setNumToMint(0)
@@ -170,9 +190,6 @@ export default function HeroSection({
           setMinActive(false)
           
           if (onMint) onMint(numToMint)
-          
-          // Redirect to claim page like the working app
-          window.location.href = 'https://cryptokaiju.io/plushclaim/'
         },
         onError: (error) => {
           console.error("Transaction failed:", error)
@@ -426,7 +443,7 @@ export default function HeroSection({
                       {isPending 
                         ? '⏳ MINTING...' 
                         : numToMint === 0
-                        ? '⚡ RESERVE BOXES FIRST'
+                        ? '⚡ CHECK AVAILABILITY'
                         : `⚡ MINT ${numToMint} MYSTERY BOX${numToMint > 1 ? 'ES' : ''}`
                       }
                     </motion.button>
