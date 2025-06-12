@@ -1,7 +1,7 @@
-// src/components/shared/PolaroidCard.tsx
 'use client'
 
-import { motion } from 'framer-motion'
+import { useEffect, useRef } from 'react'
+import { motion, useInView } from 'framer-motion'
 import Image from 'next/image'
 
 interface VideoPolaroidCardProps {
@@ -25,7 +25,10 @@ export default function VideoPolaroidCard({
   rotation = '0deg',
   size = 'medium'
 }: VideoPolaroidCardProps) {
-  
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const containerRef = useRef(null)
+  const isInView = useInView(containerRef, { once: true })
+
   const sizeConfig = {
     small: {
       container: 'w-[280px] sm:w-[300px]',
@@ -52,29 +55,47 @@ export default function VideoPolaroidCard({
 
   const config = sizeConfig[size]
 
+  useEffect(() => {
+    if (isInView && mediaType === 'video') {
+      const delayMap: { [key: number]: number } = {
+        1: 0,
+        2: 3000,
+        3: 4000
+      }
+
+      const delay = delayMap[step] ?? 0
+
+      const timeout = setTimeout(() => {
+        videoRef.current?.play()
+      }, delay)
+
+      return () => clearTimeout(timeout)
+    }
+  }, [isInView, step, mediaType])
+
   return (
     <motion.div
+      ref={containerRef}
       style={{ rotate: rotation }}
       whileHover={{ y: -4, rotate: '0deg' }}
       transition={{ duration: 0.3 }}
       className={`relative ${config.container} bg-kaiju-white border-[3px] border-kaiju-light-gray rounded-[18px] pt-6 pb-6 px-4 shadow-xl hover:shadow-2xl transition-shadow duration-300`}
     >
-      {/* Step badge */}
       <span className="absolute -top-4 -left-4 w-12 h-12 flex items-center justify-center rounded-full bg-kaiju-white border-[3px] border-kaiju-light-gray text-lg font-bold z-10 shadow-lg">
         {step}
       </span>
 
-      {/* Large Video/Media area - takes up most of the card */}
       <div
         className={`${config.videoHeight} w-full mb-4 rounded-[12px] overflow-hidden ${backgroundColor} relative`}
       >
         {mediaType === 'video' ? (
           <video
+            ref={videoRef}
             src={mediaSrc}
-            autoPlay
             loop
             muted
             playsInline
+            preload="auto"
             className="w-full h-full object-cover"
           >
             Your browser does not support the video tag.
@@ -90,12 +111,10 @@ export default function VideoPolaroidCard({
             />
           </div>
         )}
-        
-        {/* Optional overlay for better text contrast on videos */}
+
         <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/20 to-transparent h-16 rounded-b-[12px]" />
       </div>
 
-      {/* Compact text content */}
       <div className={`text-center ${config.textPadding}`}>
         <h3 className={`${config.textSize} font-extrabold mb-2 uppercase tracking-tight text-kaiju-navy leading-tight`}>
           {title}

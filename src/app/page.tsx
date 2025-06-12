@@ -34,14 +34,14 @@ export default function Home() {
     {
       title: "Open Mystery Box",
       description: "Mint your box to reveal which of the 4 Kaiju you've found.",
-      mediaSrc: "/videos/Comp 1_9x.webm",
+      mediaSrc: "/videos/Comp2.webm",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-purple-light/20"
     },
     {
       title: "Claim Physical",
-      description: "If you got a plush design, we'll ship your NFC‑chipped Kaiju to your door.",
-      mediaSrc: "/videos/claim-physical.mp4",
+      description: "Enter your physical address, pay the shipping fee, and enjoy your new CryptoKaiju!",
+      mediaSrc: "/videos/Comp 1_9.mp4",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-navy/10"
     }
