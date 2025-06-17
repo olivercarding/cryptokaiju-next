@@ -47,39 +47,43 @@ export default function Home() {
     }
   ]
 
-  // 🎯 CHARACTER SHOWCASE - All 4 available designs
-  const availableCharacters = [
+  // 🎯 PHYSICAL COLLECTIBLES SHOWCASE - Updated for new component structure
+  const physicalCollectibles = [
     {
       name: 'Uri',
       type: 'Plush',
-      rarity: 'Common',
       power: 'Glows in the dark',
-      image: '/images/Ghost1.png',              // ✅ We know this works
-      backgroundColor: 'bg-kaiju-light-pink'
+      description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
+      nftImage: '/images/Ghost1.png',
+      physicalImage: '/images/uri-physical.jpg',
+      backgroundColor: 'bg-purple-100'
     },
     {
       name: 'Kappa',
       type: 'Vinyl',
-      rarity: 'Rare', 
       power: 'Water manipulation',
-      image: '/images/kappa.png',               // Add this image to /public/images/
-      backgroundColor: 'bg-kaiju-navy/10'
+      description: 'Ancient water spirit with the ability to control rivers and rain.',
+      nftImage: '/images/kappa.png',
+      physicalImage: '/images/kappa-physical.jpg',
+      backgroundColor: 'bg-blue-100'
     },
     {
       name: 'Ryuu',
       type: 'Plush',
-      rarity: 'Ultra Rare',
       power: 'Fire breathing',
-      image: '/images/dragon.png',              // Add this image to /public/images/
-      backgroundColor: 'bg-kaiju-pink/10'
+      description: 'A legendary dragon whose flames can forge the strongest metals.',
+      nftImage: '/images/dragon.png',
+      physicalImage: '/images/ryuu-physical.jpg',
+      backgroundColor: 'bg-red-100'
     },
     {
       name: 'Fenikkusu',
       type: 'Vinyl',
-      rarity: 'Legendary',
       power: 'Eternal rebirth',
-      image: '/images/phoenix.png',             // Add this image to /public/images/
-      backgroundColor: 'bg-kaiju-purple-light/10'
+      description: 'The immortal phoenix that rises from ashes stronger than before.',
+      nftImage: '/images/phoenix.png',
+      physicalImage: '/images/phoenix-physical.jpg',
+      backgroundColor: 'bg-pink-100'
     }
   ]
 
@@ -133,9 +137,9 @@ export default function Home() {
         />
         
         <MysteriesSection 
-          title="4 Kaiju Designs Available"
-          subtitle="Meet the incredible Kaiju waiting to join your collection! Each design comes with unique traits and powers. Which one will choose you in your mystery box?"
-          characters={availableCharacters}  // 🎯 Now showing all characters!
+          title="Physical Collectibles Available"
+          subtitle="Each mystery box contains one of these incredible physical collectibles, each paired with a unique NFT. Check out what you can mint!"
+          characters={physicalCollectibles}
           onLearnMore={handleLearnMore}
         />
         
