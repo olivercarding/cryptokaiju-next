@@ -49,12 +49,12 @@ export default function Home() {
 
   const mysteries = [
     {
-    type: 'Uri (Common)',
-    backgroundColor: 'bg-kaiju-light-pink',
-    isRevealed: true,                              // Enable image display
-    revealedName: 'Uri',                 // Optional: Custom name
-    revealedPower: 'Glows in the dark',                  // Optional: Special power
-    revealedImage: '/images/ghost1.png'     // Your image path
+      type: 'Uri (Common)',
+      backgroundColor: 'bg-kaiju-light-pink',
+      isRevealed: true,
+      revealedName: 'Uri',
+      revealedPower: 'Glows in the dark',
+      revealedImage: '/images/ghost1.png'
     },
     {
       type: 'Plush (Rare)',
@@ -64,6 +64,11 @@ export default function Home() {
     {
       type: 'Vinyl (Ultra Rare)',
       backgroundColor: 'bg-kaiju-pink/10',
+      isRevealed: false
+    },
+    {
+      type: 'Special Edition',
+      backgroundColor: 'bg-kaiju-purple-light/10',
       isRevealed: false
     }
   ]

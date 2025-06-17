@@ -24,30 +24,23 @@ interface MysteriesSectionProps {
 const defaultMysteries: Mystery[] = [
   {
     type: 'Uri (Common)',
-    backgroundColor: 'bg-kaiju-light-pink',
-    isRevealed: true,
-    revealedName: 'Uri',
-    revealedPower: 'Glows in the dark',
-    revealedImage: '/images/ghost1.png'
+    backgroundColor: 'bg-kaiju-light-pink'
   },
   {
     type: 'Plush (Rare)',
-    backgroundColor: 'bg-kaiju-navy/10',
-    isRevealed: false
+    backgroundColor: 'bg-kaiju-navy/10'
   },
   {
     type: 'Vinyl (Ultra Rare)',
-    backgroundColor: 'bg-kaiju-pink/10',
-    isRevealed: false
+    backgroundColor: 'bg-kaiju-pink/10'
   },
   {
     type: 'Mystery Design',
-    backgroundColor: 'bg-kaiju-purple-light/10',
-    isRevealed: false
+    backgroundColor: 'bg-kaiju-purple-light/10'
   }
 ]
 
-// Simplified mystery card with consistent sizing
+// Simple, consistent mystery card - all cards look exactly the same
 const MysteryCard = ({ 
   mystery, 
   index,
@@ -77,86 +70,65 @@ const MysteryCard = ({
       onHoverEnd={() => setIsHovered(false)}
       className="relative group cursor-pointer"
     >
-      <div className="bg-kaiju-white border-[3px] border-kaiju-light-gray rounded-[18px] pt-6 pb-6 px-4 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+      <div className="bg-kaiju-white border-[3px] border-kaiju-light-gray rounded-[18px] pt-6 pb-6 px-4 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden h-80 flex flex-col">
         
-        {/* Content area - consistent height for all cards */}
-        <div className={`${mystery.backgroundColor} h-48 w-full mb-4 rounded-[12px] overflow-hidden relative flex items-center justify-center`}>
-          {mystery.isRevealed && mystery.revealedImage ? (
-            <motion.div
-              className="relative"
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <img
-                src={mystery.revealedImage}
-                alt={mystery.revealedName || 'Kaiju'}
-                className="w-32 h-32 object-contain drop-shadow-lg"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = '/images/mystery-placeholder.png'
+        {/* Content area - same for ALL cards */}
+        <div className={`${mystery.backgroundColor} h-48 w-full mb-4 rounded-[12px] overflow-hidden relative flex items-center justify-center flex-shrink-0`}>
+          <div className="relative">
+            {/* Mystery question mark - same for all cards */}
+            <div className="w-24 h-24 bg-black/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
+              <motion.span 
+                className="text-4xl text-kaiju-navy/60 font-bold"
+                animate={{ 
+                  rotate: [0, 5, -5, 0],
+                  scale: [1, 1.1, 1]
+                }}
+                transition={{ 
+                  duration: 3,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              >
+                ?
+              </motion.span>
+            </div>
+
+            {/* Floating sparkles */}
+            {[...Array(3)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-kaiju-pink rounded-full"
+                style={{
+                  left: `${25 + (i * 25)}%`,
+                  top: `${20 + (i % 2) * 50}%`,
+                }}
+                animate={{
+                  opacity: [0.3, 1, 0.3],
+                  scale: [0.5, 1, 0.5],
+                  y: [0, -8, 0]
+                }}
+                transition={{
+                  duration: 2,
+                  delay: i * 0.4,
+                  repeat: Infinity,
                 }}
               />
-            </motion.div>
-          ) : (
-            <div className="relative">
-              {/* Mystery question mark */}
-              <div className="w-24 h-24 bg-black/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
-                <motion.span 
-                  className="text-4xl text-kaiju-navy/60 font-bold"
-                  animate={{ 
-                    rotate: [0, 5, -5, 0],
-                    scale: [1, 1.1, 1]
-                  }}
-                  transition={{ 
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  ?
-                </motion.span>
-              </div>
-
-              {/* Floating sparkles for mystery items */}
-              {[...Array(3)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 bg-kaiju-pink rounded-full"
-                  style={{
-                    left: `${25 + (i * 25)}%`,
-                    top: `${20 + (i % 2) * 50}%`,
-                  }}
-                  animate={{
-                    opacity: [0.3, 1, 0.3],
-                    scale: [0.5, 1, 0.5],
-                    y: [0, -8, 0]
-                  }}
-                  transition={{
-                    duration: 2,
-                    delay: i * 0.4,
-                    repeat: Infinity,
-                  }}
-                />
-              ))}
-            </div>
-          )}
+            ))}
+          </div>
           
-          {/* Mystery shimmer effect */}
-          {!mystery.isRevealed && (
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent"
-              animate={{
-                opacity: [0, 0.3, 0],
-                x: ['-100%', '100%']
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-            />
-          )}
+          {/* Shimmer effect */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent"
+            animate={{
+              opacity: [0, 0.3, 0],
+              x: ['-100%', '100%']
+            }}
+            transition={{
+              duration: 3,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          />
 
           {/* Hover overlay */}
           <motion.div
@@ -175,33 +147,20 @@ const MysteryCard = ({
               className="text-center text-white"
             >
               <Sparkles className="w-4 h-4 mx-auto mb-1" />
-              <div className="text-xs font-semibold">
-                {mystery.isRevealed ? 'Revealed!' : 'Mystery Awaits'}
-              </div>
+              <div className="text-xs font-semibold">Mystery Awaits</div>
             </motion.div>
           </motion.div>
         </div>
         
-        {/* Text content - consistent layout for all cards */}
-        <div className="text-center px-2 h-20 flex flex-col justify-between">
-          <div>
-            <h3 className="text-xl font-extrabold mb-2 uppercase tracking-tight text-kaiju-navy leading-tight">
-              {mystery.isRevealed && mystery.revealedName ? mystery.revealedName : mystery.type}
-            </h3>
-            
-            {mystery.isRevealed && mystery.revealedPower ? (
-              <div className="bg-gradient-to-r from-kaiju-pink/10 to-kaiju-purple-light/10 rounded-lg p-2 mb-2">
-                <p className="text-sm text-kaiju-navy/80 leading-relaxed font-medium">
-                  ✨ {mystery.revealedPower}
-                </p>
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-kaiju-navy/5 to-kaiju-purple-light/5 rounded-lg p-2 mb-2">
-                <p className="text-sm text-kaiju-navy/70 leading-relaxed">
-                  Mint to discover
-                </p>
-              </div>
-            )}
+        {/* Text content - exactly the same for ALL cards with fixed height */}
+        <div className="text-center px-2 h-20 flex flex-col justify-center flex-shrink-0">
+          <h3 className="text-xl font-extrabold mb-2 uppercase tracking-tight text-kaiju-navy leading-tight">
+            {mystery.type}
+          </h3>
+          <div className="bg-gradient-to-r from-kaiju-navy/5 to-kaiju-purple-light/5 rounded-lg p-2">
+            <p className="text-sm text-kaiju-navy/70 leading-relaxed">
+              Mint to discover
+            </p>
           </div>
         </div>
       </div>
