@@ -3,105 +3,62 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Heart, Zap, Shield, Flame, ChevronRight } from 'lucide-react'
+import { ChevronRight, Sparkles } from 'lucide-react'
 
-interface KaijuCharacter {
-  id: string
-  name: string
-  type: 'Plush' | 'Vinyl'
-  rarity: 'Common' | 'Rare' | 'Ultra Rare'
-  element: string
-  personality: string
-  specialMove: string
-  description: string
-  image?: string
-  animation?: string
+interface Mystery {
+  type: string
   backgroundColor: string
-  accentColor: string
+  isRevealed?: boolean
+  revealedName?: string
+  revealedPower?: string
+  revealedImage?: string
 }
 
 interface MysteriesSectionProps {
   title?: string
   subtitle?: string
-  characters?: KaijuCharacter[]
-  onLearnMore?: (characterId: string) => void
+  mysteries?: Mystery[]
+  onLearnMore?: (mysteryType: string) => void
 }
 
-const defaultCharacters: KaijuCharacter[] = [
+const defaultMysteries: Mystery[] = [
   {
-    id: 'cuddle-beast',
-    name: 'Cuddle Beast',
-    type: 'Plush',
-    rarity: 'Common',
-    element: 'Heart',
-    personality: 'Gentle and nurturing, loves giving warm hugs',
-    specialMove: 'Comfort Wave',
-    description: 'This soft and cuddly Kaiju brings peace wherever it goes. Its fluffy exterior hides a heart full of love and the power to heal emotional wounds with a single embrace.',
-    backgroundColor: 'bg-gradient-to-br from-pink-100 via-rose-50 to-pink-100',
-    accentColor: 'from-pink-400 to-rose-500',
-    animation: '/animations/cuddle-beast.json' // Lottie file
+    type: 'Uri (Common)',
+    backgroundColor: 'bg-kaiju-light-pink',
+    isRevealed: true,
+    revealedName: 'Uri',
+    revealedPower: 'Glows in the dark',
+    revealedImage: '/images/ghost1.png'
   },
   {
-    id: 'tech-guardian',
-    name: 'Tech Guardian',
-    type: 'Vinyl',
-    rarity: 'Common',
-    element: 'Digital',
-    personality: 'Logical and protective, always analyzing threats',
-    specialMove: 'Data Shield',
-    description: 'A sleek technological marvel with advanced AI capabilities. This Kaiju can interface with any digital system and protect its collector from cyber threats with cutting-edge defenses.',
-    backgroundColor: 'bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-100',
-    accentColor: 'from-blue-400 to-cyan-500'
+    type: 'Plush (Rare)',
+    backgroundColor: 'bg-kaiju-navy/10',
+    isRevealed: false
   },
   {
-    id: 'crystal-sage',
-    name: 'Crystal Sage',
-    type: 'Plush',
-    rarity: 'Rare',
-    element: 'Mystic',
-    personality: 'Wise and mysterious, sees beyond the veil',
-    specialMove: 'Reality Glimpse',
-    description: 'An ancient and wise Kaiju whose crystalline formations can peer into other dimensions. Its soft, ethereal form belies immense magical power and knowledge of cosmic secrets.',
-    backgroundColor: 'bg-gradient-to-br from-purple-100 via-violet-50 to-indigo-100',
-    accentColor: 'from-purple-400 to-indigo-500'
+    type: 'Vinyl (Ultra Rare)',
+    backgroundColor: 'bg-kaiju-pink/10',
+    isRevealed: false
   },
   {
-    id: 'inferno-king',
-    name: 'Inferno King',
-    type: 'Vinyl',
-    rarity: 'Ultra Rare',
-    element: 'Fire',
-    personality: 'Fierce and commanding, burns with ancient power',
-    specialMove: 'Apocalypse Flare',
-    description: 'The legendary ruler of the fire realm, this Ultra Rare Kaiju commands respect and fear. Its presence alone can melt steel, and its roar can be heard across dimensions.',
-    backgroundColor: 'bg-gradient-to-br from-red-100 via-orange-50 to-yellow-100',
-    accentColor: 'from-red-500 to-orange-600'
+    type: 'Mystery Design',
+    backgroundColor: 'bg-kaiju-purple-light/10',
+    isRevealed: false
   }
 ]
 
-// Element icons
-const ElementIcon = ({ element }: { element: string }) => {
-  const iconMap = {
-    Heart: <Heart className="w-6 h-6" />,
-    Digital: <Zap className="w-6 h-6" />,
-    Mystic: <Shield className="w-6 h-6" />,
-    Fire: <Flame className="w-6 h-6" />
-  }
-  return iconMap[element as keyof typeof iconMap] || <Heart className="w-6 h-6" />
-}
-
-// Character showcase card
-const CharacterCard = ({ 
-  character, 
+// Simplified mystery card with consistent sizing
+const MysteryCard = ({ 
+  mystery, 
   index,
   onLearnMore 
 }: { 
-  character: KaijuCharacter
+  mystery: Mystery
   index: number
   onLearnMore: () => void 
 }) => {
   const [isHovered, setIsHovered] = useState(false)
-  const isUltraRare = character.rarity === 'Ultra Rare'
+  const rotation = ['-2deg', '1deg', '-1deg', '2deg'][index] || '0deg'
 
   return (
     <motion.div
@@ -110,259 +67,202 @@ const CharacterCard = ({
       viewport={{ once: true }}
       transition={{ 
         duration: 0.8, 
-        delay: index * 0.2,
+        delay: index * 0.1,
         type: "spring",
         damping: 25
       }}
-      className="relative group"
+      style={{ rotate: rotation }}
+      whileHover={{ y: -8, rotate: '0deg', scale: 1.02 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      className="relative group cursor-pointer"
     >
-      {/* Ultra rare particle effects */}
-      {isUltraRare && (
-        <div className="absolute inset-0 pointer-events-none z-0">
-          {[...Array(8)].map((_, i) => (
+      <div className="bg-kaiju-white border-[3px] border-kaiju-light-gray rounded-[18px] pt-6 pb-6 px-4 shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden">
+        
+        {/* Content area - consistent height for all cards */}
+        <div className={`${mystery.backgroundColor} h-48 w-full mb-4 rounded-[12px] overflow-hidden relative flex items-center justify-center`}>
+          {mystery.isRevealed && mystery.revealedImage ? (
             <motion.div
-              key={i}
-              className="absolute w-2 h-2 bg-gradient-to-r from-kaiju-pink to-orange-400 rounded-full"
-              style={{
-                left: `${10 + Math.random() * 80}%`,
-                top: `${10 + Math.random() * 80}%`,
-              }}
+              className="relative"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <img
+                src={mystery.revealedImage}
+                alt={mystery.revealedName || 'Kaiju'}
+                className="w-32 h-32 object-contain drop-shadow-lg"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.src = '/images/mystery-placeholder.png'
+                }}
+              />
+            </motion.div>
+          ) : (
+            <div className="relative">
+              {/* Mystery question mark */}
+              <div className="w-24 h-24 bg-black/10 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/20">
+                <motion.span 
+                  className="text-4xl text-kaiju-navy/60 font-bold"
+                  animate={{ 
+                    rotate: [0, 5, -5, 0],
+                    scale: [1, 1.1, 1]
+                  }}
+                  transition={{ 
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  ?
+                </motion.span>
+              </div>
+
+              {/* Floating sparkles for mystery items */}
+              {[...Array(3)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-1 h-1 bg-kaiju-pink rounded-full"
+                  style={{
+                    left: `${25 + (i * 25)}%`,
+                    top: `${20 + (i % 2) * 50}%`,
+                  }}
+                  animate={{
+                    opacity: [0.3, 1, 0.3],
+                    scale: [0.5, 1, 0.5],
+                    y: [0, -8, 0]
+                  }}
+                  transition={{
+                    duration: 2,
+                    delay: i * 0.4,
+                    repeat: Infinity,
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          
+          {/* Mystery shimmer effect */}
+          {!mystery.isRevealed && (
+            <motion.div
+              className="absolute inset-0 bg-gradient-to-br from-transparent via-white/10 to-transparent"
               animate={{
-                scale: [0, 1, 0],
-                opacity: [0, 0.8, 0],
-                rotate: [0, 180, 360]
+                opacity: [0, 0.3, 0],
+                x: ['-100%', '100%']
               }}
               transition={{
                 duration: 3,
-                delay: i * 0.4,
                 repeat: Infinity,
-                repeatDelay: 1
+                ease: "linear"
               }}
             />
-          ))}
-        </div>
-      )}
+          )}
 
-      <motion.div
-        className={`relative w-full ${character.backgroundColor} rounded-3xl shadow-xl border-4 border-white overflow-hidden cursor-pointer`}
-        onHoverStart={() => setIsHovered(true)}
-        onHoverEnd={() => setIsHovered(false)}
-        whileHover={{ 
-          y: -12,
-          scale: 1.02,
-          boxShadow: isUltraRare 
-            ? "0 35px 70px -12px rgba(255, 0, 92, 0.3)"
-            : "0 35px 70px -12px rgba(0, 0, 0, 0.15)"
-        }}
-        transition={{ duration: 0.4, type: "spring", damping: 20 }}
-      >
-        {/* Character illustration area */}
-        <div className="relative h-80 flex items-center justify-center p-8">
-          {/* Background pattern */}
-          <div className="absolute inset-0 opacity-10">
-            <div className={`w-full h-full bg-gradient-to-br ${character.accentColor}`} />
-          </div>
-          
-          {/* Character illustration placeholder */}
+          {/* Hover overlay */}
           <motion.div
-            className="relative z-10 w-full h-full flex items-center justify-center"
-            animate={isHovered ? { 
-              scale: [1, 1.1, 1],
-              rotate: [0, 2, -2, 0]
-            } : {}}
-            transition={{ 
-              duration: 2,
-              repeat: isHovered ? Infinity : 0,
-              ease: "easeInOut"
-            }}
-          >
-            {/* Placeholder character - replace with actual images/animations */}
-            <div className={`w-48 h-48 rounded-2xl bg-gradient-to-br ${character.accentColor} flex items-center justify-center shadow-2xl`}>
-              <div className="text-8xl filter drop-shadow-lg">
-                {character.type === 'Plush' ? '🧸' : '🤖'}
-              </div>
-            </div>
-            
-            {/* Floating element icon */}
-            <motion.div
-              className={`absolute top-4 right-4 w-12 h-12 rounded-full bg-gradient-to-r ${character.accentColor} flex items-center justify-center text-white shadow-lg`}
-              animate={isHovered ? { 
-                y: [-2, 2, -2],
-                rotate: [0, 10, -10, 0]
-              } : {}}
-              transition={{ 
-                duration: 1.5,
-                repeat: isHovered ? Infinity : 0
-              }}
-            >
-              <ElementIcon element={character.element} />
-            </motion.div>
-          </motion.div>
-
-          {/* Hover overlay with special move */}
-          <motion.div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center"
+            className="absolute inset-0 bg-gradient-to-t from-kaiju-navy/40 via-transparent to-transparent flex items-end justify-center pb-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: isHovered ? 1 : 0 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="text-center text-white">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ 
-                  scale: isHovered ? 1 : 0.8,
-                  opacity: isHovered ? 1 : 0
-                }}
-                transition={{ duration: 0.4, delay: 0.1 }}
-              >
-                <div className="text-sm font-medium mb-2 text-yellow-300">Special Move</div>
-                <div className="text-2xl font-bold mb-4">{character.specialMove}</div>
-                <div className="text-sm opacity-90 max-w-xs">{character.personality}</div>
-              </motion.div>
-            </div>
+            <motion.div
+              initial={{ y: 10, opacity: 0 }}
+              animate={{ 
+                y: isHovered ? 0 : 10,
+                opacity: isHovered ? 1 : 0
+              }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="text-center text-white"
+            >
+              <Sparkles className="w-4 h-4 mx-auto mb-1" />
+              <div className="text-xs font-semibold">
+                {mystery.isRevealed ? 'Revealed!' : 'Mystery Awaits'}
+              </div>
+            </motion.div>
           </motion.div>
         </div>
-
-        {/* Character info section */}
-        <div className="relative bg-white/95 backdrop-blur-sm p-6">
-          {/* Type and rarity badge */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-semibold text-kaiju-navy/60 uppercase tracking-wide">
-              {character.type}
-            </span>
-            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-              character.rarity === 'Ultra Rare' 
-                ? 'bg-gradient-to-r from-kaiju-pink to-red-500 text-white'
-                : character.rarity === 'Rare'
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-700'
-            }`}>
-              {character.rarity}
-            </span>
+        
+        {/* Text content - consistent layout for all cards */}
+        <div className="text-center px-2 h-20 flex flex-col justify-between">
+          <div>
+            <h3 className="text-xl font-extrabold mb-2 uppercase tracking-tight text-kaiju-navy leading-tight">
+              {mystery.isRevealed && mystery.revealedName ? mystery.revealedName : mystery.type}
+            </h3>
+            
+            {mystery.isRevealed && mystery.revealedPower ? (
+              <div className="bg-gradient-to-r from-kaiju-pink/10 to-kaiju-purple-light/10 rounded-lg p-2 mb-2">
+                <p className="text-sm text-kaiju-navy/80 leading-relaxed font-medium">
+                  ✨ {mystery.revealedPower}
+                </p>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-kaiju-navy/5 to-kaiju-purple-light/5 rounded-lg p-2 mb-2">
+                <p className="text-sm text-kaiju-navy/70 leading-relaxed">
+                  Mint to discover
+                </p>
+              </div>
+            )}
           </div>
-
-          {/* Character name */}
-          <h3 className="text-2xl font-black text-kaiju-navy mb-2 leading-tight">
-            {character.name}
-          </h3>
-
-          {/* Element */}
-          <div className="flex items-center gap-2 mb-4">
-            <div className={`w-4 h-4 rounded-full bg-gradient-to-r ${character.accentColor}`} />
-            <span className="text-sm font-semibold text-kaiju-navy/70">
-              {character.element} Element
-            </span>
-          </div>
-
-          {/* Description */}
-          <p className="text-sm text-kaiju-navy/70 leading-relaxed mb-6 line-clamp-3">
-            {character.description}
-          </p>
-
-          {/* Learn more button */}
-          <motion.button
-            onClick={(e) => {
-              e.stopPropagation()
-              onLearnMore()
-            }}
-            className={`w-full py-3 px-6 rounded-xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2 ${
-              isUltraRare
-                ? 'bg-gradient-to-r from-kaiju-pink to-red-500 text-white hover:shadow-lg hover:shadow-kaiju-pink/25'
-                : `bg-gradient-to-r ${character.accentColor} text-white hover:shadow-lg`
-            }`}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Meet {character.name}
-            <ChevronRight className="w-4 h-4" />
-          </motion.button>
         </div>
-
-        {/* Ultra rare glow effect */}
-        {isUltraRare && (
-          <motion.div
-            className="absolute inset-0 rounded-3xl"
-            style={{
-              background: 'linear-gradient(45deg, transparent, rgba(255, 0, 92, 0.1), transparent)',
-              filter: 'blur(1px)'
-            }}
-            animate={{
-              opacity: [0.3, 0.6, 0.3],
-              scale: [1, 1.01, 1]
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-          />
-        )}
-      </motion.div>
+      </div>
     </motion.div>
   )
 }
 
 export default function MysteriesSection({
-  title = "Meet the Kaiju",
-  subtitle = "Four unique characters await discovery in our mystery boxes. Each Kaiju has their own personality, powers, and story. Which one will become your companion?",
-  characters = defaultCharacters,
+  title = "4 Kaiju Designs Await",
+  subtitle = "Deep within the CryptoKaiju vault, four distinct design types await discovery. Some will be cuddly plush companions, others collectible vinyl figures. Which destiny calls to you?",
+  mysteries = defaultMysteries,
   onLearnMore
 }: MysteriesSectionProps) {
   
-  const handleLearnMore = (characterId: string) => {
+  const handleLearnMore = (mysteryType: string) => {
     if (onLearnMore) {
-      onLearnMore(characterId)
+      onLearnMore(mysteryType)
     } else {
-      // Default behavior - could open a modal or navigate to character detail page
-      console.log('Learn more about character:', characterId)
+      // Default behavior - scroll to hero section
+      const heroElement = document.querySelector('#hero')
+      if (heroElement) {
+        heroElement.scrollIntoView({ behavior: 'smooth' })
+      }
     }
   }
 
   return (
-    <section className="py-24 px-6 bg-gradient-to-b from-white via-kaiju-light-pink/20 to-white" id="mysteries">
-      <div className="max-w-7xl mx-auto">
+    <section className="bg-kaiju-light-pink py-24 px-6" id="mysteries">
+      <div className="max-w-7xl mx-auto text-center">
         {/* Section header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-20"
-        >
-          <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black text-kaiju-navy mb-6 leading-tight">
-            {title}
-          </h2>
-          <p className="max-w-4xl mx-auto text-xl text-kaiju-navy/75 leading-relaxed">
-            {subtitle}
-          </p>
-        </motion.div>
+        <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-kaiju-navy">{title}</h2>
+        <p className="max-w-3xl mx-auto text-kaiju-navy/70 mb-14 leading-relaxed">
+          {subtitle}
+        </p>
 
-        {/* Character grid */}
-        <div className="grid gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-          {characters.map((character, index) => (
-            <CharacterCard
-              key={character.id}
-              character={character}
+        {/* Mystery cards grid */}
+        <div className="relative grid gap-10 md:grid-cols-2 lg:grid-cols-4 justify-items-center">
+          {mysteries.map((mystery, index) => (
+            <MysteryCard
+              key={index}
+              mystery={mystery}
               index={index}
-              onLearnMore={() => handleLearnMore(character.id)}
+              onLearnMore={() => handleLearnMore(mystery.type)}
             />
           ))}
         </div>
 
-        {/* Bottom section */}
+        {/* Bottom CTA section */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.6, delay: 1 }}
-          className="text-center mt-20"
+          transition={{ duration: 0.6, delay: 0.8 }}
+          className="mt-16"
         >
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-kaiju-light-gray/50 max-w-2xl mx-auto">
             <h3 className="text-2xl font-bold text-kaiju-navy mb-4">
-              Ready to Meet Your Kaiju?
+              Ready to Discover Your Kaiju?
             </h3>
             <p className="text-kaiju-navy/70 mb-6">
-              Each mystery box guarantees one of these amazing characters. Start your collection and discover which Kaiju will choose you!
+              Each mystery box guarantees one of these amazing designs. Start your collection and discover which Kaiju will choose you!
             </p>
             <motion.button
               onClick={() => {
@@ -371,11 +271,13 @@ export default function MysteriesSection({
                   heroElement.scrollIntoView({ behavior: 'smooth' })
                 }
               }}
-              className="bg-gradient-to-r from-kaiju-pink to-red-500 text-white font-bold px-8 py-4 rounded-full shadow-xl hover:shadow-kaiju-pink/25 transition-all duration-300"
+              className="bg-gradient-to-r from-kaiju-pink to-red-500 text-white font-bold px-8 py-4 rounded-full shadow-xl hover:shadow-kaiju-pink/25 transition-all duration-300 inline-flex items-center gap-2"
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
+              <Sparkles className="w-5 h-5" />
               Open Your Mystery Box
+              <ChevronRight className="w-5 h-5" />
             </motion.button>
           </div>
         </motion.div>
