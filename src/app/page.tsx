@@ -40,7 +40,7 @@ export default function Home() {
     },
     {
       title: "Claim Physical",
-      description: "Enter your physical address, pay the shipping fee, and enjoy your new CryptoKaiju!",
+      description: "Enter your physical address, pay the shipping fee, and enjoy your new CryptoKaiju!", 
       mediaSrc: "/videos/Comp 1_9.mp4",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-navy/10"
@@ -49,14 +49,12 @@ export default function Home() {
 
   const mysteries = [
     {
-      type: 'Plush (Common)',
-      backgroundColor: 'bg-kaiju-light-pink',
-      isRevealed: false
-    },
-    {
-      type: 'Vinyl (Common)',
-      backgroundColor: 'bg-kaiju-purple-light/20',
-      isRevealed: false
+    type: 'Uri (Common)',
+    backgroundColor: 'bg-kaiju-light-pink',
+    isRevealed: true,                              // Enable image display
+    revealedName: 'Uri',                 // Optional: Custom name
+    revealedPower: 'Glows in the dark',                  // Optional: Special power
+    revealedImage: '/images/ghost1.png'     // Your image path
     },
     {
       type: 'Plush (Rare)',
