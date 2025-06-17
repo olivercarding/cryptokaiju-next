@@ -47,29 +47,39 @@ export default function Home() {
     }
   ]
 
-  const mysteries = [
+  // 🎯 CHARACTER SHOWCASE - All 4 available designs
+  const availableCharacters = [
     {
-      type: 'Uri (Common)',
-      backgroundColor: 'bg-kaiju-light-pink',
-      isRevealed: true,
-      revealedName: 'Uri',
-      revealedPower: 'Glows in the dark',
-      revealedImage: '/images/ghost1.png'
+      name: 'Uri',
+      type: 'Plush',
+      rarity: 'Common',
+      power: 'Glows in the dark',
+      image: '/images/Ghost1.png',              // ✅ We know this works
+      backgroundColor: 'bg-kaiju-light-pink'
     },
     {
-      type: 'Plush (Rare)',
-      backgroundColor: 'bg-kaiju-navy/10',
-      isRevealed: false
+      name: 'Kappa',
+      type: 'Vinyl',
+      rarity: 'Rare', 
+      power: 'Water manipulation',
+      image: '/images/kappa.png',               // Add this image to /public/images/
+      backgroundColor: 'bg-kaiju-navy/10'
     },
     {
-      type: 'Vinyl (Ultra Rare)',
-      backgroundColor: 'bg-kaiju-pink/10',
-      isRevealed: false
+      name: 'Ryuu',
+      type: 'Plush',
+      rarity: 'Ultra Rare',
+      power: 'Fire breathing',
+      image: '/images/dragon.png',              // Add this image to /public/images/
+      backgroundColor: 'bg-kaiju-pink/10'
     },
     {
-      type: 'Special Edition',
-      backgroundColor: 'bg-kaiju-purple-light/10',
-      isRevealed: false
+      name: 'Fenikkusu',
+      type: 'Vinyl',
+      rarity: 'Legendary',
+      power: 'Eternal rebirth',
+      image: '/images/phoenix.png',             // Add this image to /public/images/
+      backgroundColor: 'bg-kaiju-purple-light/10'
     }
   ]
 
@@ -96,6 +106,11 @@ export default function Home() {
     // Add CTA logic here
   }
 
+  const handleLearnMore = (characterName: string) => {
+    console.log(`Learn more about ${characterName}`)
+    // Could open a modal or navigate to character details
+  }
+
   return (
     <>
       <Header />
@@ -118,9 +133,10 @@ export default function Home() {
         />
         
         <MysteriesSection 
-          title="4 Kaiju Designs Await"
-          subtitle="Deep within the CryptoKaiju vault, four distinct design types await discovery. Some will be cuddly plush companions, others collectible vinyl figures. Which destiny calls to you?"
-          mysteries={mysteries}
+          title="4 Kaiju Designs Available"
+          subtitle="Meet the incredible Kaiju waiting to join your collection! Each design comes with unique traits and powers. Which one will choose you in your mystery box?"
+          characters={availableCharacters}  // 🎯 Now showing all characters!
+          onLearnMore={handleLearnMore}
         />
         
         <section id="community">
