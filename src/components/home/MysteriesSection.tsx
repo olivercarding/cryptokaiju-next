@@ -3,7 +3,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
-import { ChevronRight, Sparkles, Zap, Droplets, Flame, Star, Eye, ChevronDown, Book, Zap as Lightning, Shield } from 'lucide-react'
+import { ChevronRight, Sparkles, Zap, Droplets, Flame, Star, Eye, ChevronDown, Book, Zap as Lightning, Shield, Database, Monitor } from 'lucide-react'
 
 interface Character {
   name: string
@@ -87,348 +87,17 @@ const getIcon = (iconName: string) => {
   return icons[iconName as keyof typeof icons] || Star
 }
 
-// Enhanced Character Button Component
-const CharacterButton = ({ 
-  character, 
-  isSelected, 
-  onClick,
-  index 
-}: { 
-  character: Character
-  isSelected: boolean
-  onClick: () => void
-  index: number
-}) => {
-  const [isHovered, setIsHovered] = useState(false)
-  
-  return (
-    <motion.button
-      className="relative w-full text-left group"
-      onClick={onClick}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      initial={{ opacity: 0, x: -30 }}
-      animate={{ opacity: 1, x: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ x: 4 }}
-      whileTap={{ scale: 0.98 }}
-    >
-      {/* Selection glow */}
-      {isSelected && (
-        <motion.div
-          className={`absolute -inset-1 bg-gradient-to-r ${character.accentColor} blur-lg opacity-60 rounded-2xl`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 0.6 }}
-          transition={{ duration: 0.3 }}
-        />
-      )}
-
-      {/* Main button */}
-      <div className={`relative overflow-hidden rounded-2xl transition-all duration-300 ${
-        isSelected 
-          ? 'bg-white/20 border-2 border-white/30 shadow-2xl' 
-          : 'bg-white/10 border border-white/20 hover:bg-white/15'
-      }`}>
-        
-        {/* Character-themed background */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${character.backgroundColor} transition-opacity duration-300 ${
-          isSelected ? 'opacity-70' : 'opacity-40'
-        }`} />
-        
-        {/* Content */}
-        <div className="relative z-10 p-4 flex items-center gap-4">
-          {/* Large character image */}
-          <motion.div
-            className="flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden bg-white/10 backdrop-blur-sm border border-white/20"
-            animate={isHovered || isSelected ? { scale: 1.05 } : { scale: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className={`w-full h-full bg-gradient-to-br ${character.backgroundColor} flex items-center justify-center`}>
-              <motion.img
-                src={character.image}
-                alt={character.name}
-                className="w-12 h-12 object-contain drop-shadow-lg"
-                animate={isHovered || isSelected ? { 
-                  scale: 1.1,
-                  filter: "brightness(1.2) saturate(1.3)"
-                } : {}}
-                transition={{ duration: 0.3 }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = '/images/placeholder-kaiju.png'
-                }}
-              />
-            </div>
-          </motion.div>
-
-          {/* Character info with proper contrast */}
-          <div className="flex-1 min-w-0">
-            <div className="bg-black/40 backdrop-blur-sm rounded-lg p-3 border border-white/10">
-              <h3 className={`font-black text-lg mb-1 transition-all duration-300 ${
-                isSelected 
-                  ? `bg-gradient-to-r ${character.accentColor} bg-clip-text text-transparent` 
-                  : 'text-white'
-              }`}>
-                {character.name}
-              </h3>
-              <div className={`inline-flex items-center gap-2 text-xs px-2 py-1 rounded-full font-bold ${
-                isSelected 
-                  ? `bg-gradient-to-r ${character.accentColor} text-white` 
-                  : 'bg-white/20 text-white/90'
-              }`}>
-                <div className={`w-1.5 h-1.5 rounded-full ${
-                  isSelected ? 'bg-white' : `bg-gradient-to-r ${character.accentColor}`
-                }`} />
-                {character.type}
-              </div>
-            </div>
-          </div>
-
-          {/* Selection indicator */}
-          <motion.div
-            className={`w-2 h-8 rounded-full transition-all duration-300 ${
-              isSelected ? `bg-gradient-to-b ${character.accentColor}` : 'bg-white/20'
-            }`}
-            animate={isSelected ? { scaleY: [1, 1.2, 1] } : {}}
-            transition={{ duration: 1, repeat: Infinity }}
-          />
-        </div>
-      </div>
-    </motion.button>
-  )
-}
-
-// Information Card Component
-const InfoCard = ({ 
-  icon: Icon, 
-  title, 
-  children, 
-  accentColor 
-}: { 
-  icon: any
-  title: string
-  children: React.ReactNode
-  accentColor: string 
-}) => (
-  <motion.div
-    className="bg-black/60 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5 }}
-  >
-    <div className="flex items-center gap-3 mb-4">
-      <div className={`p-2 bg-gradient-to-r ${accentColor} rounded-lg shadow-lg`}>
-        <Icon className="w-5 h-5 text-white" />
-      </div>
-      <h4 className="text-white font-bold text-lg">{title}</h4>
-    </div>
-    {children}
-  </motion.div>
-)
-
-// Enhanced Character Showcase Component
-const CharacterShowcase = ({ character }: { character: Character }) => {
-  const PowerIcon = getIcon(character.powerIcon)
-
-  return (
-    <div className="relative h-full">
-      {/* Enhanced Background with better contrast */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${character.backgroundColor} rounded-3xl`} />
-      
-      {/* Dark overlay for better text contrast */}
-      <div className="absolute inset-0 bg-black/30 rounded-3xl" />
-      
-      {/* Floating Particles */}
-      {[...Array(8)].map((_, i) => (
-        <motion.div
-          key={`${character.name}-particle-${i}`}
-          className={`absolute rounded-full blur-sm bg-gradient-to-r ${character.accentColor}`}
-          style={{
-            width: `${Math.random() * 4 + 2}px`,
-            height: `${Math.random() * 4 + 2}px`,
-            left: `${15 + (i * 10)}%`,
-            top: `${10 + Math.sin(i * 1.5) * 70}%`,
-          }}
-          animate={{
-            y: [0, -30, 0],
-            opacity: [0.3, 0.8, 0.3],
-            scale: [0.5, 1, 0.5]
-          }}
-          transition={{
-            duration: 4 + Math.random() * 2,
-            repeat: Infinity,
-            delay: i * 0.5,
-            ease: "easeInOut"
-          }}
-        />
-      ))}
-
-      <div className="relative z-10 h-full p-6 md:p-8 flex flex-col">
-        {/* Header with Now Viewing */}
-        <motion.div
-          className="flex items-center gap-3 mb-6"
-          key={`${character.name}-header`}
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <div className="bg-black/60 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-            <div className="flex items-center gap-3">
-              <div className={`p-2 bg-gradient-to-r ${character.accentColor} rounded-lg`}>
-                <Eye className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h4 className="text-white font-bold text-sm uppercase tracking-wider">Now Viewing</h4>
-                <div className={`h-0.5 w-12 bg-gradient-to-r ${character.accentColor} rounded-full mt-1`} />
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* HERO CHARACTER IMAGE - Much Larger */}
-        <motion.div
-          className="flex-1 flex items-center justify-center mb-6"
-          key={character.name}
-          initial={{ opacity: 0, scale: 0.8, rotateY: 90 }}
-          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-          exit={{ opacity: 0, scale: 0.8, rotateY: -90 }}
-          transition={{ duration: 0.8, type: "spring", damping: 15 }}
-        >
-          <div className="relative">
-            {/* Multi-layered glow for hero image */}
-            <motion.div
-              className={`absolute inset-0 bg-gradient-to-r ${character.accentColor} rounded-full blur-3xl opacity-40`}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.4, 0.6, 0.4]
-              }}
-              transition={{ duration: 4, repeat: Infinity }}
-            />
-            
-            {/* Hero image container - Much larger */}
-            <div className="relative bg-black/40 backdrop-blur-sm rounded-3xl p-8 md:p-12 border border-white/30 shadow-2xl">
-              <motion.img
-                src={character.image}
-                alt={character.name}
-                className="relative z-10 w-72 h-72 md:w-80 md:h-80 object-contain drop-shadow-2xl"
-                whileHover={{ 
-                  scale: 1.05,
-                  filter: "brightness(1.2) saturate(1.4)",
-                  rotateZ: [0, 2, -2, 0]
-                }}
-                transition={{ duration: 0.6 }}
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement
-                  target.src = '/images/placeholder-kaiju.png'
-                }}
-              />
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Character Name - Better contrast */}
-        <motion.div
-          className="text-center mb-6"
-          key={`${character.name}-name`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <div className="bg-black/60 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
-            <h2 className={`text-4xl md:text-5xl font-black bg-gradient-to-r ${character.accentColor} bg-clip-text text-transparent mb-2`}>
-              {character.name}
-            </h2>
-            <div className={`h-1 w-20 bg-gradient-to-r ${character.accentColor} rounded-full mx-auto`} />
-          </div>
-        </motion.div>
-
-        {/* Modular Information Cards */}
-        <motion.div
-          className="grid gap-4 md:gap-6"
-          key={`${character.name}-info`}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.4 }}
-        >
-          {/* Power Card */}
-          <InfoCard icon={PowerIcon} title="Legendary Power" accentColor={character.accentColor}>
-            <h4 className={`text-xl md:text-2xl font-black bg-gradient-to-r ${character.accentColor} bg-clip-text text-transparent mb-3`}>
-              {character.power}
-            </h4>
-            <p className="text-white/90 leading-relaxed">
-              {character.description}
-            </p>
-          </InfoCard>
-
-          {/* Abilities Card */}
-          {character.abilities && character.abilities.length > 0 && (
-            <InfoCard icon={Lightning} title="Special Abilities" accentColor={character.accentColor}>
-              <div className="grid grid-cols-2 gap-2">
-                {character.abilities.map((ability, i) => (
-                  <motion.div
-                    key={ability}
-                    className="bg-white/10 rounded-lg p-2 border border-white/20"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.1 * i }}
-                  >
-                    <span className="text-white/90 text-sm font-semibold">{ability}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </InfoCard>
-          )}
-
-          {/* Backstory Card */}
-          {character.backstory && (
-            <InfoCard icon={Book} title="Ancient Legend" accentColor={character.accentColor}>
-              <p className="text-white/90 leading-relaxed text-sm md:text-base">
-                {character.backstory}
-              </p>
-            </InfoCard>
-          )}
-        </motion.div>
-      </div>
-    </div>
-  )
-}
-
 export default function MysteriesSection({
-  title = "Choose Your Guardian",
-  subtitle = "Four legendary Kaiju await discovery. Select a character to learn about their unique powers and ancient stories.",
+  title = "Guardian Database",
+  subtitle = "Use the interface below to explore each legendary guardian",
   characters = defaultCharacters,
   onDiscoverStory
 }: MysteriesSectionProps) {
-  const [selectedCharacter, setSelectedCharacter] = useState(0)
-  const [isMobile, setIsMobile] = useState(false)
+  const [selectedCharacter, setSelectedCharacter] = useState<number | null>(null)
   const ref = useRef(null)
-  const showcaseRef = useRef<HTMLDivElement>(null)
   const isInView = useInView(ref, { once: true })
 
-  // Mobile detection
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024)
-    }
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  // Auto-scroll on mobile when character is selected
-  useEffect(() => {
-    if (isMobile && showcaseRef.current) {
-      const timer = setTimeout(() => {
-        showcaseRef.current?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        })
-      }, 300)
-      return () => clearTimeout(timer)
-    }
-  }, [selectedCharacter, isMobile])
-
-  const handleDiscoverStory = (characterName: string) => {
+  const handleLearnMore = (characterName: string) => {
     if (onDiscoverStory) {
       onDiscoverStory(characterName)
     } else {
@@ -439,23 +108,25 @@ export default function MysteriesSection({
     }
   }
 
+  const PowerIcon = selectedCharacter !== null && characters && characters[selectedCharacter] ? getIcon(characters[selectedCharacter].powerIcon) : Star
+
   return (
     <section className="relative py-12 md:py-20 px-4 md:px-6 min-h-screen bg-kaiju-navy overflow-hidden" id="mysteries" ref={ref}>
-      {/* Enhanced Background */}
+      {/* Background */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-gradient-to-br from-kaiju-purple-dark via-kaiju-navy to-kaiju-purple-dark" />
         
-        {/* Global particles */}
-        {[...Array(15)].map((_, i) => (
+        {/* Floating particles */}
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full blur-sm"
             style={{
-              width: `${Math.random() * 3 + 1}px`,
-              height: `${Math.random() * 3 + 1}px`,
+              width: `${(i * 0.5) + 2}px`,
+              height: `${(i * 0.3) + 2}px`,
               background: i % 2 === 0 ? '#FF69B4' : '#A855F7',
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: `${(i * 12 + 10) % 100}%`,
+              top: `${(i * 17 + 5) % 100}%`,
             }}
             animate={{
               y: [0, -100, 0],
@@ -463,175 +134,250 @@ export default function MysteriesSection({
               scale: [0, 1, 0]
             }}
             transition={{
-              duration: Math.random() * 4 + 3,
+              duration: (i * 0.5) + 3,
               repeat: Infinity,
-              delay: Math.random() * 2,
+              delay: i * 0.3,
             }}
           />
         ))}
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* Enhanced Header with better contrast */}
+      <div className="relative z-10 max-w-6xl mx-auto">
+        {/* Header */}
         <motion.div
-          className="text-center mb-8 md:mb-16"
+          className="text-center mb-8 md:mb-12"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
         >
-          <div className="bg-black/40 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-white/20 max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-6xl font-black mb-4 bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light bg-clip-text text-transparent">
-              {title}
-            </h2>
-            <div className="h-1 w-20 md:w-32 bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light rounded-full mx-auto mb-4" />
-            <p className="text-lg md:text-xl text-white max-w-3xl mx-auto leading-relaxed">
-              {subtitle}
-            </p>
+          <h2 className="text-3xl md:text-5xl font-black mb-4 bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light bg-clip-text text-transparent">
+            {title}
+          </h2>
+          <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto">
+            {subtitle}
+          </p>
+        </motion.div>
+
+        {/* Pokédex Interface */}
+        <motion.div
+          className="bg-gradient-to-br from-red-600 to-red-700 rounded-3xl p-6 md:p-8 shadow-2xl border-4 border-red-800"
+          initial={{ opacity: 0, y: 50 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          {/* Device Body */}
+          <div className="bg-black/90 rounded-2xl p-4 md:p-6 border-2 border-gray-800">
+            
+            {/* Screen */}
+            <div className="bg-green-400 rounded-xl p-1 mb-6 shadow-inner">
+              <div className="bg-green-300 rounded-lg h-80 md:h-96 p-4 relative overflow-hidden">
+                
+                {/* Screen Content */}
+                <AnimatePresence mode="wait">
+                  {selectedCharacter === null || !characters || !characters[selectedCharacter] ? (
+                    // Default Screen
+                    <motion.div
+                      key="default"
+                      className="flex flex-col items-center justify-center h-full text-black"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Database className="w-16 h-16 mb-4 opacity-70" />
+                      <h3 className="text-2xl md:text-3xl font-bold mb-2">Choose Your Options</h3>
+                      <p className="text-lg opacity-80 text-center">Select a button below to view guardian data</p>
+                      
+                      {/* Blinking cursor */}
+                      <motion.div
+                        className="w-3 h-6 bg-black mt-4"
+                        animate={{ opacity: [1, 0, 1] }}
+                        transition={{ duration: 1, repeat: Infinity }}
+                      />
+                    </motion.div>
+                  ) : (
+                    // Character Display
+                    <motion.div
+                      key={`character-${selectedCharacter}`}
+                      className="h-full text-black overflow-y-auto"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.4 }}
+                    >
+                      <div className="h-full flex">
+                        {/* Left Side - Character Image & Name */}
+                        <div className="w-1/2 p-3 flex flex-col items-center justify-center border-r-2 border-black/20">
+                          <div className="text-center mb-4">
+                            <h3 className="text-lg md:text-xl font-bold mb-1">{characters[selectedCharacter].name}</h3>
+                            <div className="inline-block px-2 py-1 bg-black/20 rounded-full text-xs font-semibold">
+                              #{String(selectedCharacter + 1).padStart(3, '0')} • {characters[selectedCharacter].type}
+                            </div>
+                          </div>
+                          
+                          {/* Large Character Image */}
+                          <div className="flex-1 flex items-center justify-center max-w-full">
+                            <motion.img
+                              src={characters[selectedCharacter].image}
+                              alt={characters[selectedCharacter].name}
+                              className="w-full h-auto max-w-[160px] md:max-w-[200px] max-h-[180px] md:max-h-[220px] object-contain drop-shadow-lg cursor-pointer"
+                              whileHover={{ 
+                                scale: 1.1,
+                                rotateZ: [0, 5, -5, 0],
+                                filter: "brightness(1.2) saturate(1.3)"
+                              }}
+                              transition={{ 
+                                scale: { duration: 0.3 },
+                                rotateZ: { duration: 0.6, ease: "easeInOut" },
+                                filter: { duration: 0.3 }
+                              }}
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement
+                                target.src = '/images/placeholder-kaiju.png'
+                              }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Right Side - Character Info */}
+                        <div className="w-1/2 p-3 space-y-3 text-xs md:text-sm overflow-y-auto">
+                          <div>
+                            <div className="font-bold flex items-center gap-1 mb-1">
+                              <PowerIcon className="w-3 h-3" />
+                              SPECIAL ABILITY
+                            </div>
+                            <div className="font-semibold text-xs">{characters[selectedCharacter].power}</div>
+                          </div>
+
+                          <div>
+                            <div className="font-bold mb-1">DESCRIPTION</div>
+                            <div className="text-xs leading-tight">{characters[selectedCharacter].description}</div>
+                          </div>
+
+                          {characters[selectedCharacter].abilities && characters[selectedCharacter].abilities.length > 0 && (
+                            <div>
+                              <div className="font-bold mb-1">ABILITIES</div>
+                              <div className="grid grid-cols-1 gap-1">
+                                {characters[selectedCharacter].abilities.map((ability, i) => (
+                                  <div key={i} className="bg-black/10 rounded px-2 py-1 text-xs">
+                                    {ability}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {characters[selectedCharacter].backstory && (
+                            <div>
+                              <div className="font-bold mb-1">LEGEND</div>
+                              <div className="text-xs leading-tight">{characters[selectedCharacter].backstory}</div>
+                            </div>
+                          )}
+
+                          {/* Learn More Button for this character */}
+                          <div className="pt-2">
+                            <motion.button
+                              onClick={() => handleLearnMore(characters[selectedCharacter].name)}
+                              className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light text-white font-bold px-3 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 text-xs"
+                              whileHover={{ scale: 1.05, y: -1 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <Eye className="w-3 h-3" />
+                              Learn More About {characters[selectedCharacter].name}
+                            </motion.button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* Control Buttons */}
+            <div className="grid grid-cols-2 gap-4">
+              {characters && characters.map((character, index) => (
+                <motion.button
+                  key={character.name}
+                  onClick={() => setSelectedCharacter(index)}
+                  className={`bg-gradient-to-br from-kaiju-navy to-kaiju-purple-dark hover:from-kaiju-purple-light hover:to-kaiju-pink rounded-xl p-4 border-2 shadow-xl transition-all duration-300 ${
+                    selectedCharacter === index 
+                      ? 'border-kaiju-pink ring-4 ring-kaiju-pink/50 bg-gradient-to-br from-kaiju-pink to-kaiju-red shadow-kaiju-pink/25' 
+                      : 'border-white/30 hover:border-kaiju-pink/50 hover:shadow-lg'
+                  }`}
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <div className="text-white font-bold text-sm md:text-base">
+                    {character.name}
+                  </div>
+                  <div className="text-white/70 text-xs mt-1">
+                    #{String(index + 1).padStart(3, '0')}
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+
+            {/* Action Buttons */}
+            {selectedCharacter !== null && characters && characters[selectedCharacter] && (
+              <motion.div
+                className="mt-6 flex flex-col sm:flex-row gap-3"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+              >
+                <motion.button
+                  onClick={() => handleLearnMore(characters[selectedCharacter].name)}
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Eye className="w-4 h-4" />
+                  Learn More About {characters[selectedCharacter].name}
+                </motion.button>
+                
+                <motion.button
+                  onClick={() => {
+                    const heroElement = document.querySelector('#hero')
+                    if (heroElement) {
+                      heroElement.scrollIntoView({ behavior: 'smooth' })
+                    }
+                  }}
+                  className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold px-6 py-3 rounded-xl shadow-lg transition-all duration-200 flex items-center justify-center gap-2"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Open Mystery Box
+                  <ChevronRight className="w-4 h-4" />
+                </motion.button>
+              </motion.div>
+            )}
           </div>
         </motion.div>
 
-        {/* Mobile Layout: Character Carousel + Showcase */}
-        {isMobile ? (
-          <div className="space-y-6">
-            {/* Horizontal Character Carousel */}
-            <motion.div
-              className="bg-black/40 backdrop-blur-xl rounded-2xl p-4 border border-white/20"
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.3 }}
-            >
-              <h3 className="text-white font-bold text-lg mb-4 text-center">Select Your Guardian</h3>
-              <div className="grid grid-cols-1 gap-3">
-                {characters.map((character, index) => (
-                  <CharacterButton
-                    key={character.name}
-                    character={character}
-                    isSelected={selectedCharacter === index}
-                    onClick={() => setSelectedCharacter(index)}
-                    index={index}
-                  />
-                ))}
-              </div>
-              
-              {/* Mobile scroll indicator */}
-              <motion.div
-                className="flex items-center justify-center gap-2 mt-4 text-white/60"
-                animate={{ y: [0, 5, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <span className="text-sm">View details below</span>
-                <ChevronDown className="w-4 h-4" />
-              </motion.div>
-            </motion.div>
-
-            {/* Character Showcase */}
-            <motion.div
-              ref={showcaseRef}
-              className="bg-black/40 backdrop-blur-xl rounded-2xl border border-white/20 min-h-[600px]"
-              initial={{ opacity: 0, y: 20 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, delay: 0.5 }}
-            >
-              <AnimatePresence mode="wait">
-                <CharacterShowcase 
-                  key={selectedCharacter}
-                  character={characters[selectedCharacter]} 
-                />
-              </AnimatePresence>
-            </motion.div>
-          </div>
-        ) : (
-          /* Desktop Layout: Side-by-side */
-          <div className="bg-black/40 backdrop-blur-xl rounded-3xl border border-white/20 shadow-2xl overflow-hidden">
-            <div className="grid lg:grid-cols-4 min-h-[700px]">
-              
-              {/* Character Selection */}
-              <motion.div
-                className="lg:col-span-1 p-6 bg-black/20 border-r border-white/10"
-                initial={{ opacity: 0, x: -50 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.8, delay: 0.3 }}
-              >
-                <div className="text-center mb-6">
-                  <h3 className="text-white font-black text-xl mb-2">Select Guardian</h3>
-                  <div className="h-0.5 w-16 bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light rounded-full mx-auto" />
-                </div>
-                
-                <div className="space-y-4">
-                  {characters.map((character, index) => (
-                    <CharacterButton
-                      key={character.name}
-                      character={character}
-                      isSelected={selectedCharacter === index}
-                      onClick={() => setSelectedCharacter(index)}
-                      index={index}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* Character Showcase */}
-              <motion.div
-                className="lg:col-span-3"
-                initial={{ opacity: 0, x: 50 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ duration: 0.8, delay: 0.5 }}
-              >
-                <AnimatePresence mode="wait">
-                  <CharacterShowcase 
-                    key={selectedCharacter}
-                    character={characters[selectedCharacter]} 
-                  />
-                </AnimatePresence>
-              </motion.div>
-            </div>
-          </div>
-        )}
-
-        {/* Enhanced Action Section with better contrast */}
+        {/* Big Open Mystery Box Button - Under the Pokédex */}
         <motion.div
-          className="text-center mt-8 md:mt-16"
+          className="mt-8 flex justify-center"
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ duration: 0.8, delay: 0.7 }}
+          transition={{ duration: 0.8, delay: 0.8 }}
         >
-          <div className="bg-black/60 backdrop-blur-xl rounded-2xl md:rounded-3xl p-6 md:p-8 border border-white/20 max-w-4xl mx-auto shadow-2xl">
-            <h3 className="text-2xl md:text-3xl font-black text-white mb-4">
-              Ready to Meet Your Guardian?
-            </h3>
-            <div className="h-1 w-20 md:w-24 bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light rounded-full mx-auto mb-6" />
-            <p className="text-white/90 mb-8 text-base md:text-lg leading-relaxed">
-              Every mystery box contains one of these legendary Kaiju. Your adventure begins with a single mint.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button
-                onClick={() => handleDiscoverStory(characters[selectedCharacter].name)}
-                className={`bg-gradient-to-r ${characters[selectedCharacter].accentColor} text-white font-bold px-6 md:px-8 py-3 md:py-4 rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 inline-flex items-center gap-3`}
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Sparkles className="w-5 h-5" />
-                <span className="text-sm md:text-base">Learn About {characters[selectedCharacter].name}</span>
-              </motion.button>
-              
-              <motion.button
-                onClick={() => {
-                  const heroElement = document.querySelector('#hero')
-                  if (heroElement) {
-                    heroElement.scrollIntoView({ behavior: 'smooth' })
-                  }
-                }}
-                className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold px-6 md:px-8 py-3 md:py-4 rounded-full shadow-xl hover:shadow-kaiju-pink/25 transition-all duration-300 inline-flex items-center gap-3"
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Sparkles className="w-5 h-5" />
-                <span className="text-sm md:text-base">Open Mystery Box</span>
-                <ChevronRight className="w-5 h-5" />
-              </motion.button>
-            </div>
-          </div>
+          <motion.button
+            onClick={() => {
+              const heroElement = document.querySelector('#hero')
+              if (heroElement) {
+                heroElement.scrollIntoView({ behavior: 'smooth' })
+              }
+            }}
+            className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-black text-xl md:text-2xl px-10 md:px-16 py-4 md:py-6 rounded-full shadow-2xl hover:shadow-kaiju-pink/25 transition-all duration-300 flex items-center justify-center gap-4 border-4 border-white/20"
+            whileHover={{ scale: 1.05, y: -3 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <Sparkles className="w-6 h-6 md:w-8 md:h-8" />
+            <span>Open Mystery Box</span>
+            <ChevronRight className="w-6 h-6 md:w-8 md:h-8" />
+          </motion.button>
         </motion.div>
       </div>
     </section>
