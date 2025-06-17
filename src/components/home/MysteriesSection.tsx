@@ -8,7 +8,6 @@ import { ChevronRight, Sparkles } from 'lucide-react'
 interface Character {
   name: string
   type: string
-  rarity: string
   power: string
   image: string
   backgroundColor: string
@@ -25,7 +24,6 @@ const defaultCharacters: Character[] = [
   {
     name: 'Uri',
     type: 'Plush',
-    rarity: 'Common',
     power: 'Glows in the dark',
     image: '/images/Ghost1.png',
     backgroundColor: 'bg-kaiju-light-pink'
@@ -33,7 +31,6 @@ const defaultCharacters: Character[] = [
   {
     name: 'Kappa',
     type: 'Vinyl',
-    rarity: 'Rare',
     power: 'Water manipulation',
     image: '/images/kappa.png',
     backgroundColor: 'bg-kaiju-navy/10'
@@ -41,7 +38,6 @@ const defaultCharacters: Character[] = [
   {
     name: 'Ryuu',
     type: 'Plush',
-    rarity: 'Ultra Rare',
     power: 'Fire breathing',
     image: '/images/dragon.png',
     backgroundColor: 'bg-kaiju-pink/10'
@@ -49,7 +45,6 @@ const defaultCharacters: Character[] = [
   {
     name: 'Fenikkusu',
     type: 'Vinyl',
-    rarity: 'Legendary',
     power: 'Eternal rebirth',
     image: '/images/phoenix.png',
     backgroundColor: 'bg-kaiju-purple-light/10'
@@ -63,15 +58,6 @@ const CharacterCard = ({ character, index, onLearnMore }: {
 }) => {
   const [isHovered, setIsHovered] = useState(false)
   const rotation = ['-2deg', '1deg', '-1deg', '2deg'][index] || '0deg'
-
-  const getRarityColor = (rarity: string) => {
-    switch (rarity) {
-      case 'Legendary': return 'bg-purple-600'
-      case 'Ultra Rare': return 'bg-red-500'
-      case 'Rare': return 'bg-blue-500'
-      default: return 'bg-green-500'
-    }
-  }
 
   return (
     <motion.div
@@ -122,10 +108,6 @@ const CharacterCard = ({ character, index, onLearnMore }: {
                 ease: "easeInOut"
               }}
             />
-            
-            <div className={`absolute top-2 right-2 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg ${getRarityColor(character.rarity)}`}>
-              {character.rarity}
-            </div>
 
             <div className="absolute top-2 left-2 bg-kaiju-navy/80 text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
               {character.type}
@@ -186,7 +168,7 @@ export default function MysteriesSection({
     }
   }
 
-  const rarityTypes = ['Common', 'Rare', 'Ultra Rare', 'Legendary']
+  const characterTypes = ['Plush', 'Vinyl']
 
   return (
     <section className="bg-kaiju-light-pink py-24 px-6" id="mysteries">
@@ -215,25 +197,16 @@ export default function MysteriesSection({
           transition={{ duration: 0.6, delay: 0.6 }}
           className="mt-12 flex flex-wrap justify-center gap-4"
         >
-          {rarityTypes.map((rarity) => {
-            const count = characters.filter(c => c.rarity === rarity).length
+          {characterTypes.map((type) => {
+            const count = characters.filter(c => c.type === type).length
             if (count === 0) return null
             
-            const getTextColor = (rarity: string) => {
-              switch (rarity) {
-                case 'Legendary': return 'text-purple-600'
-                case 'Ultra Rare': return 'text-red-500'
-                case 'Rare': return 'text-blue-500'
-                default: return 'text-green-500'
-              }
-            }
-            
             return (
-              <div key={rarity} className="bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-kaiju-light-gray/30">
-                <div className={`text-lg font-bold ${getTextColor(rarity)}`}>
+              <div key={type} className="bg-white/60 backdrop-blur-sm rounded-xl p-3 border border-kaiju-light-gray/30">
+                <div className="text-lg font-bold text-kaiju-navy">
                   {count}
                 </div>
-                <div className="text-xs text-kaiju-navy/70">{rarity}</div>
+                <div className="text-xs text-kaiju-navy/70">{type}</div>
               </div>
             )
           })}

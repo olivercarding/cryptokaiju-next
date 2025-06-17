@@ -16,12 +16,10 @@ import { useMintPrice } from '@/lib/hooks/useMintPrice'
 interface HeroSectionProps {
   mysteryDesigns?: Array<{
     type: string
-    rarity: string
-    probability: string
+    power: string
   }>
   stats?: {
     boxesLeft: number
-    ultraRareChance: string
   }
   onMint?: (quantity: number) => void
   onViewPossibilities?: () => void
@@ -41,14 +39,13 @@ interface MintedNFT {
 
 export default function HeroSection({ 
   mysteryDesigns = [
-    { type: 'Plush', rarity: 'Common', probability: '40%' },
-    { type: 'Vinyl', rarity: 'Common', probability: '35%' },
-    { type: 'Plush', rarity: 'Rare', probability: '20%' },
-    { type: 'Vinyl', rarity: 'Ultra Rare', probability: '5%' },
+    { type: 'Plush', power: 'Glows in the dark' },
+    { type: 'Vinyl', power: 'Water manipulation' },
+    { type: 'Plush', power: 'Fire breathing' },
+    { type: 'Vinyl', power: 'Eternal rebirth' },
   ],
   stats = {
-    boxesLeft: 427,
-    ultraRareChance: '5%'
+    boxesLeft: 427
   },
   onMint,
   onViewPossibilities
@@ -295,7 +292,7 @@ export default function HeroSection({
               </h1>
               
               <p className="text-lg text-white/90 mb-0 max-w-lg mx-auto font-medium">
-              4 Designs - 1 Chosen at Random on every mint.
+                4 Designs - 1 Chosen at Random on every mint.
               </p>
             </motion.div>
           </div>

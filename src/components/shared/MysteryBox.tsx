@@ -7,8 +7,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion'
 interface MysteryBoxProps {
   mysteryDesigns: Array<{
     type: string
-    rarity: string
-    probability: string
+    power: string
   }>
   size?: 'small' | 'medium' | 'large'
   showBreakdown?: boolean
@@ -74,8 +73,6 @@ const CompleteBox = ({ className = "" }: { className?: string }) => (
     </g>
   </svg>
 )
-
-
 
 export default function MysteryBox({ 
   mysteryDesigns, 
@@ -200,11 +197,7 @@ export default function MysteryBox({
             >
               <CompleteBox className="w-full h-full" />
             </motion.div>
-
-
           </div>
-
-
         </motion.div>
       </motion.div>
     </div>
