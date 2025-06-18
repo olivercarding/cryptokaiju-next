@@ -6,6 +6,7 @@ import HeroSection from '@/components/home/HeroSection'
 import HowItWorksSection from '@/components/home/HowItWorksSection'
 import MysteriesSection from '@/components/home/MysteriesSection'
 import CTASection from '@/components/home/CTASection'
+import { defaultEasing } from 'framer-motion'
 
 export default function Home() {
   
@@ -51,34 +52,34 @@ export default function Home() {
   const physicalCollectibles = [
     {
       name: 'Uri',
-      type: 'Plush',
+      type: 'vinyl',
       power: 'Glows in the dark',
       description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
       nftImage: '/images/Ghost1.png',
-      physicalImage: '/images/uri-physical.jpg',
+      physicalImage: '/images/Uri_product_shot.png',
       backgroundColor: 'bg-purple-100'
     },
     {
-      name: 'Kappa',
-      type: 'Vinyl',
-      power: 'Water manipulation',
+      name: 'Genesis (Pink)',
+      type: 'Plush',
+      power: 'Cute, soft and cuddly.',
       description: 'Ancient water spirit with the ability to control rivers and rain.',
       nftImage: '/images/kappa.png',
       physicalImage: '/images/kappa-physical.jpg',
       backgroundColor: 'bg-blue-100'
     },
     {
-      name: 'Ryuu',
-      type: 'Plush',
-      power: 'Fire breathing',
-      description: 'A legendary dragon whose flames can forge the strongest metals.',
+      name: 'Diamond Hands',
+      type: 'Vinyl',
+      power: 'Iconic, cuddly and soft.',
+      description: 'A cool Kaiju you’ll want to hold, based on the iconic Genesis design.',
       nftImage: '/images/dragon.png',
       physicalImage: '/images/ryuu-physical.jpg',
       backgroundColor: 'bg-red-100'
     },
     {
-      name: 'Fenikkusu',
-      type: 'Vinyl',
+      name: 'Genesis (Green)',
+      type: 'Plush',
       power: 'Eternal rebirth',
       description: 'The immortal phoenix that rises from ashes stronger than before.',
       nftImage: '/images/phoenix.png',
