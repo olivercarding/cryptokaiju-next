@@ -60,12 +60,12 @@ export default function Home() {
       backgroundColor: 'bg-purple-100'
     },
     {
-      name: 'Genesis (Pink)',
-      type: 'Plush',
+      name: 'Meme',
+      type: 'vinyl',
       power: 'Cute, soft and cuddly.',
       description: 'Ancient water spirit with the ability to control rivers and rain.',
       nftImage: '/images/kappa.png',
-      physicalImage: '/images/kappa-physical.jpg',
+      physicalImage: '/images/Meme.png',
       backgroundColor: 'bg-blue-100'
     },
     {
@@ -74,7 +74,7 @@ export default function Home() {
       power: 'Iconic, cuddly and soft.',
       description: 'A cool Kaiju you’ll want to hold, based on the iconic Genesis design.',
       nftImage: '/images/dragon.png',
-      physicalImage: '/images/ryuu-physical.jpg',
+      physicalImage: '/images/Diamond_hands_product_shot.png',
       backgroundColor: 'bg-red-100'
     },
     {
@@ -83,7 +83,7 @@ export default function Home() {
       power: 'Eternal rebirth',
       description: 'The immortal phoenix that rises from ashes stronger than before.',
       nftImage: '/images/phoenix.png',
-      physicalImage: '/images/phoenix-physical.jpg',
+      physicalImage: '/images/Green_genesis_product_shot.png',
       backgroundColor: 'bg-pink-100'
     }
   ]
