@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Filter, Zap, Package, Clock, Database, Cpu } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import axios from 'axios'
 
 interface KaijuCharacter {
   id: string
@@ -16,9 +17,10 @@ interface KaijuCharacter {
   status: 'available' | 'sold-out' | 'coming-soon'
   
   // Stats
-  totalMinted: number
-  maxSupply: number
+  totalMinted?: number // Will be fetched dynamically
   rarityPercentage: number
+  releaseYear: number
+  batch: string // For OpenSea API lookup
   
   // Visual assets
   nftImage: string
@@ -40,9 +42,9 @@ const kaijuDatabase: KaijuCharacter[] = [
     type: 'Plush',
     rarity: 'Rare',
     status: 'available',
-    totalMinted: 247,
-    maxSupply: 500,
     rarityPercentage: 20,
+    releaseYear: 2024,
+    batch: 'Uri',
     nftImage: '/images/Ghost1.png',
     physicalImage: '/images/Uri_product_shot.png',
     power: 'Spectral Manipulation',
@@ -57,9 +59,9 @@ const kaijuDatabase: KaijuCharacter[] = [
     type: 'Vinyl',
     rarity: 'Common',
     status: 'available',
-    totalMinted: 892,
-    maxSupply: 1000,
     rarityPercentage: 35,
+    releaseYear: 2024,
+    batch: 'Meme',
     nftImage: '/images/Meme-NFT.png',
     physicalImage: '/images/Meme.png',
     power: 'Aquatic Resonance',
@@ -74,9 +76,9 @@ const kaijuDatabase: KaijuCharacter[] = [
     type: 'Vinyl',
     rarity: 'Ultra Rare',
     status: 'available',
-    totalMinted: 124,
-    maxSupply: 200,
     rarityPercentage: 5,
+    releaseYear: 2024,
+    batch: 'Diamond Hands',
     nftImage: '/images/dragon.png',
     physicalImage: '/images/Diamond_hands_product_shot.png',
     power: 'Crystalline Fortitude',
@@ -91,9 +93,9 @@ const kaijuDatabase: KaijuCharacter[] = [
     type: 'Plush',
     rarity: 'Legendary',
     status: 'available',
-    totalMinted: 89,
-    maxSupply: 100,
     rarityPercentage: 5,
+    releaseYear: 2024,
+    batch: 'Genesis',
     nftImage: '/images/Genesis-NFT.png',
     physicalImage: '/images/Green_genesis_product_shot.png',
     power: 'Primordial Energy',
@@ -109,9 +111,9 @@ const kaijuDatabase: KaijuCharacter[] = [
     type: 'Vinyl',
     rarity: 'Rare',
     status: 'coming-soon',
-    totalMinted: 0,
-    maxSupply: 300,
     rarityPercentage: 15,
+    releaseYear: 2025,
+    batch: 'Tempest',
     nftImage: '/images/placeholder-kaiju.png',
     physicalImage: '/images/placeholder-physical.jpg',
     power: 'Storm Mastery',
@@ -126,9 +128,9 @@ const kaijuDatabase: KaijuCharacter[] = [
     type: 'Plush',
     rarity: 'Ultra Rare',
     status: 'coming-soon',
-    totalMinted: 0,
-    maxSupply: 150,
     rarityPercentage: 3,
+    releaseYear: 2025,
+    batch: 'Inferno',
     nftImage: '/images/placeholder-kaiju.png',
     physicalImage: '/images/placeholder-physical.jpg',
     power: 'Volcanic Eruption',
@@ -137,6 +139,31 @@ const kaijuDatabase: KaijuCharacter[] = [
     discoveredDate: '2024.08.15'
   }
 ]
+
+// OpenSea API configuration
+const OPENSEA_API_URL = 'https://api.opensea.io/api/v2/collections/cryptokaiju/nfts'
+const OPENSEA_API_KEY = 'a221b5fb89fb4ffeb5fbf4fa42cc6532' // Move to environment variables
+
+// Function to fetch minted count for a specific batch
+const fetchBatchMintedCount = async (batchName: string): Promise<number> => {
+  try {
+    const response = await axios.get(OPENSEA_API_URL, {
+      headers: {
+        "x-api-key": OPENSEA_API_KEY,
+      },
+      params: {
+        trait_type: 'Batch', // Adjust this based on your actual trait name
+        trait_value: batchName,
+        limit: 200 // Adjust based on expected batch sizes
+      }
+    })
+
+    return response.data.nfts?.length || 0
+  } catch (error) {
+    console.error(`Error fetching minted count for batch ${batchName}:`, error)
+    return 0
+  }
+}
 
 const rarityColors = {
   'Common': 'text-green-400 bg-green-400/10 border-green-400/30',
@@ -153,6 +180,32 @@ const statusColors = {
 
 const KaijuCard = ({ character, index }: { character: KaijuCharacter; index: number }) => {
   const [isScanning, setIsScanning] = useState(false)
+  const [mintedCount, setMintedCount] = useState<number | null>(null)
+  const [isLoadingCount, setIsLoadingCount] = useState(true)
+
+  // Fetch minted count for this character
+  useEffect(() => {
+    const fetchMintedCount = async () => {
+      if (character.status === 'coming-soon') {
+        setMintedCount(0)
+        setIsLoadingCount(false)
+        return
+      }
+
+      try {
+        setIsLoadingCount(true)
+        const count = await fetchBatchMintedCount(character.batch)
+        setMintedCount(count)
+      } catch (error) {
+        console.error(`Failed to fetch minted count for ${character.name}:`, error)
+        setMintedCount(0)
+      } finally {
+        setIsLoadingCount(false)
+      }
+    }
+
+    fetchMintedCount()
+  }, [character.batch, character.status])
 
   return (
     <motion.div
@@ -221,11 +274,23 @@ const KaijuCard = ({ character, index }: { character: KaijuCharacter; index: num
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="bg-white/5 rounded p-2">
                 <div className="text-white/60 font-mono">MINTED</div>
-                <div className="text-white font-bold">{character.totalMinted.toLocaleString()}</div>
+                <div className="text-white font-bold">
+                  {isLoadingCount ? (
+                    <motion.div
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                      className="text-kaiju-pink"
+                    >
+                      Loading...
+                    </motion.div>
+                  ) : (
+                    mintedCount?.toLocaleString() || '0'
+                  )}
+                </div>
               </div>
               <div className="bg-white/5 rounded p-2">
-                <div className="text-white/60 font-mono">MAX SUPPLY</div>
-                <div className="text-white font-bold">{character.maxSupply.toLocaleString()}</div>
+                <div className="text-white/60 font-mono">RELEASE YEAR</div>
+                <div className="text-white font-bold">{character.releaseYear}</div>
               </div>
             </div>
 
@@ -252,9 +317,12 @@ const KaijuCard = ({ character, index }: { character: KaijuCharacter; index: num
 
 export default function KaijudexPage() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'coming-soon'>('all')
+  const [filterYear, setFilterYear] = useState<'all' | number>('all')
   const [filterType, setFilterType] = useState<'all' | 'Plush' | 'Vinyl'>('all')
   const [isLoading, setIsLoading] = useState(true)
+
+  // Get unique release years for filter
+  const releaseYears = [...new Set(kaijuDatabase.map(c => c.releaseYear))].sort((a, b) => b - a)
 
   // Simulate loading
   useEffect(() => {
@@ -266,10 +334,10 @@ export default function KaijudexPage() {
   const filteredCharacters = kaijuDatabase.filter(character => {
     const matchesSearch = character.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          character.element.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = filterStatus === 'all' || character.status === filterStatus
+    const matchesYear = filterYear === 'all' || character.releaseYear === filterYear
     const matchesType = filterType === 'all' || character.type === filterType
     
-    return matchesSearch && matchesStatus && matchesType
+    return matchesSearch && matchesYear && matchesType
   })
 
   if (isLoading) {
@@ -290,6 +358,26 @@ export default function KaijudexPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-black">
+      {/* Fixed Logo in top left */}
+      <div className="fixed top-6 left-6 z-50">
+        <Link href="/">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="cursor-pointer"
+          >
+            <Image
+              src="/images/cryptokaiju-logo.png"
+              alt="CryptoKaiju"
+              width={140}
+              height={70}
+              className="h-auto hover:drop-shadow-lg transition-all duration-300"
+              priority
+            />
+          </motion.div>
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="relative pt-32 pb-16 px-6">
         {/* Animated background elements */}
@@ -359,15 +447,16 @@ export default function KaijudexPage() {
                 />
               </div>
 
-              {/* Status Filter */}
+              {/* Release Year Filter */}
               <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value as any)}
+                value={filterYear}
+                onChange={(e) => setFilterYear(e.target.value === 'all' ? 'all' : parseInt(e.target.value))}
                 className="bg-white/5 border border-white/20 rounded-lg px-4 py-3 text-white font-mono focus:border-kaiju-pink focus:outline-none"
               >
-                <option value="all">All Status</option>
-                <option value="available">Available</option>
-                <option value="coming-soon">Coming Soon</option>
+                <option value="all">All Years</option>
+                {releaseYears.map(year => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
               </select>
 
               {/* Type Filter */}
