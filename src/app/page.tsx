@@ -64,7 +64,7 @@ export default function Home() {
       type: 'vinyl',
       power: 'Cute, soft and cuddly.',
       description: 'Ancient water spirit with the ability to control rivers and rain.',
-      nftImage: '/images/kappa.png',
+      nftImage: '/images/Meme-NFT.png',
       physicalImage: '/images/Meme.png',
       backgroundColor: 'bg-blue-100'
     },
@@ -78,13 +78,13 @@ export default function Home() {
       backgroundColor: 'bg-red-100'
     },
     {
-      name: 'Genesis (Green)',
+      name: 'Genesis Plush (Green)',
       type: 'Plush',
-      power: 'Eternal rebirth',
+      power: 'Beautifully soft in the iconic design',
       description: 'The immortal phoenix that rises from ashes stronger than before.',
-      nftImage: '/images/phoenix.png',
+      nftImage: '/images/Genesis-NFT.png',
       physicalImage: '/images/Green_genesis_product_shot.png',
-      backgroundColor: 'bg-pink-100'
+      backgroundColor: 'bg-blue-100'
     }
   ]
 
