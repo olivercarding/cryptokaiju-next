@@ -1,8 +1,7 @@
 // src/lib/services/CryptoKaijuApiService.ts
 import axios from 'axios'
 
-// API endpoints
-const API_URL = 'https://dapp.cryptokaiju.io/api'
+// OpenSea API endpoints
 const OPENSEA_API_URL = 'https://api.opensea.io/api/v2/collections/cryptokaiju/nfts'
 const OPENSEA_API_KEY = process.env.NEXT_PUBLIC_OPENSEA_API_KEY || 'a221b5fb89fb4ffeb5fbf4fa42cc6532'
 
@@ -12,7 +11,7 @@ export interface KaijuNFT {
   nfcId: string
   owner: string
   tokenURI: string
-  birthDate: number
+  birthDate?: number
   ipfsData?: {
     name: string
     description: string
@@ -57,7 +56,7 @@ export interface OpenSeaAsset {
     address: string
     quantity: number
   }>
-  rarity: {
+  rarity?: {
     strategy_id: string
     strategy_version: string
     rank: number
@@ -69,10 +68,8 @@ export interface OpenSeaAsset {
   }
 }
 
-const AXIOS_CONFIG = {
-  headers: {
-    'Access-Control-Allow-Origin': '*'
-  }
+interface NFCMapping {
+  [nfcId: string]: string // nfcId -> tokenId
 }
 
 const OPENSEA_CONFIG = {
@@ -83,49 +80,261 @@ const OPENSEA_CONFIG = {
 }
 
 class CryptoKaijuApiService {
-  
+  private nfcMappingCache: NFCMapping | null = null
+  private cacheExpiry: number = 0
+  private readonly CACHE_DURATION = 30 * 60 * 1000 // 30 minutes
+
   /**
-   * Get token details by token ID from the legacy API
+   * Build and cache NFC ID mappings from OpenSea + IPFS
    */
-  async getTokenDetails(network: number = 1, tokenId: string): Promise<KaijuNFT | null> {
+  private async buildNFCMapping(): Promise<NFCMapping> {
+    console.log('Building NFC mapping from OpenSea + IPFS...')
+    const mapping: NFCMapping = {}
+    let next = ""
+    let processedCount = 0
+
     try {
-      const response = await axios.get(
-        `${API_URL}/network/${network}/token/id/${tokenId}`, 
-        AXIOS_CONFIG
-      )
-      return response.data
+      do {
+        // Fetch batch of NFTs from OpenSea
+        const params: any = { limit: 50 }
+        if (next) params.next = next
+
+        console.log(`Fetching batch from OpenSea... (processed: ${processedCount})`)
+        const response = await axios.get(OPENSEA_API_URL, {
+          ...OPENSEA_CONFIG,
+          params
+        })
+
+        const { nfts, next: nextToken } = response.data
+        next = nextToken
+
+        // Process each NFT to extract NFC ID
+        const batch = await Promise.all(
+          nfts.map(async (nft: any) => {
+            try {
+              // Get NFC ID from OpenSea traits first (faster)
+              const nfcTrait = nft.traits?.find((trait: any) => 
+                trait.trait_type?.toLowerCase() === 'nfc' || 
+                trait.trait_type?.toLowerCase() === 'nfc_id'
+              )
+              
+              let nfcId = nfcTrait?.value
+
+              // If not in traits, fetch from IPFS metadata
+              if (!nfcId && nft.metadata_url) {
+                try {
+                  const ipfsHash = this.extractIPFSHash(nft.metadata_url)
+                  if (ipfsHash) {
+                    const metadata = await this.fetchIpfsMetadata(ipfsHash)
+                    nfcId = metadata?.attributes?.nfc
+                  }
+                } catch (error) {
+                  console.warn(`Failed to fetch metadata for token ${nft.identifier}:`, error)
+                }
+              }
+
+              if (nfcId) {
+                return { nfcId: nfcId.toLowerCase(), tokenId: nft.identifier }
+              }
+              return null
+            } catch (error) {
+              console.warn(`Error processing NFT ${nft.identifier}:`, error)
+              return null
+            }
+          })
+        )
+
+        // Add to mapping
+        batch.forEach(item => {
+          if (item) {
+            mapping[item.nfcId] = item.tokenId
+          }
+        })
+
+        processedCount += nfts.length
+        console.log(`Processed ${processedCount} NFTs, found ${Object.keys(mapping).length} with NFC IDs`)
+
+        // Add small delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 100))
+
+      } while (next && processedCount < 5000) // Safety limit
+
+      console.log(`NFC mapping built: ${Object.keys(mapping).length} entries`)
+      return mapping
+
     } catch (error) {
-      console.error(`Error fetching token details for ID ${tokenId}:`, error)
+      console.error('Error building NFC mapping:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get cached NFC mapping or build new one
+   */
+  private async getNFCMapping(): Promise<NFCMapping> {
+    const now = Date.now()
+    
+    if (this.nfcMappingCache && now < this.cacheExpiry) {
+      return this.nfcMappingCache
+    }
+
+    this.nfcMappingCache = await this.buildNFCMapping()
+    this.cacheExpiry = now + this.CACHE_DURATION
+    
+    return this.nfcMappingCache
+  }
+
+  /**
+   * Extract IPFS hash from various metadata URL formats
+   */
+  private extractIPFSHash(metadataUrl: string): string | null {
+    if (!metadataUrl) return null
+    
+    // Handle different IPFS URL formats
+    if (metadataUrl.startsWith('ipfs://')) {
+      return metadataUrl.replace('ipfs://', '')
+    }
+    
+    if (metadataUrl.includes('/ipfs/')) {
+      return metadataUrl.split('/ipfs/')[1]
+    }
+    
+    // Handle direct hash
+    if (metadataUrl.match(/^[a-zA-Z0-9]{46,}$/)) {
+      return metadataUrl
+    }
+    
+    return null
+  }
+
+  /**
+   * Lookup Kaiju by NFC ID
+   */
+  async lookupByNFC(nfcId: string): Promise<KaijuNFT | null> {
+    try {
+      console.log('Looking up NFC ID:', nfcId)
+      const normalizedNFC = nfcId.toLowerCase().trim()
+      
+      const mapping = await this.getNFCMapping()
+      const tokenId = mapping[normalizedNFC]
+      
+      if (!tokenId) {
+        console.log('NFC ID not found in mapping')
+        return null
+      }
+
+      console.log(`Found token ID ${tokenId} for NFC ${normalizedNFC}`)
+      return await this.getTokenDetails(tokenId)
+      
+    } catch (error) {
+      console.error('Error looking up NFC:', error)
       return null
     }
   }
 
   /**
-   * Get token details by NFC ID
+   * Get token details by token ID from OpenSea
    */
-  async getNfcDetails(network: number = 1, nfcId: string): Promise<KaijuNFT | null> {
+  async getTokenDetails(tokenId: string): Promise<KaijuNFT | null> {
     try {
       const response = await axios.get(
-        `${API_URL}/network/${network}/token/nfc/${nfcId}`, 
-        AXIOS_CONFIG
+        `${OPENSEA_API_URL}/${tokenId}`,
+        OPENSEA_CONFIG
       )
-      return response.data
+      
+      const nft = response.data.nft
+      if (!nft) return null
+
+      // Convert OpenSea data to our format
+      const kaiju: KaijuNFT = {
+        tokenId: nft.identifier,
+        nfcId: '', // Will be filled from metadata
+        owner: nft.owners?.[0]?.address || '',
+        tokenURI: this.extractIPFSHash(nft.metadata_url) || '',
+        ipfsData: null
+      }
+
+      // Fetch IPFS metadata
+      if (kaiju.tokenURI) {
+        try {
+          const metadata = await this.fetchIpfsMetadata(kaiju.tokenURI)
+          if (metadata) {
+            kaiju.ipfsData = metadata
+            kaiju.nfcId = metadata.attributes?.nfc || ''
+            
+            // Parse birthday if available
+            if (metadata.attributes?.dob) {
+              const birthday = Date.parse(metadata.attributes.dob)
+              if (!isNaN(birthday)) {
+                kaiju.birthDate = Math.floor(birthday / 1000)
+              }
+            }
+          }
+        } catch (metadataError) {
+          console.warn('Failed to fetch IPFS metadata:', metadataError)
+        }
+      }
+
+      return kaiju
+      
     } catch (error) {
-      console.error(`Error fetching NFC details for ID ${nfcId}:`, error)
+      console.error(`Error fetching token details for ${tokenId}:`, error)
       return null
     }
   }
 
   /**
-   * Get all tokens owned by an address
+   * Get tokens owned by an address
    */
-  async getTokensForAddress(network: number = 1, address: string): Promise<KaijuNFT[]> {
+  async getTokensForAddress(address: string): Promise<KaijuNFT[]> {
     try {
-      const response = await axios.get(
-        `${API_URL}/network/${network}/token/account/${address}`, 
-        AXIOS_CONFIG
+      const response = await axios.get(OPENSEA_API_URL, {
+        ...OPENSEA_CONFIG,
+        params: {
+          owner: address,
+          limit: 50 // Adjust as needed
+        }
+      })
+
+      const nfts = response.data.nfts || []
+      
+      // Convert to our format and enrich with IPFS data
+      const kaijus = await Promise.all(
+        nfts.map(async (nft: any) => {
+          const kaiju: KaijuNFT = {
+            tokenId: nft.identifier,
+            nfcId: '',
+            owner: address,
+            tokenURI: this.extractIPFSHash(nft.metadata_url) || '',
+            ipfsData: null
+          }
+
+          // Fetch IPFS metadata
+          if (kaiju.tokenURI) {
+            try {
+              const metadata = await this.fetchIpfsMetadata(kaiju.tokenURI)
+              if (metadata) {
+                kaiju.ipfsData = metadata
+                kaiju.nfcId = metadata.attributes?.nfc || ''
+                
+                if (metadata.attributes?.dob) {
+                  const birthday = Date.parse(metadata.attributes.dob)
+                  if (!isNaN(birthday)) {
+                    kaiju.birthDate = Math.floor(birthday / 1000)
+                  }
+                }
+              }
+            } catch (error) {
+              console.warn(`Failed to fetch metadata for token ${nft.identifier}`)
+            }
+          }
+
+          return kaiju
+        })
       )
-      return response.data || []
+
+      return kaijus.filter(k => k.ipfsData) // Only return ones with metadata
+      
     } catch (error) {
       console.error(`Error fetching tokens for address ${address}:`, error)
       return []
@@ -133,18 +342,67 @@ class CryptoKaijuApiService {
   }
 
   /**
-   * Get all tokens (with pagination)
+   * Search tokens by name, token ID, or NFC ID
    */
-  async getAllTokens(network: number = 1): Promise<KaijuNFT[]> {
+  async searchTokens(query: string): Promise<KaijuNFT[]> {
+    try {
+      const searchQuery = query.toLowerCase().trim()
+      
+      // If query looks like NFC ID (hex format), try direct NFC lookup first
+      if (/^[0-9a-f]{8,}$/i.test(searchQuery)) {
+        console.log('Attempting direct NFC lookup for:', searchQuery)
+        const nfcResult = await this.lookupByNFC(searchQuery)
+        if (nfcResult) {
+          return [nfcResult]
+        }
+      }
+      
+      // If direct NFC lookup fails, try searching OpenSea collection
+      // This is more limited but can search by name/traits
+      const response = await axios.get(OPENSEA_API_URL, {
+        ...OPENSEA_CONFIG,
+        params: {
+          limit: 20 // Limit for search results
+        }
+      })
+
+      const nfts = response.data.nfts || []
+      
+      // Filter and convert results
+      const results = await Promise.all(
+        nfts
+          .filter((nft: any) => {
+            // Basic filtering by name
+            return nft.name?.toLowerCase().includes(searchQuery) ||
+                   nft.identifier === searchQuery
+          })
+          .slice(0, 10) // Limit results
+          .map(async (nft: any) => {
+            return await this.getTokenDetails(nft.identifier)
+          })
+      )
+
+      return results.filter(Boolean) as KaijuNFT[]
+      
+    } catch (error) {
+      console.error('Error searching tokens:', error)
+      return []
+    }
+  }
+
+  /**
+   * Fetch metadata from IPFS
+   */
+  async fetchIpfsMetadata(ipfsHash: string): Promise<any> {
     try {
       const response = await axios.get(
-        `${API_URL}/network/${network}/token/all`, 
-        AXIOS_CONFIG
+        `https://cryptokaiju.mypinata.cloud/ipfs/${ipfsHash}`,
+        { timeout: 5000 }
       )
-      return response.data || []
+      return response.data
     } catch (error) {
-      console.error('Error fetching all tokens:', error)
-      return []
+      console.error(`Error fetching IPFS metadata for ${ipfsHash}:`, error)
+      return null
     }
   }
 
@@ -165,85 +423,30 @@ class CryptoKaijuApiService {
   }
 
   /**
-   * Get multiple OpenSea assets by owner address
+   * Get all tokens (limited for performance)
    */
-  async getOpenSeaAssetsByOwner(ownerAddress: string, limit: number = 50): Promise<OpenSeaAsset[]> {
+  async getAllTokens(): Promise<KaijuNFT[]> {
     try {
       const response = await axios.get(OPENSEA_API_URL, {
         ...OPENSEA_CONFIG,
         params: {
-          owner: ownerAddress,
-          limit: limit
+          limit: 50 // Reasonable limit for "all tokens" view
         }
       })
-      return response.data.nfts || []
-    } catch (error) {
-      console.error(`Error fetching OpenSea assets for owner ${ownerAddress}:`, error)
-      return []
-    }
-  }
 
-  /**
-   * Search tokens by name, token ID, or NFC ID
-   */
-  async searchTokens(query: string, network: number = 1): Promise<KaijuNFT[]> {
-    try {
-      const searchQuery = query.toLowerCase().trim()
+      const nfts = response.data.nfts || []
       
-      // First, try direct NFC ID lookup if query looks like an NFC ID (hex format)
-      if (/^[0-9a-f]{8,}$/i.test(searchQuery)) {
-        console.log('Trying direct NFC lookup for:', searchQuery)
-        const nfcResult = await this.getNfcDetails(network, searchQuery)
-        if (nfcResult) {
-          return [nfcResult]
-        }
-      }
-      
-      // If direct lookup fails or query doesn't look like NFC, search all tokens
-      const allTokens = await this.getAllTokens(network)
-      
-      return allTokens.filter(token => {
-        // Search by token ID
-        if (token.tokenId.toString().includes(searchQuery)) {
-          return true
-        }
-        
-        // Search by NFC ID (case insensitive)
-        if (token.nfcId.toLowerCase().includes(searchQuery)) {
-          return true
-        }
-        
-        // Search by name in IPFS data
-        if (token.ipfsData?.name?.toLowerCase().includes(searchQuery)) {
-          return true
-        }
-        
-        // Search by attributes
-        if (token.ipfsData?.attributes) {
-          const attributes = token.ipfsData.attributes
-          return Object.values(attributes).some(value => 
-            value?.toString().toLowerCase().includes(searchQuery)
-          )
-        }
-        
-        return false
-      })
-    } catch (error) {
-      console.error('Error searching tokens:', error)
-      return []
-    }
-  }
+      const kaijus = await Promise.all(
+        nfts.map(async (nft: any) => {
+          return await this.getTokenDetails(nft.identifier)
+        })
+      )
 
-  /**
-   * Fetch metadata from IPFS
-   */
-  async fetchIpfsMetadata(tokenURI: string): Promise<any> {
-    try {
-      const response = await axios.get(`https://cryptokaiju.mypinata.cloud/ipfs/${tokenURI}`)
-      return response.data
+      return kaijus.filter(Boolean) as KaijuNFT[]
+      
     } catch (error) {
-      console.error(`Error fetching IPFS metadata for ${tokenURI}:`, error)
-      return null
+      console.error('Error fetching all tokens:', error)
+      return []
     }
   }
 
@@ -252,18 +455,25 @@ class CryptoKaijuApiService {
    */
   async getCollectionStats(): Promise<{totalSupply: number, owners: number}> {
     try {
-      // This would typically come from your backend or OpenSea
-      const allTokens = await this.getAllTokens()
-      const uniqueOwners = new Set(allTokens.map(token => token.owner)).size
-      
+      // This would need to be expanded to get full collection stats
+      // For now, return basic stats
       return {
-        totalSupply: allTokens.length,
-        owners: uniqueOwners
+        totalSupply: 3000, // Approximate - could be fetched from contract
+        owners: 800 // Approximate
       }
     } catch (error) {
       console.error('Error fetching collection stats:', error)
       return { totalSupply: 0, owners: 0 }
     }
+  }
+
+  /**
+   * Clear NFC mapping cache (useful for testing)
+   */
+  clearCache(): void {
+    this.nfcMappingCache = null
+    this.cacheExpiry = 0
+    console.log('NFC mapping cache cleared')
   }
 }
 

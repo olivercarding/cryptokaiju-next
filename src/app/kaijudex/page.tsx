@@ -203,43 +203,100 @@ export default function KaijudexPage() {
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'owned' | 'available'>('all')
   const [filterRarity, setFilterRarity] = useState<'all' | 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'>('all')
+  
+  // New state for search results
+  const [searchResults, setSearchResults] = useState<KaijuNFT[]>([])
+  const [isSearching, setIsSearching] = useState(false)
+  const [hasSearched, setHasSearched] = useState(false)
 
   // Create a Set of owned token IDs for quick lookup
   const ownedTokenIds = new Set(myKaijus.map(k => k.tokenId))
 
-  // Filter kaijus
-  const filteredKaijus = allKaijus.filter(kaiju => {
-    // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase()
-      const matchesSearch = 
-        kaiju.tokenId.includes(searchLower) ||
-        kaiju.nfcId.toLowerCase().includes(searchLower) ||
-        kaiju.ipfsData?.name?.toLowerCase().includes(searchLower) ||
-        Object.values(kaiju.ipfsData?.attributes || {}).some(val => 
-          val?.toString().toLowerCase().includes(searchLower)
-        )
-      if (!matchesSearch) return false
+  // Handle search with debouncing
+  useEffect(() => {
+    const performSearch = async () => {
+      if (!searchTerm.trim()) {
+        setSearchResults([])
+        setHasSearched(false)
+        return
+      }
+
+      // Only search if it looks like a specific lookup (token ID or NFC ID)
+      const query = searchTerm.trim()
+      const isTokenId = /^\d+$/.test(query)
+      const isNFCId = /^[0-9a-f]{8,}$/i.test(query)
+      
+      if (isTokenId || isNFCId) {
+        setIsSearching(true)
+        setHasSearched(true)
+        
+        try {
+          console.log(`🔍 Performing search for: "${query}"`)
+          const CryptoKaijuApiService = (await import('@/lib/services/CryptoKaijuApiService')).default
+          const results = await CryptoKaijuApiService.searchTokens(query)
+          console.log(`📊 Search results:`, results)
+          setSearchResults(results)
+        } catch (error) {
+          console.error('❌ Search failed:', error)
+          setSearchResults([])
+        } finally {
+          setIsSearching(false)
+        }
+      } else {
+        // For other searches, fall back to local filtering
+        setHasSearched(false)
+        setSearchResults([])
+      }
     }
 
-    // Ownership filter
-    if (filterType === 'owned' && !ownedTokenIds.has(kaiju.tokenId)) return false
-    if (filterType === 'available' && ownedTokenIds.has(kaiju.tokenId)) return false
+    // Debounce search
+    const timeoutId = setTimeout(performSearch, 500)
+    return () => clearTimeout(timeoutId)
+  }, [searchTerm])
 
-    // Rarity filter
-    if (filterRarity !== 'all') {
-      const attributes = kaiju.ipfsData?.attributes
-      let rarity: string = 'Common'
-      
-      if (attributes?.batch?.toLowerCase().includes('genesis')) rarity = 'Legendary'
-      else if (attributes?.class?.toLowerCase().includes('diamond')) rarity = 'Ultra Rare'
-      else if (attributes?.batch?.toLowerCase().includes('plush')) rarity = 'Rare'
-      
-      if (rarity !== filterRarity) return false
+  // Determine which kaijus to display
+  const getDisplayKaijus = () => {
+    // If we have search results, use those
+    if (hasSearched) {
+      return searchResults
     }
+    
+    // Otherwise, use local filtering on allKaijus
+    return allKaijus.filter(kaiju => {
+      // Search filter (local)
+      if (searchTerm && !hasSearched) {
+        const searchLower = searchTerm.toLowerCase()
+        const matchesSearch = 
+          kaiju.tokenId.includes(searchLower) ||
+          kaiju.nfcId.toLowerCase().includes(searchLower) ||
+          kaiju.ipfsData?.name?.toLowerCase().includes(searchLower) ||
+          Object.values(kaiju.ipfsData?.attributes || {}).some(val => 
+            val?.toString().toLowerCase().includes(searchLower)
+          )
+        if (!matchesSearch) return false
+      }
 
-    return true
-  })
+      // Ownership filter
+      if (filterType === 'owned' && !ownedTokenIds.has(kaiju.tokenId)) return false
+      if (filterType === 'available' && ownedTokenIds.has(kaiju.tokenId)) return false
+
+      // Rarity filter
+      if (filterRarity !== 'all') {
+        const attributes = kaiju.ipfsData?.attributes
+        let rarity: string = 'Common'
+        
+        if (attributes?.batch?.toLowerCase().includes('genesis')) rarity = 'Legendary'
+        else if (attributes?.class?.toLowerCase().includes('diamond')) rarity = 'Ultra Rare'
+        else if (attributes?.batch?.toLowerCase().includes('plush')) rarity = 'Rare'
+        
+        if (rarity !== filterRarity) return false
+      }
+
+      return true
+    })
+  }
+
+  const filteredKaijus = getDisplayKaijus()
 
   if (loadingAll && allKaijus.length === 0) {
     return (
@@ -251,7 +308,7 @@ export default function KaijudexPage() {
             className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full mx-auto mb-4"
           />
           <div className="text-kaiju-pink font-mono text-lg">INITIALIZING KAIJUDEX...</div>
-          <div className="text-white/60 font-mono text-sm mt-2">Scanning blockchain database...</div>
+          <div className="text-white/60 font-mono text-sm mt-2">Scanning blockchain for new Kaiju...</div>
         </div>
       </div>
     )
@@ -333,6 +390,138 @@ export default function KaijudexPage() {
         </div>
       )}
 
+      {/* Debug Section - Only in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="px-6 mb-8">
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-orange-500/20 backdrop-blur-sm border border-orange-400/30 rounded-xl p-4"
+            >
+              <h3 className="text-orange-200 font-bold mb-3 text-center">🧪 Debug Tools (Development Only)</h3>
+              <div className="flex flex-wrap gap-2 justify-center">
+                <button 
+                  onClick={async () => {
+                    console.log('🧪 Starting NFC debug tests...')
+                    
+                    try {
+                      // Import the service
+                      const CryptoKaijuApiService = (await import('@/lib/services/CryptoKaijuApiService')).default
+                      
+                      console.log('✅ Service imported successfully')
+                      
+                      // Test 1: Get token details to see trait structure
+                      console.log('🔍 Test 1: Fetching token 1300...')
+                      const token = await CryptoKaijuApiService.getTokenDetails('1300')
+                      console.log('📄 Token data:', token)
+                      console.log('🏷️ Traits/attributes:', token?.ipfsData?.attributes)
+                      
+                      // Test 2: Clear cache and build NFC mapping
+                      console.log('🔄 Test 2: Building NFC mapping...')
+                      CryptoKaijuApiService.clearCache()
+                      const mapping = await CryptoKaijuApiService.getNFCMapping()
+                      
+                      console.log('📊 NFC Mapping Results:')
+                      console.log('- Total mappings found:', Object.keys(mapping).length)
+                      console.log('- Sample mappings:', Object.entries(mapping).slice(0, 10))
+                      
+                      // Test 3: Try searching for an NFC ID
+                      console.log('🔍 Test 3: Testing NFC search...')
+                      const searchResults = await CryptoKaijuApiService.searchTokens('043821FA4E6E80')
+                      console.log('🎯 Search results:', searchResults)
+                      
+                      // Test 4: Try direct NFC lookup
+                      console.log('🔍 Test 4: Testing direct NFC lookup...')
+                      const nfcResults = await CryptoKaijuApiService.lookupByNFC('043821FA4E6E80')
+                      console.log('🎯 NFC lookup results:', nfcResults)
+                      
+                      alert('✅ Debug tests complete! Check browser console for results.')
+                      
+                    } catch (error) {
+                      console.error('❌ Debug test failed:', error)
+                      alert('❌ Debug test failed. Check console for details.')
+                    }
+                  }}
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-bold px-4 py-2 rounded text-sm"
+                >
+                  🧪 Debug NFC Mapping
+                </button>
+                
+                <button 
+                  onClick={async () => {
+                    try {
+                      const CryptoKaijuApiService = (await import('@/lib/services/CryptoKaijuApiService')).default
+                      await CryptoKaijuApiService.testAPI()
+                      alert('✅ API test complete! Check console.')
+                    } catch (error) {
+                      console.error('❌ API test failed:', error)
+                      alert('❌ API test failed. Check console.')
+                    }
+                  }}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded text-sm"
+                >
+                  🔌 Test API
+                </button>
+                
+                <button 
+                  onClick={async () => {
+                    try {
+                      const CryptoKaijuApiService = (await import('@/lib/services/CryptoKaijuApiService')).default
+                      
+                      // Test different token IDs to see trait variations
+                      console.log('🔍 Testing multiple tokens for trait variations...')
+                      
+                      const testTokens = ['1', '2', '100', '1300', '2000']
+                      
+                      for (const tokenId of testTokens) {
+                        try {
+                          console.log(`\n--- Testing Token ${tokenId} ---`)
+                          const token = await CryptoKaijuApiService.getTokenDetails(tokenId)
+                          if (token) {
+                            console.log(`Token ${tokenId}:`, token.ipfsData?.name)
+                            console.log(`Traits:`, token.ipfsData?.attributes)
+                            
+                            // Look for any field that might contain NFC
+                            const attrs = token.ipfsData?.attributes || {}
+                            Object.entries(attrs).forEach(([key, value]) => {
+                              if (key.toLowerCase().includes('nfc') || 
+                                  (typeof value === 'string' && value.match(/^[0-9a-f]{8,}$/i))) {
+                                console.log(`🏷️ Possible NFC field: ${key} = ${value}`)
+                              }
+                            })
+                          } else {
+                            console.log(`❌ Token ${tokenId} not found`)
+                          }
+                          
+                          // Small delay between requests
+                          await new Promise(resolve => setTimeout(resolve, 200))
+                          
+                        } catch (error) {
+                          console.log(`❌ Token ${tokenId} failed:`, error.message)
+                        }
+                      }
+                      
+                      alert('✅ Multi-token test complete! Check console for trait variations.')
+                      
+                    } catch (error) {
+                      console.error('❌ Multi-token test failed:', error)
+                      alert('❌ Test failed. Check console.')
+                    }
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white font-bold px-4 py-2 rounded text-sm"
+                >
+                  🔍 Test Multiple Tokens
+                </button>
+              </div>
+              <p className="text-orange-300 text-xs mt-3 text-center">
+                These buttons will run tests and log results to browser console. This section only appears in development.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      )}
+
       {/* Search and Filters */}
       <div className="px-6 mb-12">
         <div className="max-w-7xl mx-auto">
@@ -348,11 +537,16 @@ export default function KaijudexPage() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-kaiju-pink/60" />
                 <input
                   type="text"
-                  placeholder="Search by ID, name, trait..."
+                  placeholder="Search by Token ID, NFC ID, name, trait..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full bg-white/5 border border-white/20 rounded-lg pl-10 pr-4 py-3 text-white placeholder-white/50 font-mono focus:border-kaiju-pink focus:outline-none"
                 />
+                {isSearching && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-kaiju-pink border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
 
               {/* Ownership Filter */}
@@ -393,9 +587,43 @@ export default function KaijudexPage() {
             </div>
 
             {/* Results count */}
-            <div className="mt-4 text-kaiju-pink/80 font-mono text-sm">
-              {filteredKaijus.length} entities found
-              {account && ` • ${myKaijus.length} owned by you`}
+            <div className="mt-4 flex items-center justify-between">
+              <div className="text-kaiju-pink/80 font-mono text-sm">
+                {hasSearched ? (
+                  <>
+                    {isSearching ? (
+                      'Searching...'
+                    ) : (
+                      <>
+                        {filteredKaijus.length} result{filteredKaijus.length !== 1 ? 's' : ''} found for "{searchTerm}"
+                        {filteredKaijus.length === 0 && (
+                          <span className="text-white/60 ml-2">
+                            (Try exact Token ID like "1300" or NFC ID like "046B14BA4E6E80")
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {filteredKaijus.length} entities found
+                    {account && ` • ${myKaijus.length} owned by you`}
+                  </>
+                )}
+              </div>
+              
+              {hasSearched && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('')
+                    setSearchResults([])
+                    setHasSearched(false)
+                  }}
+                  className="text-white/60 hover:text-white text-sm font-mono underline"
+                >
+                  Clear search
+                </button>
+              )}
             </div>
           </motion.div>
         </div>
