@@ -80,7 +80,7 @@ const PhysicalProductCard = ({
       transition={{ duration: 0.6, delay: index * 0.15 }}
       whileHover={{ 
         y: -8, 
-        scale: 1.02
+        scale: 1.01
       }}
       className="relative w-full max-w-[420px] mx-auto"
       onMouseEnter={() => setIsHovered(true)}
@@ -104,7 +104,7 @@ const PhysicalProductCard = ({
               transform: isHovered ? 'rotateY(180deg)' : 'rotateY(0deg)',
               backfaceVisibility: 'hidden'
             }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
           >
             <img
               src={character.physicalImage}
@@ -132,7 +132,7 @@ const PhysicalProductCard = ({
               transform: isHovered ? 'rotateY(0deg)' : 'rotateY(-180deg)',
               backfaceVisibility: 'hidden'
             }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
           >
             <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-kaiju-navy/10 via-kaiju-purple-light/10 to-kaiju-pink/10">
               <motion.img
@@ -140,12 +140,10 @@ const PhysicalProductCard = ({
                 alt={`${character.name} NFT`}
                 className="max-w-full max-h-full object-contain drop-shadow-2xl"
                 animate={{
-                  scale: isHovered ? 1.1 : 1,
-                  rotateZ: isHovered ? [0, 5, -5, 0] : 0
+                  scale: isHovered ? 1.05 : 1
                 }}
                 transition={{ 
-                  scale: { duration: 0.3 },
-                  rotateZ: { duration: 1.5, repeat: isHovered ? Infinity : 0 }
+                  scale: { duration: 0.3 }
                 }}
                 onError={(e) => {
                   const target = e.target as HTMLImageElement
@@ -171,32 +169,6 @@ const PhysicalProductCard = ({
           >
             Hover to see NFT
           </motion.div>
-
-          {/* Magical sparkle effects on hover */}
-          {isHovered && (
-            <>
-              {[...Array(6)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  className="absolute w-1 h-1 bg-kaiju-pink rounded-full"
-                  style={{
-                    left: `${20 + Math.random() * 60}%`,
-                    top: `${20 + Math.random() * 60}%`,
-                  }}
-                  animate={{
-                    scale: [0, 1, 0],
-                    opacity: [0, 1, 0],
-                    rotate: [0, 180],
-                  }}
-                  transition={{
-                    duration: 1.5,
-                    repeat: Infinity,
-                    delay: i * 0.2,
-                  }}
-                />
-              ))}
-            </>
-          )}
         </div>
 
         {/* Character info */}

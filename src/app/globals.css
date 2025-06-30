@@ -22,6 +22,14 @@
   --color-kaiju-accent-dot-pink: oklch(0.65 0.35 0);   /* Pink dot */
   --color-kaiju-accent-dot-blue: oklch(0.25 0.15 265); /* Dark blue dot */
   
+  /* Character Background Colors */
+  --color-kaiju-ghost-bg: oklch(0.95 0.08 280);     /* Light purple for Uri/Ghost */
+  --color-kaiju-water-bg: oklch(0.95 0.08 220);     /* Light blue for Kappa/Water */
+  --color-kaiju-fire-bg: oklch(0.95 0.08 25);       /* Light red/orange for Fire */
+  --color-kaiju-phoenix-bg: oklch(0.95 0.08 330);   /* Light magenta for Phoenix */
+  --color-kaiju-earth-bg: oklch(0.95 0.08 120);     /* Light green for Earth types */
+  --color-kaiju-electric-bg: oklch(0.95 0.08 60);   /* Light yellow for Electric */
+  
   /* Typography */
   --font-primary: "Open Sans", sans-serif;         /* The official brand font */
   
@@ -60,6 +68,14 @@
     border-image-repeat: stretch;
     border-image-source: url("data:image/svg+xml,%3Csvg width='8' height='8' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h2v2H0V0zm2 2h2v2H2V2zm2-2h2v2H4V0zm4 0v2h-2V0h2zm-2 4h2v2H6V4zm-2 2v2h2V6H4zm-2 0H0v2h2V6z' fill='%23ff005c' fill-rule='evenodd'/%3E%3C/svg%3E");
   }
+
+  /* Character background utilities */
+  .bg-kaiju-ghost { background-color: var(--color-kaiju-ghost-bg); }
+  .bg-kaiju-water { background-color: var(--color-kaiju-water-bg); }
+  .bg-kaiju-fire { background-color: var(--color-kaiju-fire-bg); }
+  .bg-kaiju-phoenix { background-color: var(--color-kaiju-phoenix-bg); }
+  .bg-kaiju-earth { background-color: var(--color-kaiju-earth-bg); }
+  .bg-kaiju-electric { background-color: var(--color-kaiju-electric-bg); }
 }
 
 /* Button styles to match the style guide */

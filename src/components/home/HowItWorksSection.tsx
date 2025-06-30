@@ -50,7 +50,7 @@ export default function HowItWorksSection({
   return (
     <section className="bg-kaiju-light-pink py-24 px-6" id="how">
       <div className="max-w-7xl mx-auto text-center">
-        <h2 className="text-3xl sm:text-4xl font-bold mb-14 text-kaiju-navy">{title}</h2>
+        <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black mb-14 text-kaiju-navy leading-tight">{title}</h2>
 
         <div className="relative grid gap-10 md:grid-cols-3 justify-items-center">
           {steps.map((step, i) => (
