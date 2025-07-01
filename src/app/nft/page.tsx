@@ -1,0 +1,450 @@
+// src/app/nft/page.tsx
+'use client'
+
+import { useState } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database } from 'lucide-react'
+import Link from 'next/link'
+import Image from 'next/image'
+import { useNFTSearch } from '@/lib/hooks/useSimplifiedCryptoKaiju'
+
+const NFTDisplayCard = ({ 
+  nft, 
+  openSeaData, 
+  onShare 
+}: { 
+  nft: any
+  openSeaData: any
+  onShare: () => void
+}) => {
+  const [imageError, setImageError] = useState(false)
+
+  const getImageSrc = () => {
+    if (imageError) return '/images/placeholder-kaiju.png'
+    if (openSeaData?.display_image_url) return openSeaData.display_image_url
+    if (openSeaData?.image_url) return openSeaData.image_url
+    if (nft?.ipfsData?.image) {
+      if (nft.ipfsData.image.startsWith('ipfs://')) {
+        return nft.ipfsData.image.replace('ipfs://', 'https://cryptokaiju.mypinata.cloud/ipfs/')
+      }
+      return nft.ipfsData.image
+    }
+    return '/images/placeholder-kaiju.png'
+  }
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+  }
+
+  const getTraits = () => {
+    const traits = []
+    
+    if (openSeaData?.traits) {
+      openSeaData.traits.forEach((trait: any) => {
+        traits.push({
+          trait_type: trait.trait_type,
+          value: trait.value.toString(),
+        })
+      })
+    }
+    
+    if (traits.length === 0 && nft?.ipfsData?.attributes) {
+      Object.entries(nft.ipfsData.attributes).forEach(([key, value]) => {
+        if (value && !['dob', 'nfc'].includes(key)) {
+          traits.push({
+            trait_type: key,
+            value: value.toString(),
+          })
+        }
+      })
+    }
+    
+    return traits
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.5 }}
+      className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100 max-w-4xl mx-auto"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* NFT Image */}
+        <div className="relative">
+          <div className="relative h-80 lg:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
+            <Image
+              src={getImageSrc()}
+              alt={nft.ipfsData?.name || `Kaiju #${nft.tokenId}`}
+              fill
+              className="object-contain p-6"
+              onError={() => setImageError(true)}
+            />
+            
+            {/* Floating action buttons */}
+            <div className="absolute bottom-4 right-4 flex gap-2">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={onShare}
+                className="w-10 h-10 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-kaiju-pink transition-colors shadow-lg"
+              >
+                <Share2 className="w-4 h-4" />
+              </motion.button>
+              {openSeaData?.opensea_url && (
+                <motion.a
+                  href={openSeaData.opensea_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-10 h-10 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors shadow-lg"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                </motion.a>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* NFT Info */}
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center gap-4 mb-4">
+              <span className="text-kaiju-pink font-mono text-lg font-bold">#{nft.tokenId}</span>
+              {nft.nfcId && (
+                <span className="text-gray-500 font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                  NFC: {nft.nfcId}
+                </span>
+              )}
+            </div>
+            
+            <h1 className="text-3xl font-black text-kaiju-navy mb-2">
+              {nft.ipfsData?.name || `Kaiju #${nft.tokenId}`}
+            </h1>
+            <p className="text-lg text-kaiju-pink font-medium">
+              Individual CryptoKaiju NFT
+            </p>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-2 text-gray-600 text-sm font-medium mb-1">
+                <User className="w-4 h-4" />
+                OWNER
+              </div>
+              <div className="text-kaiju-navy font-bold text-sm">
+                {nft.owner ? `${nft.owner.slice(0, 6)}...${nft.owner.slice(-4)}` : 'Unknown'}
+              </div>
+            </div>
+            
+            {nft.birthDate && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-gray-600 text-sm font-medium mb-1">
+                  <Calendar className="w-4 h-4" />
+                  MINTED
+                </div>
+                <div className="text-kaiju-navy font-bold text-sm">
+                  {formatDate(nft.birthDate)}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Description */}
+          {nft.ipfsData?.description && (
+            <div className="bg-kaiju-light-pink rounded-lg p-4">
+              <h3 className="font-bold text-kaiju-navy mb-2">Description</h3>
+              <p className="text-kaiju-navy/80 text-sm leading-relaxed">
+                {nft.ipfsData.description}
+              </p>
+            </div>
+          )}
+
+          {/* Traits */}
+          {getTraits().length > 0 && (
+            <div>
+              <h3 className="font-bold text-kaiju-navy mb-3">Traits</h3>
+              <div className="grid grid-cols-2 gap-2">
+                {getTraits().slice(0, 6).map((trait, index) => (
+                  <div key={index} className="bg-gray-50 rounded-lg p-3 text-center">
+                    <div className="text-xs text-gray-500 font-medium capitalize mb-1">
+                      {trait.trait_type}
+                    </div>
+                    <div className="text-sm font-bold text-kaiju-navy capitalize">
+                      {trait.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* External Links */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {openSeaData?.opensea_url && (
+              <a
+                href={openSeaData.opensea_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-center flex items-center justify-center gap-2"
+              >
+                View on OpenSea
+                <ExternalLink className="w-4 h-4" />
+              </a>
+            )}
+            
+            <a
+              href={`https://etherscan.io/token/0x102c527714ab7e652630cac7a30abb482b041fd0?a=${nft.tokenId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-center flex items-center justify-center gap-2"
+            >
+              Etherscan
+              <ExternalLink className="w-4 h-4" />
+            </a>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void; isLoading: boolean }) => {
+  const [query, setQuery] = useState('')
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (query.trim()) {
+      onSearch(query.trim())
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100 max-w-2xl mx-auto"
+    >
+      <div className="text-center mb-6">
+        <div className="flex items-center justify-center gap-3 mb-4">
+          <Search className="w-8 h-8 text-kaiju-pink" />
+          <h2 className="text-2xl font-bold text-kaiju-navy">Find Your NFT</h2>
+        </div>
+        <p className="text-gray-600">
+          Enter your Token ID or NFC ID to look up your specific CryptoKaiju
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="relative">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Enter Token ID (e.g., 1234) or NFC ID (e.g., 043821FA4E6E80)"
+            className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-4 pr-12 focus:border-kaiju-pink focus:outline-none font-medium text-lg"
+            disabled={isLoading}
+          />
+          <Search className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        </div>
+        
+        <button
+          type="submit"
+          disabled={!query.trim() || isLoading}
+          className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Searching...
+            </>
+          ) : (
+            <>
+              <Search className="w-5 h-5" />
+              Look Up NFT
+            </>
+          )}
+        </button>
+      </form>
+
+      <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+        <h4 className="font-semibold text-kaiju-navy mb-2">Search Tips:</h4>
+        <ul className="text-sm text-gray-600 space-y-1">
+          <li>• <strong>Token ID:</strong> The number on your NFT (e.g., 1, 1234, 2500)</li>
+          <li>• <strong>NFC ID:</strong> The chip ID from your physical toy (e.g., 043821FA4E6E80)</li>
+          <li>• Search is case-insensitive and works with partial NFC IDs</li>
+        </ul>
+      </div>
+    </motion.div>
+  )
+}
+
+export default function NFTLookupPage() {
+  const { result, isLoading, error, search, clear } = useNFTSearch()
+  const [searchQuery, setSearchQuery] = useState('')
+  const [hasSearched, setHasSearched] = useState(false)
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query)
+    setHasSearched(true)
+    search(query)
+  }
+
+  const handleShare = async () => {
+    if (navigator.share && result?.nft) {
+      try {
+        await navigator.share({
+          title: `${result.nft.ipfsData?.name || `Kaiju #${result.nft.tokenId}`} | CryptoKaiju`,
+          text: `Check out this CryptoKaiju NFT: ${result.nft.ipfsData?.name || `#${result.nft.tokenId}`}`,
+          url: window.location.href,
+        })
+      } catch (err) {
+        navigator.clipboard.writeText(window.location.href)
+        alert('URL copied to clipboard!')
+      }
+    } else {
+      navigator.clipboard.writeText(window.location.href)
+      alert('URL copied to clipboard!')
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-kaiju-light-pink to-white">
+      {/* Header */}
+      <div className="pt-32 pb-8 px-6">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="mb-8"
+          >
+            <Link 
+              href="/kaijudex"
+              className="inline-flex items-center gap-2 text-kaiju-pink hover:text-kaiju-red transition-colors font-medium"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Kaijudex
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-center mb-12"
+          >
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <Database className="w-8 h-8 text-kaiju-pink" />
+              <h1 className="text-4xl md:text-5xl font-black text-kaiju-navy">
+                NFT Lookup
+              </h1>
+            </div>
+            <p className="text-lg text-kaiju-navy/70 max-w-2xl mx-auto">
+              Find your specific CryptoKaiju NFT using its Token ID or NFC chip ID
+            </p>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-6 pb-20">
+        <div className="max-w-7xl mx-auto">
+          {!hasSearched || (!result?.nft && !isLoading && !error) ? (
+            <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+          ) : (
+            <div className="space-y-8">
+              {/* Search Again Bar */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white rounded-xl p-4 shadow-lg border border-gray-200 max-w-2xl mx-auto"
+              >
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+                    placeholder="Enter Token ID or NFC ID"
+                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:border-kaiju-pink focus:outline-none"
+                  />
+                  <button
+                    onClick={() => handleSearch(searchQuery)}
+                    disabled={isLoading}
+                    className="bg-kaiju-pink hover:bg-kaiju-red text-white font-bold px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
+                  >
+                    {isLoading ? 'Searching...' : 'Search'}
+                  </button>
+                </div>
+              </motion.div>
+
+              {/* Results */}
+              <AnimatePresence mode="wait">
+                {isLoading && (
+                  <motion.div
+                    key="loading"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="text-center py-20"
+                  >
+                    <div className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <div className="text-kaiju-navy text-xl font-bold">Searching for your NFT...</div>
+                    <div className="text-gray-600 mt-2">Looking up "{searchQuery}"</div>
+                  </motion.div>
+                )}
+
+                {error && (
+                  <motion.div
+                    key="error"
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    className="bg-white rounded-2xl p-8 shadow-xl border-2 border-red-200 max-w-2xl mx-auto text-center"
+                  >
+                    <div className="text-red-500 text-xl font-bold mb-4">NFT Not Found</div>
+                    <div className="text-gray-600 mb-6">
+                      Could not find a CryptoKaiju with "{searchQuery}". Please check your Token ID or NFC ID and try again.
+                    </div>
+                    <button
+                      onClick={() => {
+                        setSearchQuery('')
+                        setHasSearched(false)
+                        clear()
+                      }}
+                      className="bg-kaiju-pink text-white font-bold px-6 py-3 rounded-xl hover:bg-kaiju-red transition-colors"
+                    >
+                      Try Another Search
+                    </button>
+                  </motion.div>
+                )}
+
+                {result?.nft && (
+                  <motion.div
+                    key="success"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <NFTDisplayCard
+                      nft={result.nft}
+                      openSeaData={result.openSeaData}
+                      onShare={handleShare}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
