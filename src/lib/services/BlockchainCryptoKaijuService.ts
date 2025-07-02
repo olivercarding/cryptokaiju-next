@@ -1,10 +1,10 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts
+// src/lib/services/BlockchainCryptoKaijuService.ts - ENHANCED VERSION
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
 import axios from 'axios'
 
-// Complete Kaiju NFT ABI - extracted from your paste.txt
+// Complete Kaiju NFT ABI
 const KAIJU_NFT_ABI = [
   {
     "constant": true,
@@ -134,33 +134,56 @@ class BlockchainCryptoKaijuService {
 
   /**
    * Convert NFC hex string to bytes32 format (for contract calls)
+   * ENHANCED: Better debugging and validation
    */
   private nfcToBytes32(nfcHex: string): string {
-    // Remove 0x prefix if present
-    const cleanHex = nfcHex.replace(/^0x/, '').toUpperCase()
+    console.log(`🔄 Converting NFC "${nfcHex}" to bytes32...`)
     
-    // Convert to ASCII bytes (the contract stores NFC IDs as ASCII strings in bytes32)
+    // Remove 0x prefix if present and normalize
+    const cleanHex = nfcHex.replace(/^0x/, '').toUpperCase().trim()
+    console.log(`   Clean hex: "${cleanHex}"`)
+    
+    // Validate hex format
+    if (!/^[0-9A-F]+$/.test(cleanHex)) {
+      console.warn(`⚠️ Invalid hex format: ${cleanHex}`)
+    }
+    
+    // Convert to ASCII bytes (each character becomes its ASCII code in hex)
     let asciiHex = ''
     for (let i = 0; i < cleanHex.length; i++) {
-      asciiHex += cleanHex.charCodeAt(i).toString(16).padStart(2, '0')
+      const char = cleanHex[i]
+      const asciiCode = char.charCodeAt(0)
+      const hexCode = asciiCode.toString(16).padStart(2, '0')
+      asciiHex += hexCode
+      console.log(`   "${char}" -> ASCII ${asciiCode} -> hex ${hexCode}`)
     }
     
     // Pad to 64 characters (32 bytes)
     const paddedHex = asciiHex.padEnd(64, '0')
+    const result = `0x${paddedHex}`
     
-    return `0x${paddedHex}`
+    console.log(`   ASCII hex: ${asciiHex}`)
+    console.log(`   Padded: ${paddedHex}`)
+    console.log(`   Final bytes32: ${result}`)
+    
+    return result
   }
 
   /**
    * Convert bytes32 to readable NFC hex string
+   * ENHANCED: Better debugging
    */
   private bytes32ToNFC(bytes32: string): string {
+    console.log(`🔄 Converting bytes32 "${bytes32}" to NFC...`)
+    
     if (!bytes32 || bytes32 === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+      console.log(`   Empty/null bytes32`)
       return ''
     }
     
     // Remove 0x prefix
     const hex = bytes32.replace(/^0x/, '')
+    console.log(`   Hex without prefix: ${hex}`)
     
     // Convert from ASCII hex back to readable string
     let result = ''
@@ -169,11 +192,51 @@ class BlockchainCryptoKaijuService {
       if (hexPair === '00') break // Stop at null padding
       const charCode = parseInt(hexPair, 16)
       if (charCode > 0) {
-        result += String.fromCharCode(charCode)
+        const char = String.fromCharCode(charCode)
+        result += char
+        console.log(`   ${hexPair} -> ASCII ${charCode} -> "${char}"`)
       }
     }
     
+    console.log(`   Final NFC: "${result}"`)
     return result
+  }
+
+  /**
+   * ENHANCED: Find known NFC IDs for testing
+   */
+  async findKnownNFCs(maxTokens: number = 10): Promise<Array<{tokenId: string, nfcId: string}>> {
+    console.log(`🔍 Scanning first ${maxTokens} tokens for NFC IDs...`)
+    const knownNFCs: Array<{tokenId: string, nfcId: string}> = []
+    
+    try {
+      for (let tokenId = 0; tokenId < maxTokens; tokenId++) {
+        try {
+          const nfcIdBytes32 = await readContract({
+            contract: this.contract,
+            method: "nfcIdOf",
+            params: [BigInt(tokenId)]
+          })
+          
+          const nfcId = this.bytes32ToNFC(nfcIdBytes32)
+          if (nfcId) {
+            console.log(`✅ Token ${tokenId} has NFC ID: ${nfcId}`)
+            knownNFCs.push({ tokenId: tokenId.toString(), nfcId })
+          } else {
+            console.log(`   Token ${tokenId}: no NFC ID`)
+          }
+        } catch (error) {
+          console.log(`   Token ${tokenId}: error or doesn't exist`)
+        }
+      }
+      
+      console.log(`🎯 Found ${knownNFCs.length} tokens with NFC IDs`)
+      return knownNFCs
+      
+    } catch (error) {
+      console.error('❌ Error scanning for NFC IDs:', error)
+      return []
+    }
   }
 
   /**
@@ -244,7 +307,7 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Get Kaiju details by NFC ID (FAST - direct blockchain call)
+   * Get Kaiju details by NFC ID (ENHANCED with debugging)
    */
   async getByNFCId(nfcId: string): Promise<{ nft: KaijuNFT | null; openSeaData: OpenSeaAsset | null }> {
     try {
@@ -252,8 +315,29 @@ class BlockchainCryptoKaijuService {
 
       // Convert NFC ID to bytes32 format
       const nfcBytes32 = this.nfcToBytes32(nfcId)
+      console.log(`   Converted to bytes32: ${nfcBytes32}`)
       
-      // Get NFC details from contract
+      // ENHANCED: First try direct tokenOf method
+      console.log(`   Trying tokenOf method...`)
+      try {
+        const directTokenId = await readContract({
+          contract: this.contract,
+          method: "tokenOf",
+          params: [nfcBytes32]
+        })
+        
+        console.log(`   tokenOf returned: ${directTokenId}`)
+        
+        if (Number(directTokenId) > 0) {
+          console.log(`✅ Found via tokenOf: NFC ${nfcId} -> Token ${directTokenId}`)
+          return await this.getByTokenId(directTokenId.toString())
+        }
+      } catch (tokenOfError) {
+        console.log(`   tokenOf failed:`, tokenOfError)
+      }
+      
+      // ENHANCED: Fall back to nfcDetails method
+      console.log(`   Trying nfcDetails method...`)
       const nfcDetails = await readContract({
         contract: this.contract,
         method: "nfcDetails",
@@ -261,10 +345,14 @@ class BlockchainCryptoKaijuService {
       })
 
       const [tokenId, returnedNfcId, ipfsHash, birthDate] = nfcDetails
+      console.log(`   nfcDetails returned: tokenId=${tokenId}, returnedNfcId=${returnedNfcId}`)
       
       // Check if token exists (tokenId will be 0 if not found)
       if (Number(tokenId) === 0) {
-        console.log(`❌ NFC ID ${nfcId} not found on blockchain`)
+        console.log(`❌ NFC ID ${nfcId} not found on blockchain (tokenId = 0)`)
+        
+        // ENHANCED: Suggest checking known NFC IDs
+        console.log(`💡 Run findKnownNFCs() to see available NFC IDs`)
         return { nft: null, openSeaData: null }
       }
 
@@ -387,7 +475,6 @@ class BlockchainCryptoKaijuService {
     }
 
     // For name searches, we'd need to implement a different approach
-    // since the blockchain doesn't have a search function
     console.log(`❌ Name search not supported with blockchain-only approach`)
     return []
   }
@@ -454,10 +541,10 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Test the blockchain service
+   * ENHANCED Test the blockchain service with NFC discovery
    */
   async testService(): Promise<void> {
-    console.log('🧪 Testing Blockchain CryptoKaiju Service...')
+    console.log('🧪 Testing Enhanced Blockchain CryptoKaiju Service...')
     
     try {
       // Test 1: Get total supply
@@ -465,30 +552,43 @@ class BlockchainCryptoKaijuService {
       const stats = await this.getCollectionStats()
       console.log(`✅ Total supply: ${stats.totalSupply}`)
       
-      // Test 2: Try to get details for token #1
-      console.log('🎨 Testing token details for #1...')
-      const tokenResult = await this.getByTokenId('1')
-      if (tokenResult.nft) {
-        console.log(`✅ Token #1 found:`, tokenResult.nft.ipfsData?.name || 'Unnamed')
+      // Test 2: Find some known NFC IDs
+      console.log('🔍 Finding known NFC IDs...')
+      const knownNFCs = await this.findKnownNFCs(5)
+      
+      if (knownNFCs.length > 0) {
+        console.log(`✅ Found ${knownNFCs.length} tokens with NFC IDs:`)
+        knownNFCs.forEach(({tokenId, nfcId}) => {
+          console.log(`   Token ${tokenId}: ${nfcId}`)
+        })
         
-        // Test 3: If token #1 has an NFC ID, test reverse lookup
-        if (tokenResult.nft.nfcId) {
-          console.log(`🏷️ Testing reverse NFC lookup for: ${tokenResult.nft.nfcId}`)
-          const nfcResult = await this.getByNFCId(tokenResult.nft.nfcId)
-          if (nfcResult.nft && nfcResult.nft.tokenId === '1') {
-            console.log('✅ Reverse NFC lookup successful!')
-          } else {
-            console.log('❌ Reverse NFC lookup failed')
-          }
+        // Test 3: Test NFC lookup with a known good NFC ID
+        const testNFC = knownNFCs[0]
+        console.log(`🧪 Testing NFC lookup with known good NFC: ${testNFC.nfcId}`)
+        
+        const nfcResult = await this.getByNFCId(testNFC.nfcId)
+        if (nfcResult.nft && nfcResult.nft.tokenId === testNFC.tokenId) {
+          console.log('✅ NFC lookup test PASSED!')
+        } else {
+          console.log('❌ NFC lookup test FAILED!')
         }
       } else {
-        console.log('❌ Token #1 not found')
+        console.log('⚠️ No NFC IDs found in first 5 tokens')
+        
+        // Test with a random token
+        console.log('🎲 Testing with Token ID 1...')
+        const tokenResult = await this.getByTokenId('1')
+        if (tokenResult.nft) {
+          console.log(`✅ Token #1 found:`, tokenResult.nft.ipfsData?.name || 'Unnamed')
+        } else {
+          console.log('❌ Token #1 not found')
+        }
       }
       
-      console.log('🎉 Blockchain service test completed!')
+      console.log('🎉 Enhanced blockchain service test completed!')
       
     } catch (error) {
-      console.error('❌ Blockchain service test failed:', error)
+      console.error('❌ Enhanced blockchain service test failed:', error)
       throw error
     }
   }
