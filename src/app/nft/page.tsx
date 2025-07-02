@@ -1,4 +1,4 @@
-// src/app/nft/page.tsx
+// src/app/nft/page.tsx - FIXED VERSION
 'use client'
 
 import { useState } from 'react'
@@ -49,8 +49,9 @@ const NFTDisplayCard = ({
     const traits = []
     
     if (openSeaData?.traits) {
-      openSeaData.traits.forEach((trait: any) => {
+      openSeaData.traits.forEach((trait: any, index: number) => {
         traits.push({
+          id: `os-${index}`, // FIXED: Add unique ID
           trait_type: trait.trait_type,
           value: trait.value.toString(),
         })
@@ -58,9 +59,10 @@ const NFTDisplayCard = ({
     }
     
     if (traits.length === 0 && nft?.ipfsData?.attributes) {
-      Object.entries(nft.ipfsData.attributes).forEach(([key, value]) => {
+      Object.entries(nft.ipfsData.attributes).forEach(([key, value], index) => {
         if (value && !['dob', 'nfc'].includes(key)) {
           traits.push({
+            id: `ipfs-${index}`, // FIXED: Add unique ID
             trait_type: key,
             value: value.toString(),
           })
@@ -132,11 +134,6 @@ const NFTDisplayCard = ({
                   <span className="text-gray-500 font-mono text-sm bg-gray-100 px-2 py-1 rounded">
                     NFC: {nft.nfcId}
                   </span>
-                  {showConversion && (
-                    <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
-                      Raw: {nft.nfcId ? `${nft.nfcId.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('')}...` : 'N/A'}
-                    </span>
-                  )}
                 </div>
               )}
             </div>
@@ -185,13 +182,13 @@ const NFTDisplayCard = ({
             </div>
           )}
 
-          {/* Traits */}
+          {/* Traits - FIXED: Using unique keys */}
           {getTraits().length > 0 && (
             <div>
               <h3 className="font-bold text-kaiju-navy mb-3">Traits</h3>
               <div className="grid grid-cols-2 gap-2">
-                {getTraits().slice(0, 6).map((trait, index) => (
-                  <div key={index} className="bg-gray-50 rounded-lg p-3 text-center">
+                {getTraits().slice(0, 6).map((trait) => (
+                  <div key={trait.id} className="bg-gray-50 rounded-lg p-3 text-center">
                     <div className="text-xs text-gray-500 font-medium capitalize mb-1">
                       {trait.trait_type}
                     </div>
@@ -426,7 +423,7 @@ export default function NFTLookupPage() {
               <div className="bg-gray-800 rounded-lg p-4 max-h-60 overflow-y-auto">
                 {testResults.length > 0 ? (
                   testResults.map((log, index) => (
-                    <div key={index} className="text-sm font-mono mb-1">
+                    <div key={`log-${index}`} className="text-sm font-mono mb-1">
                       {log}
                     </div>
                   ))
