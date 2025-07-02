@@ -3,10 +3,15 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database } from 'lucide-react'
+import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database, Zap, Settings } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useNFTSearch } from '@/lib/hooks/useSimplifiedCryptoKaiju'
+import { useBlockchainNFTSearch, useBlockchainTest } from '@/lib/hooks/useBlockchainCryptoKaiju'
+
+// Import the test component
+const NFCConversionTest = dynamic(() => import('@/components/dev/NFCConversionTest'), { ssr: false })
+
+import dynamic from 'next/dynamic'
 
 const NFTDisplayCard = ({ 
   nft, 
@@ -85,6 +90,12 @@ const NFTDisplayCard = ({
               onError={() => setImageError(true)}
             />
             
+            {/* Blockchain badge */}
+            <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <Zap className="w-3 h-3" />
+              ON-CHAIN
+            </div>
+            
             {/* Floating action buttons */}
             <div className="absolute bottom-4 right-4 flex gap-2">
               <motion.button
@@ -117,17 +128,25 @@ const NFTDisplayCard = ({
             <div className="flex items-center gap-4 mb-4">
               <span className="text-kaiju-pink font-mono text-lg font-bold">#{nft.tokenId}</span>
               {nft.nfcId && (
-                <span className="text-gray-500 font-mono text-sm bg-gray-100 px-2 py-1 rounded">
-                  NFC: {nft.nfcId}
-                </span>
+                <div className="flex flex-col gap-1">
+                  <span className="text-gray-500 font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                    NFC: {nft.nfcId}
+                  </span>
+                  {showConversion && (
+                    <span className="text-xs text-gray-400 font-mono bg-gray-50 px-2 py-1 rounded">
+                      Raw: {nft.nfcId ? `${nft.nfcId.split('').map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('')}...` : 'N/A'}
+                    </span>
+                  )}
+                </div>
               )}
             </div>
             
             <h1 className="text-3xl font-black text-kaiju-navy mb-2">
               {nft.ipfsData?.name || `Kaiju #${nft.tokenId}`}
             </h1>
-            <p className="text-lg text-kaiju-pink font-medium">
-              Individual CryptoKaiju NFT
+            <p className="text-lg text-kaiju-pink font-medium flex items-center gap-2">
+              <Database className="w-4 h-4" />
+              Blockchain-Verified NFT
             </p>
           </div>
 
@@ -147,7 +166,7 @@ const NFTDisplayCard = ({
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-gray-600 text-sm font-medium mb-1">
                   <Calendar className="w-4 h-4" />
-                  MINTED
+                  BIRTH DATE
                 </div>
                 <div className="text-kaiju-navy font-bold text-sm">
                   {formatDate(nft.birthDate)}
@@ -234,11 +253,11 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
     >
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <Search className="w-8 h-8 text-kaiju-pink" />
-          <h2 className="text-2xl font-bold text-kaiju-navy">Find Your NFT</h2>
+          <Database className="w-8 h-8 text-kaiju-pink" />
+          <h2 className="text-2xl font-bold text-kaiju-navy">Blockchain NFT Lookup</h2>
         </div>
         <p className="text-gray-600">
-          Enter your Token ID or NFC ID to look up your specific CryptoKaiju
+          Instantly find your CryptoKaiju using direct blockchain queries
         </p>
       </div>
 
@@ -263,23 +282,27 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
           {isLoading ? (
             <>
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              Searching...
+              Searching Blockchain...
             </>
           ) : (
             <>
-              <Search className="w-5 h-5" />
-              Look Up NFT
+              <Zap className="w-5 h-5" />
+              Search Blockchain
             </>
           )}
         </button>
       </form>
 
-      <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-        <h4 className="font-semibold text-kaiju-navy mb-2">Search Tips:</h4>
-        <ul className="text-sm text-gray-600 space-y-1">
-          <li>• <strong>Token ID:</strong> The number on your NFT (e.g., 1, 1234, 2500)</li>
-          <li>• <strong>NFC ID:</strong> The chip ID from your physical toy (e.g., 043821FA4E6E80)</li>
-          <li>• Search is case-insensitive and works with partial NFC IDs</li>
+      <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
+        <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
+          <Sparkles className="w-4 h-4" />
+          ⚡ Blockchain-Powered Search
+        </h4>
+        <ul className="text-sm text-green-700 space-y-1">
+          <li>• <strong>Instant results</strong> - queries the smart contract directly</li>
+          <li>• <strong>Always accurate</strong> - no API dependencies or rate limits</li>
+          <li>• <strong>Token ID:</strong> Any number (e.g., 1, 1234, 2500)</li>
+          <li>• <strong>NFC ID:</strong> Hex string from your physical toy (e.g., 043821FA4E6E80)</li>
         </ul>
       </div>
     </motion.div>
@@ -287,9 +310,12 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
 }
 
 export default function NFTLookupPage() {
-  const { result, isLoading, error, search, clear } = useNFTSearch()
+  const { result, isLoading, error, search, clear } = useBlockchainNFTSearch()
+  const { runTest, isTestRunning, testResults } = useBlockchainTest()
   const [searchQuery, setSearchQuery] = useState('')
   const [hasSearched, setHasSearched] = useState(false)
+  const [showTest, setShowTest] = useState(false)
+  const [showConversion, setShowConversion] = useState(false)
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -341,17 +367,90 @@ export default function NFTLookupPage() {
             className="text-center mb-12"
           >
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Database className="w-8 h-8 text-kaiju-pink" />
+              <Zap className="w-8 h-8 text-kaiju-pink" />
               <h1 className="text-4xl md:text-5xl font-black text-kaiju-navy">
-                NFT Lookup
+                Blockchain NFT Lookup
               </h1>
             </div>
             <p className="text-lg text-kaiju-navy/70 max-w-2xl mx-auto">
-              Find your specific CryptoKaiju NFT using its Token ID or NFC chip ID
+              Find your CryptoKaiju instantly using direct smart contract queries
             </p>
+          </motion.div>
+
+          {/* Test Buttons */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="text-center mb-8 space-y-2"
+          >
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowTest(!showTest)}
+                className="text-gray-500 hover:text-kaiju-pink text-sm font-medium transition-colors"
+              >
+                🧪 Blockchain Test Panel
+              </button>
+              <button
+                onClick={() => setShowConversion(!showConversion)}
+                className="text-gray-500 hover:text-blue-600 text-sm font-medium transition-colors"
+              >
+                <Settings className="w-4 h-4 inline mr-1" />
+                NFC Conversion Test
+              </button>
+            </div>
           </motion.div>
         </div>
       </div>
+
+      {/* Test Panels */}
+      <AnimatePresence>
+        {showTest && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-6 mb-8"
+          >
+            <div className="max-w-4xl mx-auto bg-gray-900 text-white rounded-xl p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold">Blockchain Service Test</h3>
+                <button
+                  onClick={runTest}
+                  disabled={isTestRunning}
+                  className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  {isTestRunning ? 'Testing...' : 'Run Test'}
+                </button>
+              </div>
+              <div className="bg-gray-800 rounded-lg p-4 max-h-60 overflow-y-auto">
+                {testResults.length > 0 ? (
+                  testResults.map((log, index) => (
+                    <div key={index} className="text-sm font-mono mb-1">
+                      {log}
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-gray-400 text-sm">Click "Run Test" to test blockchain connectivity</div>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {showConversion && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="px-6 mb-8"
+          >
+            <div className="max-w-7xl mx-auto">
+              <NFCConversionTest />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main Content */}
       <div className="px-6 pb-20">
@@ -378,9 +477,14 @@ export default function NFTLookupPage() {
                   <button
                     onClick={() => handleSearch(searchQuery)}
                     disabled={isLoading}
-                    className="bg-kaiju-pink hover:bg-kaiju-red text-white font-bold px-6 py-2 rounded-lg transition-colors disabled:opacity-50"
+                    className="bg-kaiju-pink hover:bg-kaiju-red text-white font-bold px-6 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
                   >
-                    {isLoading ? 'Searching...' : 'Search'}
+                    {isLoading ? (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Zap className="w-4 h-4" />
+                    )}
+                    Search
                   </button>
                 </div>
               </motion.div>
@@ -396,8 +500,8 @@ export default function NFTLookupPage() {
                     className="text-center py-20"
                   >
                     <div className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <div className="text-kaiju-navy text-xl font-bold">Searching for your NFT...</div>
-                    <div className="text-gray-600 mt-2">Looking up "{searchQuery}"</div>
+                    <div className="text-kaiju-navy text-xl font-bold">Searching Blockchain...</div>
+                    <div className="text-gray-600 mt-2">Querying smart contract for "{searchQuery}"</div>
                   </motion.div>
                 )}
 
@@ -411,7 +515,7 @@ export default function NFTLookupPage() {
                   >
                     <div className="text-red-500 text-xl font-bold mb-4">NFT Not Found</div>
                     <div className="text-gray-600 mb-6">
-                      Could not find a CryptoKaiju with "{searchQuery}". Please check your Token ID or NFC ID and try again.
+                      Could not find a CryptoKaiju with "{searchQuery}" on the blockchain. Please check your Token ID or NFC ID and try again.
                     </div>
                     <button
                       onClick={() => {

@@ -3,13 +3,13 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Wallet, Package, ExternalLink, Heart, Sparkles, Filter } from 'lucide-react'
+import { Search, Wallet, Package, ExternalLink, Heart, Sparkles, Filter, Zap, Database } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { ConnectButton } from "thirdweb/react"
 import { thirdwebClient } from '@/lib/thirdweb'
-import { useMyKaiju, useKaijuSearch } from '@/lib/hooks/useCryptoKaiju'
-import type { KaijuNFT } from '@/lib/services/CryptoKaijuApiService'
+import { useBlockchainMyKaiju, useBlockchainKaijuSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
+import type { KaijuNFT } from '@/lib/services/BlockchainCryptoKaijuService'
 
 const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
   const [imageError, setImageError] = useState(false)
@@ -50,13 +50,19 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
           transition={{ duration: 2, repeat: Infinity }}
         />
 
+        {/* Blockchain verified badge */}
+        <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
+          <Database className="w-3 h-3" />
+          ON-CHAIN
+        </div>
+
         {/* Token ID Badge */}
         <div className="absolute top-4 right-4 bg-kaiju-pink text-white px-3 py-1 rounded-full text-sm font-bold z-10">
           #{kaiju.tokenId}
         </div>
 
         {/* Character Image */}
-        <div className="relative h-64 mb-6 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="relative h-64 mb-6 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 mt-8">
           <Image
             src={getImageSrc()}
             alt={kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
@@ -90,6 +96,14 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
             {kaiju.ipfsData?.description || 'A mysterious and powerful Kaiju from the blockchain realm.'}
           </p>
 
+          {/* NFC ID Display */}
+          {kaiju.nfcId && (
+            <div className="mb-4 p-2 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="text-xs text-blue-600 font-medium">NFC CHIP ID</div>
+              <div className="text-sm font-mono font-bold text-blue-800">{kaiju.nfcId}</div>
+            </div>
+          )}
+
           {/* Attributes Grid */}
           {kaiju.ipfsData?.attributes && (
             <div className="grid grid-cols-2 gap-2 mb-4">
@@ -122,7 +136,7 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
               View Details
             </Link>
             <a
-              href={`https://opensea.io/assets/ethereum/0x0aa42b44ce63e4ba6c9b2c4a7bb7dd6d9f1b3f4a/${kaiju.tokenId}`}
+              href={`https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${kaiju.tokenId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-3 rounded-lg transition-colors text-sm flex items-center justify-center"
@@ -137,7 +151,7 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
 }
 
 const SearchSection = () => {
-  const { results, isLoading, search, clear, hasQuery } = useKaijuSearch()
+  const { results, isLoading, search, clear, hasQuery } = useBlockchainKaijuSearch()
   const [searchTerm, setSearchTerm] = useState('')
 
   const handleSearch = (e: React.FormEvent) => {
@@ -156,7 +170,7 @@ const SearchSection = () => {
           type="text"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search by Token ID, NFC ID, or name..."
+          placeholder="Search by Token ID or NFC ID..."
           className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 pr-12 focus:border-kaiju-pink focus:outline-none font-medium"
         />
         <button
@@ -182,7 +196,10 @@ const SearchSection = () => {
             className="bg-white rounded-xl border-2 border-gray-200 p-4"
           >
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-kaiju-navy">Search Results</h3>
+              <h3 className="font-bold text-kaiju-navy flex items-center gap-2">
+                <Zap className="w-4 h-4" />
+                Blockchain Search Results
+              </h3>
               <button
                 onClick={clear}
                 className="text-gray-500 hover:text-kaiju-pink text-sm font-medium"
@@ -199,7 +216,7 @@ const SearchSection = () => {
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500">
-                No Kaiju found matching your search.
+                No Kaiju found on blockchain matching your search.
               </div>
             )}
           </motion.div>
@@ -210,7 +227,7 @@ const SearchSection = () => {
 }
 
 export default function MyKaijuPage() {
-  const { kaijus, isLoading, error, isConnected } = useMyKaiju()
+  const { kaijus, isLoading, error, isConnected } = useBlockchainMyKaiju()
 
   if (!isConnected) {
     return (
@@ -231,16 +248,16 @@ export default function MyKaijuPage() {
               </div>
               
               <p className="text-xl text-kaiju-navy/70 mb-8 max-w-2xl mx-auto">
-                Connect your wallet to view your CryptoKaiju NFT collection
+                Connect your wallet to view your CryptoKaiju NFT collection directly from the blockchain
               </p>
 
               <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100 max-w-md mx-auto">
-                <Package className="w-16 h-16 text-kaiju-pink mx-auto mb-4" />
+                <Database className="w-16 h-16 text-kaiju-pink mx-auto mb-4" />
                 <h3 className="text-xl font-bold text-kaiju-navy mb-4">
                   Connect Your Wallet
                 </h3>
                 <p className="text-gray-600 mb-6">
-                  Connect your Ethereum wallet to view and manage your CryptoKaiju collection.
+                  Connect your Ethereum wallet to view and manage your CryptoKaiju collection with instant blockchain verification.
                 </p>
                 <ConnectButton
                   client={thirdwebClient}
@@ -276,9 +293,13 @@ export default function MyKaijuPage() {
                 My Kaiju Collection
               </h1>
             </div>
-            <p className="text-lg text-kaiju-navy/70">
-              Your personal collection of CryptoKaiju NFTs
+            <p className="text-lg text-kaiju-navy/70 mb-4">
+              Your personal collection of CryptoKaiju NFTs - verified on blockchain
             </p>
+            <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+              <Database className="w-4 h-4" />
+              Live blockchain data
+            </div>
           </motion.div>
 
           {/* Stats Bar */}
@@ -297,9 +318,9 @@ export default function MyKaijuPage() {
               </div>
               <div>
                 <div className="text-3xl font-black text-kaiju-purple-dark mb-1">
-                  {new Set(kaijus.map(k => k.ipfsData?.attributes?.batch)).size}
+                  {kaijus.filter(k => k.nfcId).length}
                 </div>
-                <div className="text-gray-600 font-medium">Unique Batches</div>
+                <div className="text-gray-600 font-medium">With NFC Chips</div>
               </div>
               <div>
                 <div className="text-3xl font-black text-kaiju-navy mb-1">
@@ -329,7 +350,8 @@ export default function MyKaijuPage() {
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                 className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full mx-auto mb-4"
               />
-              <div className="text-kaiju-navy text-xl font-bold">Loading your collection...</div>
+              <div className="text-kaiju-navy text-xl font-bold">Loading from blockchain...</div>
+              <div className="text-gray-600 mt-2">Fetching your NFTs directly from smart contract</div>
             </div>
           ) : error ? (
             <div className="text-center py-20">
