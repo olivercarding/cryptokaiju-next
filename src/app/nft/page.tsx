@@ -1,4 +1,4 @@
-// src/app/nft/page.tsx - COMPLETE FIXED VERSION
+// src/app/nft/page.tsx - COMPLETE WORKING VERSION
 'use client'
 
 import { useState } from 'react'
@@ -12,6 +12,91 @@ import { useBlockchainNFTSearch, useBlockchainTest } from '@/lib/hooks/useBlockc
 // Import the test component
 const NFCConversionTest = dynamic(() => import('@/components/dev/NFCConversionTest'), { ssr: false })
 
+// Enhanced Image Component with fallbacks
+const KaijuImage = ({ 
+  nft, 
+  openSeaData, 
+  onError 
+}: { 
+  nft: any
+  openSeaData: any
+  onError?: () => void
+}) => {
+  const [imageError, setImageError] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+  // Build image source priority list
+  const getImageSources = () => {
+    const sources: string[] = []
+    
+    // OpenSea sources (highest priority)
+    if (openSeaData?.display_image_url) sources.push(openSeaData.display_image_url)
+    if (openSeaData?.image_url) sources.push(openSeaData.image_url)
+    
+    // IPFS sources (via our proxy to avoid CORS)
+    if (nft?.ipfsData?.image) {
+      let ipfsUrl = nft.ipfsData.image
+      if (ipfsUrl.startsWith('ipfs://')) {
+        const hash = ipfsUrl.replace('ipfs://', '')
+        sources.push(`/api/ipfs/${hash}`)
+      } else if (ipfsUrl.includes('/ipfs/')) {
+        const hash = ipfsUrl.split('/ipfs/')[1]
+        sources.push(`/api/ipfs/${hash}`)
+      } else {
+        sources.push(`/api/ipfs/${ipfsUrl}`)
+      }
+    }
+    
+    // Token URI as IPFS source
+    if (nft?.tokenURI) {
+      let tokenUri = nft.tokenURI
+      if (tokenUri.startsWith('ipfs://')) {
+        const hash = tokenUri.replace('ipfs://', '')
+        sources.push(`/api/ipfs/${hash}`)
+      } else if (tokenUri.includes('/ipfs/')) {
+        const hash = tokenUri.split('/ipfs/')[1]
+        sources.push(`/api/ipfs/${hash}`)
+      }
+    }
+    
+    // Fallback placeholder
+    sources.push('/images/placeholder-kaiju.png')
+    
+    return sources
+  }
+
+  const imageSources = getImageSources()
+  const currentSrc = imageSources[currentImageIndex] || '/images/placeholder-kaiju.png'
+
+  const handleImageError = () => {
+    console.log(`❌ Image failed to load: ${currentSrc}`)
+    if (currentImageIndex < imageSources.length - 1) {
+      console.log(`🔄 Trying next image source...`)
+      setCurrentImageIndex(prev => prev + 1)
+    } else {
+      console.log(`⚠️ All image sources exhausted`)
+      setImageError(true)
+      onError?.()
+    }
+  }
+
+  const handleImageLoad = () => {
+    console.log(`✅ Image loaded successfully: ${currentSrc}`)
+  }
+
+  return (
+    <Image
+      src={currentSrc}
+      alt={openSeaData?.name || nft?.ipfsData?.name || `Kaiju #${nft?.tokenId}`}
+      fill
+      className="object-contain p-6"
+      onError={handleImageError}
+      onLoad={handleImageLoad}
+      priority
+    />
+  )
+}
+
 const NFTDisplayCard = ({ 
   nft, 
   openSeaData, 
@@ -21,42 +106,7 @@ const NFTDisplayCard = ({
   openSeaData: any
   onShare: () => void
 }) => {
-  const [imageError, setImageError] = useState(false)
   const [showDebugInfo, setShowDebugInfo] = useState(false)
-
-  const getImageSrc = () => {
-    console.log('🖼️ Determining image source:', {
-      imageError,
-      openSeaDisplayUrl: openSeaData?.display_image_url,
-      openSeaImageUrl: openSeaData?.image_url,
-      ipfsImage: nft?.ipfsData?.image
-    })
-
-    if (imageError) return '/images/placeholder-kaiju.png'
-    
-    // Priority order: OpenSea display_image_url > image_url > IPFS image
-    if (openSeaData?.display_image_url) {
-      console.log('✅ Using OpenSea display_image_url')
-      return openSeaData.display_image_url
-    }
-    if (openSeaData?.image_url) {
-      console.log('✅ Using OpenSea image_url')
-      return openSeaData.image_url
-    }
-    if (nft?.ipfsData?.image) {
-      let imageUrl = nft.ipfsData.image
-      if (imageUrl.startsWith('ipfs://')) {
-        imageUrl = imageUrl.replace('ipfs://', 'https://cryptokaiju.mypinata.cloud/ipfs/')
-      } else if (!imageUrl.startsWith('http')) {
-        imageUrl = `https://cryptokaiju.mypinata.cloud/ipfs/${imageUrl}`
-      }
-      console.log('✅ Using IPFS image:', imageUrl)
-      return imageUrl
-    }
-    
-    console.log('⚠️ No image source found, using placeholder')
-    return '/images/placeholder-kaiju.png'
-  }
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
@@ -68,16 +118,16 @@ const NFTDisplayCard = ({
 
   // Get the display name with fallback priority
   const getDisplayName = () => {
-    if (openSeaData?.name) return openSeaData.name
+    if (openSeaData?.name && !openSeaData.name.includes('Kaiju #')) return openSeaData.name
     if (nft?.ipfsData?.name) return nft.ipfsData.name
-    return `Kaiju #${nft?.tokenId || 'Unknown'}`
+    return `CryptoKaiju #${nft?.tokenId || 'Unknown'}`
   }
 
   // Get description with fallback
   const getDescription = () => {
-    if (openSeaData?.description) return openSeaData.description
+    if (openSeaData?.description && !openSeaData.description.includes('unique CryptoKaiju')) return openSeaData.description
     if (nft?.ipfsData?.description) return nft.ipfsData.description
-    return 'A unique CryptoKaiju NFT with physical toy counterpart.'
+    return 'A unique CryptoKaiju NFT with physical collectible counterpart.'
   }
 
   return (
@@ -91,17 +141,7 @@ const NFTDisplayCard = ({
         {/* NFT Image */}
         <div className="relative">
           <div className="relative h-80 lg:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
-            <Image
-              src={getImageSrc()}
-              alt={getDisplayName()}
-              fill
-              className="object-contain p-6"
-              onError={() => {
-                console.log('❌ Image failed to load, switching to placeholder')
-                setImageError(true)
-              }}
-              onLoad={() => console.log('✅ Image loaded successfully')}
-            />
+            <KaijuImage nft={nft} openSeaData={openSeaData} />
             
             {/* Blockchain badge */}
             <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
@@ -116,7 +156,7 @@ const NFTDisplayCard = ({
                   IPFS ✓
                 </div>
               )}
-              {openSeaData && (
+              {openSeaData && !openSeaData.name?.includes('Kaiju #') && (
                 <div className="bg-purple-500/90 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-bold">
                   OpenSea ✓
                 </div>
@@ -141,18 +181,16 @@ const NFTDisplayCard = ({
               >
                 <Share2 className="w-4 h-4" />
               </motion.button>
-              {openSeaData?.opensea_url && (
-                <motion.a
-                  href={openSeaData.opensea_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-10 h-10 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors shadow-lg"
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </motion.a>
-              )}
+              <motion.a
+                href={openSeaData?.opensea_url || `https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${nft?.tokenId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                className="w-10 h-10 bg-white/90 backdrop-blur-sm border border-gray-200 rounded-full flex items-center justify-center text-gray-600 hover:text-blue-600 transition-colors shadow-lg"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </motion.a>
             </div>
           </div>
         </div>
@@ -191,9 +229,11 @@ const NFTDisplayCard = ({
               >
                 <h4 className="font-bold mb-2 text-yellow-400">🔧 Debug Information</h4>
                 <div className="space-y-1 font-mono">
+                  <div>Token ID: {nft?.tokenId || 'None'}</div>
+                  <div>Owner: {nft?.owner ? `${nft.owner.slice(0, 8)}...` : 'None'}</div>
+                  <div>NFC ID: {nft?.nfcId || 'None'}</div>
                   <div>Has IPFS Data: {nft?.ipfsData ? '✅' : '❌'}</div>
-                  <div>Has OpenSea Data: {openSeaData ? '✅' : '❌'}</div>
-                  <div>OpenSea URL: {openSeaData?.opensea_url ? '✅' : '⚠️ Fallback'}</div>
+                  <div>Has OpenSea Data: {openSeaData && !openSeaData.name?.includes('Kaiju #') ? '✅' : '❌ (Fallback)'}</div>
                   <div>Token URI: {nft?.tokenURI || 'None'}</div>
                   <div>IPFS Image: {nft?.ipfsData?.image || 'None'}</div>
                   <div>OpenSea Image: {openSeaData?.image_url || 'None'}</div>
@@ -236,7 +276,7 @@ const NFTDisplayCard = ({
             </p>
           </div>
 
-          {/* External Links - Always show OpenSea link */}
+          {/* External Links */}
           <div className="flex flex-col sm:flex-row gap-3">
             <a
               href={openSeaData?.opensea_url || `https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${nft?.tokenId}`}
@@ -259,7 +299,7 @@ const NFTDisplayCard = ({
             </a>
           </div>
 
-          {/* Missing Data Warning - Only show if critical data is missing */}
+          {/* Data Quality Info */}
           {!nft?.ipfsData && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <div className="flex items-start gap-2">
@@ -268,7 +308,7 @@ const NFTDisplayCard = ({
                   <h4 className="font-semibold text-yellow-800 mb-1">IPFS Metadata Loading Issues</h4>
                   <div className="text-sm text-yellow-700">
                     Unable to load metadata from IPFS. This may affect the display of name, description, and traits.
-                    <div className="mt-2 text-xs">Check browser console for detailed error messages.</div>
+                    <div className="mt-2 text-xs">Using blockchain data and OpenSea fallbacks where available.</div>
                   </div>
                 </div>
               </div>
@@ -300,10 +340,10 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-3 mb-4">
           <Database className="w-8 h-8 text-kaiju-pink" />
-          <h2 className="text-2xl font-bold text-kaiju-navy">Blockchain NFT Lookup</h2>
+          <h2 className="text-2xl font-bold text-kaiju-navy">Enhanced NFT Lookup</h2>
         </div>
         <p className="text-gray-600">
-          Instantly find your CryptoKaiju using direct blockchain queries
+          Find your CryptoKaiju with improved error handling and CORS-free IPFS access
         </p>
       </div>
 
@@ -313,7 +353,7 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter Token ID (e.g., 1503) or NFC ID (e.g., 047D1BBA4E6E80)"
+            placeholder="Enter Token ID (e.g., 1129) or NFC ID (e.g., 042C0A8A9F6580)"
             className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-4 pr-12 focus:border-kaiju-pink focus:outline-none font-medium text-lg"
             disabled={isLoading}
           />
@@ -342,13 +382,13 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
       <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
         <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
           <Sparkles className="w-4 h-4" />
-          ⚡ Enhanced Blockchain Search
+          ⚡ Enhanced Features
         </h4>
         <ul className="text-sm text-green-700 space-y-1">
-          <li>• <strong>Improved error handling</strong> - detailed logging for debugging</li>
-          <li>• <strong>Multiple IPFS gateways</strong> - fallback for failed metadata</li>
-          <li>• <strong>Enhanced OpenSea integration</strong> - better image and link handling</li>
-          <li>• <strong>Debug mode</strong> - click debug button to see data sources</li>
+          <li>• <strong>CORS-free IPFS access</strong> - No more browser blocking</li>
+          <li>• <strong>Multiple image fallbacks</strong> - Always displays something</li>
+          <li>• <strong>Enhanced error handling</strong> - Better debugging information</li>
+          <li>• <strong>Graceful degradation</strong> - Works even when APIs fail</li>
         </ul>
       </div>
     </motion.div>
@@ -364,7 +404,7 @@ export default function NFTLookupPage() {
   const [showConversion, setShowConversion] = useState(false)
 
   const handleSearch = (query: string) => {
-    console.log(`🔍 Starting search for: "${query}"`)
+    console.log(`🔍 Starting enhanced search for: "${query}"`)
     setSearchQuery(query)
     setHasSearched(true)
     search(query)
@@ -416,11 +456,11 @@ export default function NFTLookupPage() {
             <div className="flex items-center justify-center gap-3 mb-4">
               <Zap className="w-8 h-8 text-kaiju-pink" />
               <h1 className="text-4xl md:text-5xl font-black text-kaiju-navy">
-                Enhanced NFT Lookup
+                NFT Lookup
               </h1>
             </div>
             <p className="text-lg text-kaiju-navy/70 max-w-2xl mx-auto">
-              Find your CryptoKaiju with improved error handling and debugging
+              Find your CryptoKaiju NFT with enhanced blockchain search
             </p>
           </motion.div>
 
@@ -436,14 +476,14 @@ export default function NFTLookupPage() {
                 onClick={() => setShowTest(!showTest)}
                 className="text-gray-500 hover:text-kaiju-pink text-sm font-medium transition-colors"
               >
-                🧪 Blockchain Test Panel
+                🧪 Test Panel
               </button>
               <button
                 onClick={() => setShowConversion(!showConversion)}
                 className="text-gray-500 hover:text-blue-600 text-sm font-medium transition-colors"
               >
                 <Settings className="w-4 h-4 inline mr-1" />
-                NFC Conversion Test
+                NFC Test
               </button>
             </div>
           </motion.div>
@@ -461,7 +501,7 @@ export default function NFTLookupPage() {
           >
             <div className="max-w-4xl mx-auto bg-gray-900 text-white rounded-xl p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">Enhanced Blockchain Service Test</h3>
+                <h3 className="text-lg font-bold">Blockchain Service Test</h3>
                 <button
                   onClick={runTest}
                   disabled={isTestRunning}
@@ -548,7 +588,7 @@ export default function NFTLookupPage() {
                   >
                     <div className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full animate-spin mx-auto mb-4" />
                     <div className="text-kaiju-navy text-xl font-bold">Searching Blockchain...</div>
-                    <div className="text-gray-600 mt-2">Enhanced search with better error handling</div>
+                    <div className="text-gray-600 mt-2">Enhanced search with CORS-free IPFS access</div>
                   </motion.div>
                 )}
 
@@ -562,7 +602,7 @@ export default function NFTLookupPage() {
                   >
                     <div className="text-red-500 text-xl font-bold mb-4">NFT Not Found</div>
                     <div className="text-gray-600 mb-6">
-                      Could not find a CryptoKaiju with "{searchQuery}" on the blockchain. Check the browser console for detailed error information.
+                      Could not find a CryptoKaiju with "{searchQuery}" on the blockchain.
                     </div>
                     <button
                       onClick={() => {
