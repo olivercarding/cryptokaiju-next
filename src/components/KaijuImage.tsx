@@ -150,4 +150,4 @@ const KaijuImage = ({
   )
 }
 
-export default KaijuImage
+export default KaijuImage   
