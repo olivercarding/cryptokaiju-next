@@ -1,4 +1,4 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - ENHANCED VERSION
+// src/lib/services/BlockchainCryptoKaijuService.ts - FIXED VERSION
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
@@ -118,6 +118,10 @@ export interface OpenSeaAsset {
     trait_type: string
     value: any
   }>
+  rarity?: {
+    rank: number
+    score: number
+  }
 }
 
 class BlockchainCryptoKaijuService {
@@ -134,120 +138,94 @@ class BlockchainCryptoKaijuService {
 
   /**
    * Convert NFC hex string to bytes32 format (for contract calls)
-   * ENHANCED: Better debugging and validation
    */
   private nfcToBytes32(nfcHex: string): string {
     console.log(`🔄 Converting NFC "${nfcHex}" to bytes32...`)
     
-    // Remove 0x prefix if present and normalize
     const cleanHex = nfcHex.replace(/^0x/, '').toUpperCase().trim()
     console.log(`   Clean hex: "${cleanHex}"`)
     
-    // Validate hex format
-    if (!/^[0-9A-F]+$/.test(cleanHex)) {
-      console.warn(`⚠️ Invalid hex format: ${cleanHex}`)
-    }
-    
-    // Convert to ASCII bytes (each character becomes its ASCII code in hex)
     let asciiHex = ''
     for (let i = 0; i < cleanHex.length; i++) {
       const char = cleanHex[i]
       const asciiCode = char.charCodeAt(0)
       const hexCode = asciiCode.toString(16).padStart(2, '0')
       asciiHex += hexCode
-      console.log(`   "${char}" -> ASCII ${asciiCode} -> hex ${hexCode}`)
     }
     
-    // Pad to 64 characters (32 bytes)
     const paddedHex = asciiHex.padEnd(64, '0')
     const result = `0x${paddedHex}`
     
-    console.log(`   ASCII hex: ${asciiHex}`)
-    console.log(`   Padded: ${paddedHex}`)
     console.log(`   Final bytes32: ${result}`)
-    
     return result
   }
 
   /**
    * Convert bytes32 to readable NFC hex string
-   * ENHANCED: Better debugging
    */
   private bytes32ToNFC(bytes32: string): string {
-    console.log(`🔄 Converting bytes32 "${bytes32}" to NFC...`)
-    
     if (!bytes32 || bytes32 === '0x0000000000000000000000000000000000000000000000000000000000000000') {
-      console.log(`   Empty/null bytes32`)
       return ''
     }
     
-    // Remove 0x prefix
     const hex = bytes32.replace(/^0x/, '')
-    console.log(`   Hex without prefix: ${hex}`)
-    
-    // Convert from ASCII hex back to readable string
     let result = ''
     for (let i = 0; i < hex.length; i += 2) {
       const hexPair = hex.substr(i, 2)
-      if (hexPair === '00') break // Stop at null padding
+      if (hexPair === '00') break
       const charCode = parseInt(hexPair, 16)
       if (charCode > 0) {
-        const char = String.fromCharCode(charCode)
-        result += char
-        console.log(`   ${hexPair} -> ASCII ${charCode} -> "${char}"`)
+        result += String.fromCharCode(charCode)
       }
     }
     
-    console.log(`   Final NFC: "${result}"`)
     return result
   }
 
   /**
-   * ENHANCED: Find known NFC IDs for testing
+   * Improved IPFS URL formation
    */
-  async findKnownNFCs(maxTokens: number = 10): Promise<Array<{tokenId: string, nfcId: string}>> {
-    console.log(`🔍 Scanning first ${maxTokens} tokens for NFC IDs...`)
-    const knownNFCs: Array<{tokenId: string, nfcId: string}> = []
+  private formatIPFSUrl(tokenURI: string): string {
+    if (!tokenURI) return ''
     
-    try {
-      for (let tokenId = 0; tokenId < maxTokens; tokenId++) {
-        try {
-          const nfcIdBytes32 = await readContract({
-            contract: this.contract,
-            method: "nfcIdOf",
-            params: [BigInt(tokenId)]
-          })
-          
-          const nfcId = this.bytes32ToNFC(nfcIdBytes32)
-          if (nfcId) {
-            console.log(`✅ Token ${tokenId} has NFC ID: ${nfcId}`)
-            knownNFCs.push({ tokenId: tokenId.toString(), nfcId })
-          } else {
-            console.log(`   Token ${tokenId}: no NFC ID`)
-          }
-        } catch (error) {
-          console.log(`   Token ${tokenId}: error or doesn't exist`)
-        }
-      }
-      
-      console.log(`🎯 Found ${knownNFCs.length} tokens with NFC IDs`)
-      return knownNFCs
-      
-    } catch (error) {
-      console.error('❌ Error scanning for NFC IDs:', error)
-      return []
+    console.log(`🔗 Formatting IPFS URL from: "${tokenURI}"`)
+    
+    // If it's already a full HTTP URL, return as-is
+    if (tokenURI.startsWith('https://') || tokenURI.startsWith('http://')) {
+      console.log(`   Already HTTP URL: ${tokenURI}`)
+      return tokenURI
     }
+    
+    // If it starts with ipfs://, replace with gateway
+    if (tokenURI.startsWith('ipfs://')) {
+      const hash = tokenURI.replace('ipfs://', '')
+      const url = `https://cryptokaiju.mypinata.cloud/ipfs/${hash}`
+      console.log(`   Converted IPFS protocol to gateway: ${url}`)
+      return url
+    }
+    
+    // If it looks like just a hash, prepend gateway
+    if (tokenURI.match(/^[a-zA-Z0-9]{46,}$/)) {
+      const url = `https://cryptokaiju.mypinata.cloud/ipfs/${tokenURI}`
+      console.log(`   Treated as hash, added gateway: ${url}`)
+      return url
+    }
+    
+    // Otherwise assume it's a path and add to gateway
+    const url = `https://cryptokaiju.mypinata.cloud/ipfs/${tokenURI}`
+    console.log(`   Default gateway formatting: ${url}`)
+    return url
   }
 
   /**
-   * Get Kaiju details by Token ID (FAST - direct blockchain call)
+   * Get Kaiju details by Token ID (ENHANCED with better error handling)
    */
   async getByTokenId(tokenId: string): Promise<{ nft: KaijuNFT | null; openSeaData: OpenSeaAsset | null }> {
     try {
       console.log(`🔍 Looking up Token ID ${tokenId} on blockchain...`)
 
-      // Get token details from contract
-      const [tokenDetails, owner, tokenURI] = await Promise.all([
+      // Get token details from contract - FIXED: use tokenURI method primarily
+      const [tokenDetails, owner, standardTokenURI] = await Promise.all([
         readContract({
           contract: this.contract,
           method: "tokenDetails",
@@ -265,37 +243,54 @@ class BlockchainCryptoKaijuService {
         })
       ])
 
-      const [contractTokenId, nfcIdBytes32, ipfsHash, birthDate] = tokenDetails
+      const [contractTokenId, nfcIdBytes32, tokenDetailsURI, birthDate] = tokenDetails
       const nfcId = this.bytes32ToNFC(nfcIdBytes32)
 
       console.log(`✅ Found on chain: Token ${tokenId}, NFC: ${nfcId}, Owner: ${owner}`)
+      console.log(`📝 Token URIs - tokenDetails: "${tokenDetailsURI}", tokenURI: "${standardTokenURI}"`)
+
+      // Use the standard tokenURI method as primary source
+      const tokenURI = (standardTokenURI as string) || (tokenDetailsURI as string)
+      console.log(`🎯 Using token URI: "${tokenURI}"`)
 
       const kaiju: KaijuNFT = {
         tokenId: contractTokenId.toString(),
         nfcId,
         owner: owner as string,
-        tokenURI: ipfsHash as string,
+        tokenURI: tokenURI,
         birthDate: Number(birthDate)
       }
 
-      // Fetch IPFS metadata if available
-      if (kaiju.tokenURI) {
+      // Fetch IPFS metadata with improved error handling
+      if (tokenURI) {
+        console.log(`📡 Fetching IPFS metadata...`)
         try {
-          const metadata = await this.fetchIpfsMetadata(kaiju.tokenURI)
+          const metadata = await this.fetchIpfsMetadata(tokenURI)
           if (metadata) {
             kaiju.ipfsData = metadata
+            console.log(`✅ IPFS metadata loaded: "${metadata.name || 'Unnamed'}"`)
+          } else {
+            console.warn('⚠️ IPFS metadata was null')
           }
         } catch (metadataError) {
-          console.warn('⚠️ Failed to fetch IPFS metadata:', metadataError)
+          console.error('❌ IPFS metadata fetch failed:', metadataError)
         }
+      } else {
+        console.warn('⚠️ No token URI available for IPFS metadata')
       }
 
-      // Optionally fetch OpenSea data (for rarity, etc.)
+      // Fetch OpenSea data with improved error handling  
+      console.log(`🌊 Fetching OpenSea data...`)
       let openSeaData = null
       try {
         openSeaData = await this.getOpenSeaData(tokenId)
+        if (openSeaData) {
+          console.log(`✅ OpenSea data loaded: "${openSeaData.name || 'Unnamed'}"`)
+        } else {
+          console.warn('⚠️ OpenSea data was null')
+        }
       } catch (osError) {
-        console.warn('⚠️ Failed to fetch OpenSea data:', osError)
+        console.error('❌ OpenSea fetch failed:', osError)
       }
 
       return { nft: kaiju, openSeaData }
@@ -307,18 +302,15 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Get Kaiju details by NFC ID (ENHANCED with debugging)
+   * Get Kaiju details by NFC ID
    */
   async getByNFCId(nfcId: string): Promise<{ nft: KaijuNFT | null; openSeaData: OpenSeaAsset | null }> {
     try {
       console.log(`🏷️ Looking up NFC ID ${nfcId} on blockchain...`)
 
-      // Convert NFC ID to bytes32 format
       const nfcBytes32 = this.nfcToBytes32(nfcId)
-      console.log(`   Converted to bytes32: ${nfcBytes32}`)
       
-      // ENHANCED: First try direct tokenOf method
-      console.log(`   Trying tokenOf method...`)
+      // Try direct tokenOf method first
       try {
         const directTokenId = await readContract({
           contract: this.contract,
@@ -326,18 +318,15 @@ class BlockchainCryptoKaijuService {
           params: [nfcBytes32]
         })
         
-        console.log(`   tokenOf returned: ${directTokenId}`)
-        
         if (Number(directTokenId) > 0) {
           console.log(`✅ Found via tokenOf: NFC ${nfcId} -> Token ${directTokenId}`)
           return await this.getByTokenId(directTokenId.toString())
         }
       } catch (tokenOfError) {
-        console.log(`   tokenOf failed:`, tokenOfError)
+        console.log(`⚠️ tokenOf method failed, trying nfcDetails...`)
       }
       
-      // ENHANCED: Fall back to nfcDetails method
-      console.log(`   Trying nfcDetails method...`)
+      // Fall back to nfcDetails method
       const nfcDetails = await readContract({
         contract: this.contract,
         method: "nfcDetails",
@@ -345,55 +334,14 @@ class BlockchainCryptoKaijuService {
       })
 
       const [tokenId, returnedNfcId, ipfsHash, birthDate] = nfcDetails
-      console.log(`   nfcDetails returned: tokenId=${tokenId}, returnedNfcId=${returnedNfcId}`)
       
-      // Check if token exists (tokenId will be 0 if not found)
       if (Number(tokenId) === 0) {
-        console.log(`❌ NFC ID ${nfcId} not found on blockchain (tokenId = 0)`)
-        
-        // ENHANCED: Suggest checking known NFC IDs
-        console.log(`💡 Run findKnownNFCs() to see available NFC IDs`)
+        console.log(`❌ NFC ID ${nfcId} not found on blockchain`)
         return { nft: null, openSeaData: null }
       }
 
-      console.log(`✅ Found on chain: NFC ${nfcId} -> Token ${tokenId}`)
-
-      // Get owner
-      const owner = await readContract({
-        contract: this.contract,
-        method: "ownerOf",
-        params: [tokenId]
-      })
-
-      const kaiju: KaijuNFT = {
-        tokenId: tokenId.toString(),
-        nfcId: this.bytes32ToNFC(returnedNfcId),
-        owner: owner as string,
-        tokenURI: ipfsHash as string,
-        birthDate: Number(birthDate)
-      }
-
-      // Fetch IPFS metadata if available
-      if (kaiju.tokenURI) {
-        try {
-          const metadata = await this.fetchIpfsMetadata(kaiju.tokenURI)
-          if (metadata) {
-            kaiju.ipfsData = metadata
-          }
-        } catch (metadataError) {
-          console.warn('⚠️ Failed to fetch IPFS metadata:', metadataError)
-        }
-      }
-
-      // Optionally fetch OpenSea data
-      let openSeaData = null
-      try {
-        openSeaData = await this.getOpenSeaData(tokenId.toString())
-      } catch (osError) {
-        console.warn('⚠️ Failed to fetch OpenSea data:', osError)
-      }
-
-      return { nft: kaiju, openSeaData }
+      console.log(`✅ Found via nfcDetails: NFC ${nfcId} -> Token ${tokenId}`)
+      return await this.getByTokenId(tokenId.toString())
 
     } catch (error) {
       console.error(`❌ Error fetching NFC ID ${nfcId}:`, error)
@@ -408,7 +356,6 @@ class BlockchainCryptoKaijuService {
     try {
       console.log(`👤 Fetching tokens for address: ${address}`)
 
-      // Get token IDs owned by address
       const tokenIds = await readContract({
         contract: this.contract,
         method: "tokensOf",
@@ -417,7 +364,6 @@ class BlockchainCryptoKaijuService {
 
       console.log(`📦 Found ${tokenIds.length} tokens for address`)
 
-      // Fetch details for each token (in batches to avoid overwhelming)
       const batchSize = 10
       const kaijus: KaijuNFT[] = []
 
@@ -439,7 +385,6 @@ class BlockchainCryptoKaijuService {
         const validResults = batchResults.filter(Boolean) as KaijuNFT[]
         kaijus.push(...validResults)
 
-        // Small delay between batches
         if (i + batchSize < tokenIds.length) {
           await new Promise(resolve => setTimeout(resolve, 100))
         }
@@ -455,26 +400,23 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Search for tokens by name or token ID (simple version)
+   * Search for tokens
    */
   async searchTokens(query: string): Promise<KaijuNFT[]> {
     const searchQuery = query.toLowerCase().trim()
     
-    // If query is numeric, try direct token ID lookup
     if (/^\d+$/.test(searchQuery)) {
       console.log(`🔢 Searching by Token ID: ${searchQuery}`)
       const result = await this.getByTokenId(searchQuery)
       return result.nft ? [result.nft] : []
     }
     
-    // If query looks like hex (NFC ID), try NFC lookup
     if (/^[0-9a-f]{8,}$/i.test(searchQuery)) {
       console.log(`🏷️ Searching by NFC ID: ${searchQuery}`)
       const result = await this.getByNFCId(searchQuery)
       return result.nft ? [result.nft] : []
     }
 
-    // For name searches, we'd need to implement a different approach
     console.log(`❌ Name search not supported with blockchain-only approach`)
     return []
   }
@@ -500,95 +442,180 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Fetch metadata from IPFS (reusable utility)
+   * ENHANCED: Fetch metadata from IPFS with better error handling and multiple attempts
    */
-  private async fetchIpfsMetadata(ipfsHash: string): Promise<any> {
-    try {
-      const response = await axios.get(
-        `https://cryptokaiju.mypinata.cloud/ipfs/${ipfsHash}`,
-        { 
-          timeout: 5000,
-          headers: { 'Accept': 'application/json' }
+  private async fetchIpfsMetadata(tokenURI: string): Promise<any> {
+    const maxRetries = 3
+    const timeout = 10000 // Increased timeout to 10 seconds
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        const ipfsUrl = this.formatIPFSUrl(tokenURI)
+        console.log(`📡 Attempt ${attempt}/${maxRetries}: Fetching IPFS metadata from: ${ipfsUrl}`)
+        
+        const response = await axios.get(ipfsUrl, { 
+          timeout,
+          headers: { 
+            'Accept': 'application/json',
+            'User-Agent': 'CryptoKaiju-App/1.0'
+          }
+        })
+        
+        console.log(`✅ IPFS fetch successful on attempt ${attempt}`)
+        return response.data
+        
+      } catch (error) {
+        console.warn(`⚠️ IPFS fetch attempt ${attempt} failed:`, error.message)
+        
+        if (attempt === maxRetries) {
+          console.error(`❌ All IPFS fetch attempts failed for: ${tokenURI}`)
+          // Try alternative gateway as last resort
+          try {
+            const hash = tokenURI.replace(/^(ipfs:\/\/|https?:\/\/[^\/]+\/ipfs\/)/, '')
+            const altUrl = `https://ipfs.io/ipfs/${hash}`
+            console.log(`🔄 Trying alternative gateway: ${altUrl}`)
+            
+            const response = await axios.get(altUrl, { 
+              timeout: 8000,
+              headers: { 'Accept': 'application/json' }
+            })
+            console.log(`✅ Alternative gateway successful`)
+            return response.data
+          } catch (altError) {
+            console.error(`❌ Alternative gateway also failed:`, altError.message)
+          }
+          
+          return null
         }
-      )
-      return response.data
-    } catch (error) {
-      console.warn(`⚠️ Failed to fetch IPFS metadata for ${ipfsHash}`)
-      return null
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
+      }
     }
+    
+    return null
   }
 
   /**
-   * Get OpenSea data (optional, for enhanced info)
+   * ENHANCED: Get OpenSea data with better error handling and correct URL formation
    */
   private async getOpenSeaData(tokenId: string): Promise<OpenSeaAsset | null> {
     try {
-      const response = await axios.get(
-        `https://api.opensea.io/api/v2/chain/ethereum/contract/${KAIJU_NFT_ADDRESS}/nfts/${tokenId}`,
-        {
-          headers: {
-            'X-API-KEY': process.env.NEXT_PUBLIC_OPENSEA_API_KEY || 'a221b5fb89fb4ffeb5fbf4fa42cc6532',
-            'Accept': 'application/json'
-          },
-          timeout: 5000
+      const url = `https://api.opensea.io/api/v2/chain/ethereum/contract/${KAIJU_NFT_ADDRESS}/nfts/${tokenId}`
+      console.log(`🌊 Fetching OpenSea data from: ${url}`)
+      
+      const response = await axios.get(url, {
+        headers: {
+          'X-API-KEY': process.env.NEXT_PUBLIC_OPENSEA_API_KEY || 'a221b5fb89fb4ffeb5fbf4fa42cc6532',
+          'Accept': 'application/json',
+          'User-Agent': 'CryptoKaiju-App/1.0'
+        },
+        timeout: 10000
+      })
+      
+      console.log(`✅ OpenSea API response status: ${response.status}`)
+      
+      if (response.data && response.data.nft) {
+        const nft = response.data.nft
+        
+        // Construct the OpenSea URL since it might not be in the response
+        const openSeaUrl = nft.opensea_url || `https://opensea.io/assets/ethereum/${KAIJU_NFT_ADDRESS}/${tokenId}`
+        
+        const asset: OpenSeaAsset = {
+          identifier: nft.identifier || tokenId,
+          name: nft.name || '',
+          description: nft.description || '',
+          image_url: nft.image_url || '',
+          display_image_url: nft.display_image_url || nft.image_url || '',
+          opensea_url: openSeaUrl,
+          traits: nft.traits || [],
+          rarity: nft.rarity
         }
-      )
-      return response.data.nft
+        
+        console.log(`✅ OpenSea data parsed successfully for "${asset.name}"`)
+        return asset
+      } else {
+        console.warn('⚠️ OpenSea response missing nft data')
+        return null
+      }
+      
     } catch (error) {
-      // OpenSea is optional, so don't throw
+      if (axios.isAxiosError(error)) {
+        console.error(`❌ OpenSea API error:`, {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        })
+      } else {
+        console.error(`❌ OpenSea fetch error:`, error)
+      }
       return null
     }
   }
 
   /**
-   * ENHANCED Test the blockchain service with NFC discovery
+   * Find known NFC IDs for testing
+   */
+  async findKnownNFCs(maxTokens: number = 10): Promise<Array<{tokenId: string, nfcId: string}>> {
+    console.log(`🔍 Scanning first ${maxTokens} tokens for NFC IDs...`)
+    const knownNFCs: Array<{tokenId: string, nfcId: string}> = []
+    
+    try {
+      for (let tokenId = 0; tokenId < maxTokens; tokenId++) {
+        try {
+          const nfcIdBytes32 = await readContract({
+            contract: this.contract,
+            method: "nfcIdOf",
+            params: [BigInt(tokenId)]
+          })
+          
+          const nfcId = this.bytes32ToNFC(nfcIdBytes32)
+          if (nfcId) {
+            console.log(`✅ Token ${tokenId} has NFC ID: ${nfcId}`)
+            knownNFCs.push({ tokenId: tokenId.toString(), nfcId })
+          }
+        } catch (error) {
+          // Token doesn't exist or has no NFC
+        }
+      }
+      
+      console.log(`🎯 Found ${knownNFCs.length} tokens with NFC IDs`)
+      return knownNFCs
+      
+    } catch (error) {
+      console.error('❌ Error scanning for NFC IDs:', error)
+      return []
+    }
+  }
+
+  /**
+   * Test the blockchain service
    */
   async testService(): Promise<void> {
     console.log('🧪 Testing Enhanced Blockchain CryptoKaiju Service...')
     
     try {
-      // Test 1: Get total supply
-      console.log('📊 Testing total supply...')
       const stats = await this.getCollectionStats()
       console.log(`✅ Total supply: ${stats.totalSupply}`)
       
-      // Test 2: Find some known NFC IDs
-      console.log('🔍 Finding known NFC IDs...')
-      const knownNFCs = await this.findKnownNFCs(5)
-      
-      if (knownNFCs.length > 0) {
-        console.log(`✅ Found ${knownNFCs.length} tokens with NFC IDs:`)
-        knownNFCs.forEach(({tokenId, nfcId}) => {
-          console.log(`   Token ${tokenId}: ${nfcId}`)
+      // Test a specific token that should exist
+      console.log('🧪 Testing Token ID 1503 (from your search)...')
+      const tokenResult = await this.getByTokenId('1503')
+      if (tokenResult.nft) {
+        console.log(`✅ Token 1503 found:`, {
+          name: tokenResult.nft.ipfsData?.name,
+          nfcId: tokenResult.nft.nfcId,
+          hasOpenSeaData: !!tokenResult.openSeaData
         })
-        
-        // Test 3: Test NFC lookup with a known good NFC ID
-        const testNFC = knownNFCs[0]
-        console.log(`🧪 Testing NFC lookup with known good NFC: ${testNFC.nfcId}`)
-        
-        const nfcResult = await this.getByNFCId(testNFC.nfcId)
-        if (nfcResult.nft && nfcResult.nft.tokenId === testNFC.tokenId) {
-          console.log('✅ NFC lookup test PASSED!')
-        } else {
-          console.log('❌ NFC lookup test FAILED!')
-        }
       } else {
-        console.log('⚠️ No NFC IDs found in first 5 tokens')
-        
-        // Test with a random token
-        console.log('🎲 Testing with Token ID 1...')
-        const tokenResult = await this.getByTokenId('1')
-        if (tokenResult.nft) {
-          console.log(`✅ Token #1 found:`, tokenResult.nft.ipfsData?.name || 'Unnamed')
-        } else {
-          console.log('❌ Token #1 not found')
-        }
+        console.log('❌ Token 1503 not found')
       }
       
-      console.log('🎉 Enhanced blockchain service test completed!')
+      console.log('🎉 Blockchain service test completed!')
       
     } catch (error) {
-      console.error('❌ Enhanced blockchain service test failed:', error)
+      console.error('❌ Blockchain service test failed:', error)
       throw error
     }
   }
