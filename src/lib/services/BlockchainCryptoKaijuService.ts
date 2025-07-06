@@ -76,6 +76,7 @@ export interface KaijuNFT {
   owner: string
   tokenURI: string
   birthDate?: number
+  batch?: string // Added batch information from OpenSea traits
   ipfsData?: {
     name: string
     description: string
@@ -178,13 +179,13 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Convert human-readable NFC ID to bytes32 format for contract calls
+   * Convert human-readable NFC ID to bytes32 format for contract calls (ASCII encoding)
    */
-  private nfcToBytes32(nfcId: string): string {
+  private nfcToBytes32ASCII(nfcId: string): string {
     if (!nfcId) return '0x' + '0'.repeat(64)
     
     const cleanNfc = nfcId.replace(/^0x/, '').toUpperCase()
-    console.log(`🔄 Converting NFC "${cleanNfc}" to bytes32...`)
+    console.log(`🔄 Converting NFC "${cleanNfc}" to bytes32 (ASCII)...`)
     
     let asciiHex = ''
     for (let i = 0; i < cleanNfc.length; i++) {
@@ -197,29 +198,71 @@ class BlockchainCryptoKaijuService {
     const paddedHex = asciiHex.padEnd(64, '0')
     const bytes32 = '0x' + paddedHex
     
-    console.log(`✅ Final bytes32: ${bytes32}`)
+    console.log(`✅ ASCII bytes32: ${bytes32}`)
     return bytes32
   }
 
   /**
-   * Convert bytes32 to readable NFC hex string
+   * Convert human-readable NFC ID to bytes32 format for contract calls (Direct hex encoding)
+   */
+  private nfcToBytes32Direct(nfcId: string): string {
+    if (!nfcId) return '0x' + '0'.repeat(64)
+    
+    const cleanNfc = nfcId.replace(/^0x/, '').toLowerCase()
+    console.log(`🔄 Converting NFC "${cleanNfc}" to bytes32 (Direct)...`)
+    
+    const paddedHex = cleanNfc.padEnd(64, '0')
+    const bytes32 = '0x' + paddedHex
+    
+    console.log(`✅ Direct bytes32: ${bytes32}`)
+    return bytes32
+  }
+
+  /**
+   * Backward-compatible function - tries ASCII encoding (most common)
+   */
+  private nfcToBytes32(nfcId: string): string {
+    return this.nfcToBytes32ASCII(nfcId)
+  }
+
+  /**
+   * Convert bytes32 to readable NFC hex string - UPDATED to handle both encoding schemes
    */
   private bytes32ToNFC(bytes32: string): string {
     if (!bytes32 || bytes32 === '0'.repeat(64)) return ''
     
     const hex = bytes32.replace(/^0x/, '')
     
-    let result = ''
+    // Try ASCII decoding first (current method)
+    let asciiResult = ''
+    let isValidAscii = true
+    
     for (let i = 0; i < hex.length; i += 2) {
       const hexPair = hex.substr(i, 2)
       if (hexPair === '00') break
+      
       const charCode = parseInt(hexPair, 16)
-      if (charCode > 0) {
-        result += String.fromCharCode(charCode)
+      
+      // Check if it's a valid printable ASCII character (0-9, A-F typically)
+      if (charCode >= 48 && charCode <= 70) { // '0'-'9' (48-57) and 'A'-'F' (65-70) range
+        asciiResult += String.fromCharCode(charCode)
+      } else {
+        // If we hit non-ASCII, this is probably direct hex encoding
+        isValidAscii = false
+        break
       }
     }
     
-    return result
+    // If ASCII decoding worked and gave us a reasonable NFC-like result, use it
+    if (isValidAscii && asciiResult.length >= 8 && /^[0-9A-F]+$/.test(asciiResult)) {
+      console.log(`✅ Decoded as ASCII: ${asciiResult}`)
+      return asciiResult
+    }
+    
+    // Otherwise, treat as direct hex encoding (like token 1414)
+    const directHex = hex.replace(/0+$/, '').toUpperCase() // Remove trailing zeros
+    console.log(`✅ Decoded as direct hex: ${directHex}`)
+    return directHex
   }
 
   /**
@@ -350,6 +393,25 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
+   * Extract batch information from OpenSea traits
+   */
+  private extractBatchFromOpenSea(openSeaData: OpenSeaAsset | null): string | undefined {
+    if (!openSeaData?.traits) return undefined
+    
+    const batchTrait = openSeaData.traits.find(trait => 
+      trait.trait_type?.toLowerCase() === 'batch'
+    )
+    
+    if (batchTrait?.value) {
+      const batch = String(batchTrait.value).trim()
+      console.log(`✅ Found batch: ${batch}`)
+      return batch
+    }
+    
+    return undefined
+  }
+
+  /**
    * Create fallback OpenSea data when API fails
    */
   private createFallbackOpenSeaData(tokenId: string): OpenSeaAsset {
@@ -468,6 +530,9 @@ class BlockchainCryptoKaijuService {
       const finalOpenSeaData = openSeaResult.status === 'fulfilled' ? 
         openSeaResult.value : this.createFallbackOpenSeaData(tokenId)
 
+      // Extract batch information from OpenSea data
+      kaiju.batch = this.extractBatchFromOpenSea(finalOpenSeaData)
+
       console.log(`🎉 Total lookup time: ${Date.now() - startTime}ms`)
       return { nft: kaiju, openSeaData: finalOpenSeaData }
 
@@ -478,7 +543,7 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * 🚀 OPTIMIZED: Get NFT by NFC ID with maximum parallelization
+   * 🚀 OPTIMIZED: Get NFT by NFC ID with maximum parallelization - UPDATED to try both encoding schemes
    */
   async getByNFCId(nfcId: string): Promise<{ nft: KaijuNFT | null; openSeaData: OpenSeaAsset | null }> {
     const startTime = Date.now()
@@ -486,27 +551,62 @@ class BlockchainCryptoKaijuService {
     try {
       console.log(`🚀 PARALLEL NFC lookup: ${nfcId}`)
       
-      // Convert NFC ID
-      const nfcBytes32 = this.nfcToBytes32(nfcId)
+      // Try BOTH encoding schemes since we don't know which one was used
+      const nfcBytes32ASCII = this.nfcToBytes32ASCII(nfcId)
+      const nfcBytes32Direct = this.nfcToBytes32Direct(nfcId)
       
-      // 🚀 STEP 1: Call nfcDetails with timeout and caching
-      console.log(`⚡ Contract nfcDetails call...`)
-      const nfcDetails = await this.callContractWithTimeout(
-        "nfcDetails", 
-        [nfcBytes32], 
-        `nfcDetails:${nfcId}`
-      )
+      console.log(`🔄 Trying both encoding schemes...`)
+      
+      // 🚀 STEP 1: Try ASCII encoding first (most common)
+      console.log(`⚡ Contract nfcDetails call (ASCII encoding)...`)
+      let nfcDetails: any
+      let usedEncoding = 'ASCII'
+      
+      try {
+        nfcDetails = await this.callContractWithTimeout(
+          "nfcDetails", 
+          [nfcBytes32ASCII], 
+          `nfcDetails:${nfcId}:ascii`
+        )
+        
+        // Check if we found something
+        const [tokenId] = nfcDetails as [bigint, string, string, bigint]
+        if (Number(tokenId) === 0) {
+          throw new Error('Not found with ASCII encoding')
+        }
+        
+        console.log(`✅ Found with ASCII encoding: Token ${tokenId}`)
+        
+      } catch (asciiError) {
+        console.log(`⚠️ ASCII encoding failed, trying direct hex...`)
+        
+        // 🚀 STEP 2: Try direct hex encoding
+        try {
+          nfcDetails = await this.callContractWithTimeout(
+            "nfcDetails", 
+            [nfcBytes32Direct], 
+            `nfcDetails:${nfcId}:direct`
+          )
+          
+          const [tokenId] = nfcDetails as [bigint, string, string, bigint]
+          if (Number(tokenId) === 0) {
+            throw new Error('Not found with direct encoding either')
+          }
+          
+          console.log(`✅ Found with direct hex encoding: Token ${tokenId}`)
+          usedEncoding = 'Direct'
+          
+        } catch (directError) {
+          console.log(`❌ NFC ID ${nfcId} not found with either encoding scheme`)
+          return { nft: null, openSeaData: null }
+        }
+      }
       
       const [tokenId, returnedNfcId, tokenUri, dob] = nfcDetails as [bigint, string, string, bigint]
       
-      if (Number(tokenId) === 0) {
-        console.log(`❌ NFC ID ${nfcId} not found`)
-        return { nft: null, openSeaData: null }
-      }
+      console.log(`✅ Found Token ID ${tokenId} using ${usedEncoding} encoding in ${Date.now() - startTime}ms`)
       
-      console.log(`✅ Found Token ID ${tokenId} in ${Date.now() - startTime}ms`)
-      
-      // 🚀 STEP 2: Launch owner lookup + IPFS + OpenSea ALL in parallel
+      // 🚀 STEP 3: Launch owner lookup + IPFS + OpenSea ALL in parallel
       console.log(`⚡ Launching parallel data fetch (using contract URLs)...`)
       const parallelStartTime = Date.now()
       
@@ -534,6 +634,9 @@ class BlockchainCryptoKaijuService {
       
       const finalOpenSeaData = openSeaResult.status === 'fulfilled' ? 
         openSeaResult.value : this.createFallbackOpenSeaData(tokenId.toString())
+      
+      // Extract batch information from OpenSea data
+      kaiju.batch = this.extractBatchFromOpenSea(finalOpenSeaData)
       
       console.log(`🎉 Total NFC lookup time: ${Date.now() - startTime}ms`)
       return { nft: kaiju, openSeaData: finalOpenSeaData }

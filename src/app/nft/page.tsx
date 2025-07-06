@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database, Zap, Settings, AlertCircle } from 'lucide-react'
+import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database, Zap, Settings, AlertCircle, Package } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
@@ -254,6 +254,19 @@ const NFTDisplayCard = ({
                 {nft?.owner ? `${nft.owner.slice(0, 6)}...${nft.owner.slice(-4)}` : 'Unknown'}
               </div>
             </div>
+
+              {/* Add batch information */}
+              {nft?.batch && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-center gap-2 text-gray-600 text-sm font-medium mb-1">
+                    <Package className="w-4 h-4" />
+                    BATCH
+                  </div>
+                  <div className="text-kaiju-pink font-bold text-sm">
+                    {nft.batch}
+                  </div>
+                </div>
+              )}
             
             {nft?.birthDate && (
               <div className="bg-gray-50 rounded-lg p-4">
