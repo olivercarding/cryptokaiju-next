@@ -92,6 +92,15 @@ export default function HeroSection({
     }))
   }
 
+  // Helper function to convert proofs to proper hex format
+  const convertToContractProofs = (proofs: string[][]): readonly (readonly `0x${string}`[])[] => {
+    return proofs.map(proofArray => 
+      proofArray.map(proof => 
+        proof.startsWith('0x') ? proof as `0x${string}` : `0x${proof}` as `0x${string}`
+      )
+    )
+  }
+
   // Reserve function from the working older app
   const reserve = async () => {
     console.log('Reserve triggered...')
@@ -175,12 +184,15 @@ export default function HeroSection({
 
       // Convert UserClaims to ContractClaims
       const contractClaims = convertToContractClaims(userClaims)
+      
+      // Convert proofs to proper hex format
+      const contractProofs = convertToContractProofs(proofs)
 
       // Use multiOpenMint for multiple NFTs like the working app
       const transaction = prepareContractCall({
         contract,
         method: "multiOpenMint",
-        params: [account.address, contractClaims, proofs],
+        params: [account.address, contractClaims, contractProofs],
         value: priceInWei * BigInt(userClaims.length), // Use exact wei amount from contract
       })
 
