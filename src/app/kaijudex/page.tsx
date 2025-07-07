@@ -310,7 +310,7 @@ export default function KaijudexPage() {
               <div className="flex items-center justify-center gap-3 mb-6">
                 <Database className="w-8 h-8 text-kaiju-pink" />
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white">
-                  Collectible Gallery
+                  All the Kaiju ..
                 </h1>
               </div>
               <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
