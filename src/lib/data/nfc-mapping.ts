@@ -1,5 +1,5 @@
 // src/lib/services/NFCMappingService.ts
-// TypeScript version of the NFC mapping service
+// TypeScript service for NFC mapping functionality
 
 interface OpenSeaTrait {
   trait_type?: string
@@ -32,12 +32,12 @@ interface IPFSMetadata {
 }
 
 /**
- * Extract NFC ID from OpenSea traits
+ * Extract NFC ID from OpenSea traits with proper typing
  */
 function extractNFCFromTraits(traits: OpenSeaTrait[] | undefined): string | null {
   if (!traits || !Array.isArray(traits)) return null
   
-  const nfcTrait = traits.find((trait) => {
+  const nfcTrait = traits.find((trait: OpenSeaTrait) => {
     if (!trait.trait_type) return false
     const traitName = trait.trait_type.toLowerCase()
     return traitName === 'nfc' || 
@@ -68,7 +68,7 @@ function extractIPFSHash(metadataUrl: string | undefined): string | null {
 }
 
 /**
- * Fetch IPFS metadata with error handling
+ * Fetch IPFS metadata with proper error handling
  */
 async function fetchIpfsMetadata(ipfsHash: string): Promise<IPFSMetadata | null> {
   try {
@@ -85,9 +85,10 @@ async function fetchIpfsMetadata(ipfsHash: string): Promise<IPFSMetadata | null>
       throw new Error(`HTTP ${response.status}`)
     }
     
-    return await response.json()
+    return await response.json() as IPFSMetadata
   } catch (error) {
-    console.warn(`Failed to fetch IPFS ${ipfsHash}:`, error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.warn(`Failed to fetch IPFS ${ipfsHash}: ${errorMessage}`)
     return null
   }
 }
@@ -160,7 +161,7 @@ export class NFCMappingService {
   /**
    * Get mapping stats
    */
-  getMappingStats() {
+  getMappingStats(): { totalMappings: number; lastUpdated: string } {
     return {
       totalMappings: this.cache.size,
       lastUpdated: new Date().toISOString()
