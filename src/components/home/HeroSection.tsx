@@ -37,6 +37,13 @@ interface MintedNFT {
   birthday: number
 }
 
+// Contract-compatible type
+interface ContractClaim {
+  nfcId: `0x${string}`
+  birthday: bigint
+  tokenUri: string
+}
+
 export default function HeroSection({ 
   mysteryDesigns = [
     { type: 'Plush', power: 'Glows in the dark' },
@@ -75,6 +82,15 @@ export default function HeroSection({
   // Calculate costs using dynamic price from contract
   const pricePerBox = parseFloat(priceInETH)
   const totalMintCost = pricePerBox * numToMint
+
+  // Helper function to convert UserClaim to ContractClaim
+  const convertToContractClaims = (claims: UserClaim[]): ContractClaim[] => {
+    return claims.map(claim => ({
+      nfcId: claim.nfcId.startsWith('0x') ? claim.nfcId as `0x${string}` : `0x${claim.nfcId}` as `0x${string}`,
+      birthday: BigInt(claim.birthday),
+      tokenUri: claim.tokenUri
+    }))
+  }
 
   // Reserve function from the working older app
   const reserve = async () => {
@@ -157,11 +173,14 @@ export default function HeroSection({
         abi: MERKLE_MINTER_ABI,
       })
 
+      // Convert UserClaims to ContractClaims
+      const contractClaims = convertToContractClaims(userClaims)
+
       // Use multiOpenMint for multiple NFTs like the working app
       const transaction = prepareContractCall({
         contract,
         method: "multiOpenMint",
-        params: [account.address, userClaims, proofs],
+        params: [account.address, contractClaims, proofs],
         value: priceInWei * BigInt(userClaims.length), // Use exact wei amount from contract
       })
 
