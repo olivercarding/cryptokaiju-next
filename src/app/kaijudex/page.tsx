@@ -3,131 +3,148 @@
 
 import { useState, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
-import { Search, Database, Filter, Grid, List, Sparkles, Zap, Eye } from 'lucide-react'
+import { Search, Database, Filter, Sparkles, Zap, Eye, Package } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Header from '@/components/layout/Header'
 import { KAIJU_BATCHES, KaijuBatch, getBatchesByType, getBatchesByRarity } from '@/config/batches'
 
-// Batch Card Component
-const BatchCard = ({ batch, index }: { batch: KaijuBatch; index: number }) => {
+// Polaroid-style Character Card with flip interaction
+const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: number }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [showNFT, setShowNFT] = useState(false)
 
   const rarityColors = {
-    'Common': 'text-green-400 bg-green-400/10 border-green-400/30',
-    'Rare': 'text-blue-400 bg-blue-400/10 border-blue-400/30',
-    'Ultra Rare': 'text-purple-400 bg-purple-400/10 border-purple-400/30',
-    'Legendary': 'text-yellow-400 bg-yellow-400/10 border-yellow-400/30'
+    'Common': 'text-green-600 bg-green-50 border-green-200',
+    'Rare': 'text-blue-600 bg-blue-50 border-blue-200', 
+    'Ultra Rare': 'text-purple-600 bg-purple-50 border-purple-200',
+    'Legendary': 'text-yellow-600 bg-yellow-50 border-yellow-200'
   }
 
-  const getImageSrc = () => {
-    if (imageError) return '/images/placeholder-kaiju.png'
-    return batch.physicalImage
-  }
+  const rotations = ['-2deg', '1deg', '-1deg', '2deg', '-1.5deg', '1.5deg']
+  const rotation = rotations[index % rotations.length]
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 50, rotate: 0 }}
+      animate={{ opacity: 1, y: 0, rotate: rotation }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
-      whileHover={{ y: -8, scale: 1.02 }}
+      whileHover={{ 
+        y: -12, 
+        rotate: '0deg',
+        scale: 1.03,
+        transition: { duration: 0.3 }
+      }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="group relative"
+      className="group relative w-full max-w-[320px] mx-auto"
+      style={{ rotate: rotation }}
     >
       <Link href={`/kaijudex/${batch.slug}`}>
-        <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-xl border-2 border-gray-100 hover:border-kaiju-pink/50 transition-all duration-300 overflow-hidden h-full">
+        {/* Polaroid-style card */}
+        <div className="bg-white rounded-xl p-4 shadow-2xl border-4 border-gray-100 hover:shadow-3xl transition-all duration-500">
           
-          {/* Hover glow effect */}
-          <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/5 to-kaiju-purple-light/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-            animate={isHovered ? { scale: [1, 1.05, 1] } : {}}
-            transition={{ duration: 2, repeat: Infinity }}
-          />
-
-          {/* Header with badges */}
-          <div className="relative z-10 flex items-start justify-between mb-4">
-            <div className="flex flex-col gap-2">
-              <span className="text-kaiju-pink font-mono text-sm font-bold">#{batch.id}</span>
-              <div className={`px-3 py-1 rounded-full border text-xs font-mono ${rarityColors[batch.rarity]}`}>
-                {batch.rarity.toUpperCase()}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-gray-500 text-xs font-medium">{batch.type}</div>
-              <div className="text-kaiju-navy text-sm font-bold">{batch.element}</div>
+          {/* Rarity badge */}
+          <div className="absolute -top-2 -right-2 z-10">
+            <div className={`px-2 py-1 rounded-full border text-xs font-bold ${rarityColors[batch.rarity]} shadow-lg`}>
+              {batch.rarity.toUpperCase()}
             </div>
           </div>
 
-          {/* Character Image */}
-          <div className="relative h-48 mb-4 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
-            <Image
-              src={getImageSrc()}
-              alt={batch.name}
-              fill
-              className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-              onError={() => setImageError(true)}
-            />
+          {/* Photo area with flip effect */}
+          <div className="relative h-64 md:h-72 mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
             
-            {/* Hover overlay with special power */}
+            {/* Physical product image (front) */}
             <motion.div
-              className="absolute inset-0 bg-kaiju-pink/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
-              initial={false}
-              animate={isHovered ? { scale: [1, 1.1, 1] } : {}}
-              transition={{ duration: 1.5, repeat: Infinity }}
+              className="absolute inset-0"
+              style={{
+                transform: isHovered ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                backfaceVisibility: 'hidden'
+              }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
             >
-              <div className="text-white font-bold text-center p-4">
-                <Sparkles className="w-6 h-6 mx-auto mb-2" />
-                <div className="text-sm">{batch.power}</div>
+              <Image
+                src={batch.physicalImage}
+                alt={`${batch.name} Physical Collectible`}
+                fill
+                className="object-contain p-4"
+                onError={() => setImageError(true)}
+              />
+              
+              {/* Physical product label */}
+              <div className="absolute bottom-2 left-2 bg-kaiju-navy/80 text-white text-xs px-2 py-1 rounded">
+                {batch.type} Collectible
               </div>
+            </motion.div>
+
+            {/* NFT image (back) */}
+            <motion.div
+              className="absolute inset-0"
+              style={{
+                transform: isHovered ? 'rotateY(0deg)' : 'rotateY(-180deg)',
+                backfaceVisibility: 'hidden'
+              }}
+              transition={{ duration: 0.6, ease: "easeInOut" }}
+            >
+              <div className="w-full h-full flex items-center justify-center p-6 bg-gradient-to-br from-kaiju-navy/10 via-kaiju-purple-light/10 to-kaiju-pink/10">
+                <motion.img
+                  src={batch.nftImage}
+                  alt={`${batch.name} NFT`}
+                  className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                  animate={{
+                    scale: isHovered ? 1.05 : 1
+                  }}
+                  transition={{ duration: 0.3 }}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement
+                    target.src = '/images/placeholder-kaiju.png'
+                  }}
+                />
+              </div>
+              
+              {/* NFT label */}
+              <div className="absolute bottom-2 left-2 bg-kaiju-pink/90 text-white text-xs px-2 py-1 rounded">
+                Digital NFT
+              </div>
+            </motion.div>
+
+            {/* Hover instruction */}
+            <motion.div
+              className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isHovered ? 0 : 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              Hover to flip
             </motion.div>
           </div>
 
-          {/* Character Info */}
-          <div className="relative z-10">
-            <h3 className="text-xl font-black text-kaiju-navy mb-2 group-hover:text-kaiju-pink transition-colors">
-              {batch.name}
-            </h3>
+          {/* Polaroid caption area */}
+          <div className="text-center space-y-2">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <span className="text-kaiju-pink font-mono text-sm font-bold">#{batch.id}</span>
+              <span className="text-kaiju-navy/60 text-xs">{batch.element}</span>
+            </div>
             
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-              {batch.description}
+            <motion.h3 
+              className="text-xl font-black text-kaiju-navy tracking-tight handwritten"
+              animate={{ 
+                color: isHovered ? '#FF005C' : '#1f2760'
+              }}
+              transition={{ duration: 0.3 }}
+            >
+              {batch.name}
+            </motion.h3>
+            
+            <p className="text-sm text-kaiju-navy/70 italic">
+              "{batch.power}"
             </p>
 
-            {/* Stats Preview */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              <div className="bg-gray-50 rounded-lg p-2 text-center">
-                <div className="text-xs text-gray-500 font-medium">Origin</div>
-                <div className="text-sm font-bold text-kaiju-navy truncate">{batch.origin}</div>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-2 text-center">
-                <div className="text-xs text-gray-500 font-medium">Supply</div>
-                <div className="text-sm font-bold text-kaiju-pink">~{batch.estimatedSupply}</div>
-              </div>
-            </div>
-
-            {/* Battle stats bar */}
-            <div className="flex gap-1 mb-4">
-              {Object.entries(batch.battleStats).map(([stat, value]) => (
-                <div key={stat} className="flex-1">
-                  <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                    <motion.div
-                      className="h-full bg-gradient-to-r from-kaiju-pink to-kaiju-purple-light"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${value}%` }}
-                      transition={{ duration: 1, delay: index * 0.1 + 0.5 }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Action hint */}
-            <div className="flex items-center justify-between text-sm text-gray-500">
-              <span>Discovered {batch.discoveredDate}</span>
-              <div className="flex items-center gap-1 font-medium">
-                <Eye className="w-4 h-4" />
-                <span>Learn More</span>
-              </div>
+            {/* Quick stats */}
+            <div className="flex justify-between text-xs text-kaiju-navy/60 mt-3 pt-2 border-t border-gray-200">
+              <span>Supply: ~{batch.estimatedSupply}</span>
+              <span>{batch.discoveredDate}</span>
             </div>
           </div>
         </div>
@@ -136,8 +153,8 @@ const BatchCard = ({ batch, index }: { batch: KaijuBatch; index: number }) => {
   )
 }
 
-// Filter Controls Component
-const FilterControls = ({ 
+// Filter Pills Component
+const FilterPills = ({ 
   selectedType, 
   selectedRarity, 
   onTypeChange, 
@@ -154,24 +171,23 @@ const FilterControls = ({
   const rarities = ['All', 'Common', 'Rare', 'Ultra Rare', 'Legendary']
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-100 mb-8">
-      <div className="flex flex-wrap gap-4 items-center">
+    <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-8">
+      <div className="flex flex-wrap gap-4 items-center justify-center">
         <div className="flex items-center gap-2">
-          <Filter className="w-5 h-5 text-kaiju-pink" />
-          <span className="font-semibold text-kaiju-navy">Filters:</span>
+          <Filter className="w-5 h-5 text-white" />
+          <span className="font-semibold text-white">Discover:</span>
         </div>
         
         {/* Type Filter */}
         <div className="flex gap-2">
-          <span className="text-sm font-medium text-gray-600">Type:</span>
           {types.map(type => (
             <button
               key={type}
               onClick={() => onTypeChange(type)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedType === type
-                  ? 'bg-kaiju-pink text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-kaiju-pink text-white shadow-lg'
+                  : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
               }`}
             >
               {type}
@@ -181,15 +197,14 @@ const FilterControls = ({
 
         {/* Rarity Filter */}
         <div className="flex gap-2">
-          <span className="text-sm font-medium text-gray-600">Rarity:</span>
           {rarities.map(rarity => (
             <button
               key={rarity}
               onClick={() => onRarityChange(rarity)}
-              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
                 selectedRarity === rarity
-                  ? 'bg-kaiju-pink text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? 'bg-kaiju-pink text-white shadow-lg'
+                  : 'bg-white/20 text-white hover:bg-white/30 backdrop-blur-sm'
               }`}
             >
               {rarity}
@@ -201,7 +216,7 @@ const FilterControls = ({
         {(selectedType !== 'All' || selectedRarity !== 'All') && (
           <button
             onClick={onClearFilters}
-            className="px-3 py-1 bg-gray-200 text-gray-600 rounded-full text-sm font-medium hover:bg-gray-300 transition-colors"
+            className="px-4 py-2 bg-white/20 text-white rounded-full text-sm font-medium hover:bg-white/30 transition-colors backdrop-blur-sm"
           >
             Clear All
           </button>
@@ -214,7 +229,6 @@ const FilterControls = ({
 export default function KaijudexPage() {
   const [selectedType, setSelectedType] = useState('All')
   const [selectedRarity, setSelectedRarity] = useState('All')
-  const [showNFTLookup, setShowNFTLookup] = useState(false)
   
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
@@ -238,138 +252,203 @@ export default function KaijudexPage() {
   const legendaryCount = getBatchesByRarity('Legendary').length
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-kaiju-light-pink to-white">
-      {/* Header */}
-      <div className="pt-32 pb-8 px-6">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-8"
-          >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Database className="w-8 h-8 text-kaiju-pink" />
-              <h1 className="text-4xl md:text-5xl font-black text-kaiju-navy">
-                Kaijudex Database
-              </h1>
-            </div>
-            <p className="text-lg text-kaiju-navy/70 max-w-3xl mx-auto">
-              Explore all {totalBatches} unique CryptoKaiju character designs. Each batch represents a different character with unique traits, abilities, and collectible forms.
-            </p>
-          </motion.div>
+    <>
+      <Header />
+      
+      <main className="text-kaiju-navy overflow-x-hidden">
+        {/* Hero Section - Dark with particles like home page */}
+        <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
+          {/* Animated background elements */}
+          <div className="absolute inset-0">
+            <motion.div 
+              className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3]
+              }}
+              transition={{ duration: 8, repeat: Infinity }}
+            />
+            <motion.div 
+              className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_30%,theme(colors.kaiju-purple-light/30)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                opacity: [0.4, 0.2, 0.4]
+              }}
+              transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+            />
+          </div>
 
-          {/* Stats Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-100 mb-8"
-          >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-              <div>
-                <div className="text-3xl font-black text-kaiju-pink mb-1">{totalBatches}</div>
-                <div className="text-gray-600 font-medium">Character Designs</div>
+          {/* Floating particles */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-kaiju-pink rounded-full opacity-60"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0]
+              }}
+              transition={{
+                duration: Math.random() * 3 + 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+          
+          <div className="relative z-10 max-w-7xl mx-auto px-6 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="mb-8"
+            >
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <Database className="w-8 h-8 text-kaiju-pink" />
+                <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white">
+                  Collectible Gallery
+                </h1>
               </div>
-              <div>
-                <div className="text-3xl font-black text-kaiju-purple-dark mb-1">{plushCount}</div>
-                <div className="text-gray-600 font-medium">Plush Collectibles</div>
-              </div>
-              <div>
-                <div className="text-3xl font-black text-kaiju-navy mb-1">{vinylCount}</div>
-                <div className="text-gray-600 font-medium">Vinyl Figures</div>
-              </div>
-              <div>
-                <div className="text-3xl font-black text-kaiju-red mb-1">{legendaryCount}</div>
-                <div className="text-gray-600 font-medium">Legendary Designs</div>
-              </div>
-            </div>
-          </motion.div>
+              <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
+                Discover all {totalBatches} unique CryptoKaiju designs. Each character comes as both a digital NFT and physical collectible.
+              </p>
+            </motion.div>
 
-          {/* NFT Lookup Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="bg-gradient-to-r from-kaiju-navy to-kaiju-purple-dark rounded-xl p-6 shadow-lg mb-8"
-          >
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-              <div>
-                <h3 className="text-xl font-bold text-white mb-2">Looking for your specific NFT?</h3>
-                <p className="text-white/80">Search by Token ID or NFC ID to find your individual CryptoKaiju</p>
-              </div>
+            {/* Stats showcase */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+            >
+              {[
+                { label: 'Character Designs', value: totalBatches, color: 'text-kaiju-pink' },
+                { label: 'Plush Collectibles', value: plushCount, color: 'text-kaiju-purple-light' },
+                { label: 'Vinyl Figures', value: vinylCount, color: 'text-white' },
+                { label: 'Legendary Designs', value: legendaryCount, color: 'text-yellow-400' }
+              ].map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                  className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20"
+                >
+                  <div className={`text-2xl font-black ${stat.color} mb-1`}>{stat.value}</div>
+                  <div className="text-white/80 text-sm font-medium">{stat.label}</div>
+                </motion.div>
+              ))}
+            </motion.div>
+
+            {/* Filters */}
+            <FilterPills
+              selectedType={selectedType}
+              selectedRarity={selectedRarity}
+              onTypeChange={setSelectedType}
+              onRarityChange={setSelectedRarity}
+              onClearFilters={handleClearFilters}
+            />
+
+            {/* Quick Links */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-col sm:flex-row gap-4 justify-center"
+            >
               <Link
                 href="/nft"
-                className="bg-kaiju-pink hover:bg-kaiju-red text-white font-bold px-6 py-3 rounded-xl transition-colors flex items-center gap-2"
+                className="bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold px-6 py-3 rounded-xl hover:bg-white/20 transition-all flex items-center gap-2"
               >
                 <Search className="w-5 h-5" />
-                NFT Lookup
+                Find Your NFT
               </Link>
-            </div>
-          </motion.div>
-        </div>
-      </div>
-
-      {/* Filters */}
-      <div className="px-6 mb-8">
-        <div className="max-w-7xl mx-auto">
-          <FilterControls
-            selectedType={selectedType}
-            selectedRarity={selectedRarity}
-            onTypeChange={setSelectedType}
-            onRarityChange={setSelectedRarity}
-            onClearFilters={handleClearFilters}
-          />
-        </div>
-      </div>
-
-      {/* Batch Grid */}
-      <div className="px-6 pb-20" ref={ref}>
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={isInView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.8 }}
-            className="mb-6"
-          >
-            <h2 className="text-2xl font-bold text-kaiju-navy mb-2">
-              Character Designs ({filteredBatches.length})
-            </h2>
-            <p className="text-gray-600">
-              {selectedType !== 'All' || selectedRarity !== 'All' 
-                ? `Filtered results • ${filteredBatches.length} of ${totalBatches} designs`
-                : 'All available character designs'
-              }
-            </p>
-          </motion.div>
-
-          {filteredBatches.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredBatches.map((batch, index) => (
-                <BatchCard key={batch.id} batch={batch} index={index} />
-              ))}
-            </div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-20"
-            >
-              <Zap className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-bold text-kaiju-navy mb-2">No designs found</h3>
-              <p className="text-gray-600 mb-6">
-                Try adjusting your filters to see more results.
-              </p>
-              <button
-                onClick={handleClearFilters}
-                className="bg-kaiju-pink text-white font-bold px-6 py-3 rounded-xl hover:bg-kaiju-red transition-colors"
+              <Link
+                href="/#hero"
+                className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold px-6 py-3 rounded-xl hover:shadow-lg transition-all flex items-center gap-2"
               >
-                Clear All Filters
-              </button>
+                <Package className="w-5 h-5" />
+                Mint Mystery Box
+              </Link>
             </motion.div>
-          )}
-        </div>
-      </div>
-    </div>
+          </div>
+        </section>
+
+        {/* Gallery Section - Light like home page content sections */}
+        <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6" ref={ref}>
+          <div className="max-w-7xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl font-bold text-kaiju-navy mb-4">
+                Character Collection ({filteredBatches.length})
+              </h2>
+              <p className="text-kaiju-navy/70 max-w-2xl mx-auto">
+                {selectedType !== 'All' || selectedRarity !== 'All' 
+                  ? `Filtered results • Hover each card to see the NFT version`
+                  : 'Browse all collectible designs • Hover each card to see the NFT version'
+                }
+              </p>
+            </motion.div>
+
+            {filteredBatches.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                {filteredBatches.map((batch, index) => (
+                  <CharacterPolaroidCard key={batch.id} batch={batch} index={index} />
+                ))}
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-center py-20"
+              >
+                <Zap className="w-16 h-16 text-kaiju-pink mx-auto mb-4" />
+                <h3 className="text-xl font-bold text-kaiju-navy mb-2">No designs found</h3>
+                <p className="text-kaiju-navy/70 mb-6">
+                  Try adjusting your filters to see more results.
+                </p>
+                <button
+                  onClick={handleClearFilters}
+                  className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold px-6 py-3 rounded-xl hover:shadow-lg transition-all"
+                >
+                  Clear All Filters
+                </button>
+              </motion.div>
+            )}
+
+            {/* Bottom CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="text-center mt-16"
+            >
+              <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100 max-w-2xl mx-auto">
+                <h3 className="text-2xl font-bold text-kaiju-navy mb-4">Ready to Collect?</h3>
+                <p className="text-kaiju-navy/70 mb-6">
+                  Each mystery box contains one of these amazing designs. Start your collection today!
+                </p>
+                <Link
+                  href="/#hero"
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Open Mystery Box
+                  <Package className="w-5 h-5" />
+                </Link>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      </main>
+    </>
   )
 }
