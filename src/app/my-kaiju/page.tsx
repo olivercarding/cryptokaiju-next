@@ -380,15 +380,15 @@ export default function MyKaijuPage() {
               <div className="flex items-center justify-center gap-3 mb-4">
                 <Heart className="w-8 h-8 text-kaiju-pink" />
                 <h1 className="text-4xl md:text-5xl font-black text-white">
-                  My Kaiju Collection
+                  Your Kaiju Collection
                 </h1>
               </div>
               <p className="text-lg text-white/90 mb-4 max-w-2xl mx-auto">
-                Your personal collection of CryptoKaiju NFTs - verified on blockchain
+                All the CryptoKaiju you own ...
               </p>
               <div className="inline-flex items-center gap-2 bg-green-100/20 backdrop-blur-sm text-green-300 px-3 py-1 rounded-full text-sm font-medium border border-green-400/30">
                 <Database className="w-4 h-4" />
-                Live blockchain data
+                Scanning Blockchain (Please be patient, this may take a few seconds)
               </div>
             </motion.div>
 

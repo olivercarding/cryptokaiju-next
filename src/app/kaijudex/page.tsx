@@ -326,8 +326,8 @@ export default function KaijudexPage() {
               className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
             >
               {[
-                { label: 'Character Designs', value: totalBatches, color: 'text-kaiju-pink' },
-                { label: 'Plush Collectibles', value: plushCount, color: 'text-kaiju-purple-light' },
+                { label: 'Character Designs', value: totalBatches, color: 'text-white' },
+                { label: 'Plush Collectibles', value: plushCount, color: 'text-white' },
                 { label: 'Vinyl Figures', value: vinylCount, color: 'text-white' },
                 { label: 'Legendary Designs', value: legendaryCount, color: 'text-yellow-400' }
               ].map((stat, index) => (
@@ -434,7 +434,7 @@ export default function KaijudexPage() {
               <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100 max-w-2xl mx-auto">
                 <h3 className="text-2xl font-bold text-kaiju-navy mb-4">Ready to Collect?</h3>
                 <p className="text-kaiju-navy/70 mb-6">
-                  Each mystery box contains one of these amazing designs. Start your collection today!
+                  Each mystery box contains an amazing design. Start your CryptoKaiju collection today!
                 </p>
                 <Link
                   href="/#hero"
