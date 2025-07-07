@@ -4,6 +4,8 @@
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { ConnectButton } from "thirdweb/react"
 import { thirdwebClient } from '@/lib/thirdweb'
 
@@ -11,6 +13,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const { scrollY } = useScroll()
+  const router = useRouter()
   
   // Transform scroll into background opacity
   const backgroundOpacity = useTransform(scrollY, [0, 100], [0, 0.95])
@@ -25,28 +28,41 @@ export default function Header() {
   }, [])
 
   const navItems = [
-    { label: 'Mint', href: '#hero' },
-    { label: 'How It Works', href: '#how' },
-    { label: 'Designs', href: '#mysteries' },
-    { label: 'Community', href: '#community' },
+    { label: 'Mint', href: '/#hero' },
+    { label: 'How It Works', href: '/#how' },
+    { label: 'Designs', href: '/#mysteries' },
+    { label: 'Kaijudex', href: '/kaijudex' },
+    { label: 'My Collection', href: '/my-kaiju' },
+    { label: 'Community', href: '/#community' },
   ]
 
   const handleNavClick = (href: string) => {
     // Close mobile menu first
     setIsMenuOpen(false)
     
-    // Small delay to allow menu animation to complete
-    setTimeout(() => {
-      const element = document.querySelector(href)
-      if (element) {
-        element.scrollIntoView({ 
-          behavior: 'smooth',
-          block: 'start'
-        })
+    // Check if it's a home page anchor link
+    if (href.startsWith('/#')) {
+      const anchorId = href.substring(2) // Remove '/#'
+      
+      // If we're already on home page, just scroll to section
+      if (window.location.pathname === '/') {
+        setTimeout(() => {
+          const element = document.querySelector(`#${anchorId}`)
+          if (element) {
+            element.scrollIntoView({ 
+              behavior: 'smooth',
+              block: 'start'
+            })
+          }
+        }, 100)
       } else {
-        console.warn(`Element with selector "${href}" not found`)
+        // Navigate to home page with anchor
+        router.push(`/#${anchorId}`)
       }
-    }, 100)
+    } else {
+      // Regular page navigation
+      router.push(href)
+    }
   }
 
   // Determine text color based on scroll position
@@ -129,7 +145,7 @@ export default function Header() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="flex items-center cursor-pointer"
-              onClick={() => handleNavClick('#hero')}
+              onClick={() => router.push('/')}
             >
               <motion.div
                 animate={{ 
