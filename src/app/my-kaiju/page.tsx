@@ -1,4 +1,4 @@
-// src/app/my-kaiju/page.tsx
+// src/app/my-kaiju/page.tsx - FIXED VERSION
 'use client'
 
 import { useState } from 'react'
@@ -11,6 +11,71 @@ import { ConnectButton } from "thirdweb/react"
 import { thirdwebClient } from '@/lib/thirdweb'
 import { useBlockchainMyKaiju, useBlockchainKaijuSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
 import type { KaijuNFT } from '@/lib/services/BlockchainCryptoKaijuService'
+
+// FIXED: Safe attribute value renderer
+const renderAttributeValue = (value: any): string => {
+  if (value === null || value === undefined) return 'Unknown'
+  
+  // If it's an object with trait_type and value properties (OpenSea format)
+  if (typeof value === 'object' && value.trait_type && value.value !== undefined) {
+    return String(value.value)
+  }
+  
+  // If it's an object with just value property
+  if (typeof value === 'object' && value.value !== undefined) {
+    return String(value.value)
+  }
+  
+  // If it's a plain object, try to stringify it safely
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return '[Object]'
+    }
+  }
+  
+  // For primitives, just convert to string
+  return String(value)
+}
+
+// FIXED: Safe attribute extraction
+const extractAttributes = (ipfsData: any): Array<{key: string, value: string}> => {
+  if (!ipfsData?.attributes) return []
+  
+  const attributes: Array<{key: string, value: string}> = []
+  
+  try {
+    // Handle array format (OpenSea style)
+    if (Array.isArray(ipfsData.attributes)) {
+      ipfsData.attributes.forEach((attr: any) => {
+        if (attr && typeof attr === 'object') {
+          const key = attr.trait_type || attr.key || 'Unknown'
+          const value = renderAttributeValue(attr.value || attr)
+          
+          if (key && value && !['dob', 'nfc', 'birth_date'].includes(key.toLowerCase())) {
+            attributes.push({ key: String(key), value })
+          }
+        }
+      })
+    }
+    // Handle object format (key-value pairs)
+    else if (typeof ipfsData.attributes === 'object') {
+      Object.entries(ipfsData.attributes).forEach(([key, value]) => {
+        if (key && value && !['dob', 'nfc', 'birth_date'].includes(key.toLowerCase())) {
+          attributes.push({ 
+            key: String(key), 
+            value: renderAttributeValue(value)
+          })
+        }
+      })
+    }
+  } catch (error) {
+    console.warn('Error extracting attributes:', error)
+  }
+  
+  return attributes.slice(0, 6) // Limit to 6 attributes
+}
 
 const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
   const [imageError, setImageError] = useState(false)
@@ -31,6 +96,9 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString()
   }
+
+  // FIXED: Safe attribute extraction
+  const attributes = extractAttributes(kaiju.ipfsData)
 
   return (
     <motion.div
@@ -105,19 +173,27 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
             </div>
           )}
 
-          {/* Attributes Grid */}
-          {kaiju.ipfsData?.attributes && (
+          {/* Batch Display */}
+          {kaiju.batch && (
+            <div className="mb-4 p-2 bg-purple-50 rounded-lg border border-purple-200">
+              <div className="text-xs text-purple-600 font-medium">BATCH</div>
+              <div className="text-sm font-bold text-purple-800">{kaiju.batch}</div>
+            </div>
+          )}
+
+          {/* FIXED: Attributes Grid - Safe rendering */}
+          {attributes.length > 0 && (
             <div className="grid grid-cols-2 gap-2 mb-4">
-              {Object.entries(kaiju.ipfsData.attributes)
-                .filter(([key, value]) => value && key !== 'dob' && key !== 'nfc')
-                .slice(0, 4)
-                .map(([key, value]) => (
-                  <div key={key} className="bg-gray-50 rounded-lg p-2 text-center">
-                    <div className="text-xs text-gray-500 font-medium capitalize">{key}</div>
-                    <div className="text-sm font-bold text-kaiju-navy capitalize">{value}</div>
+              {attributes.map(({ key, value }, attrIndex) => (
+                <div key={`${key}-${attrIndex}`} className="bg-gray-50 rounded-lg p-2 text-center">
+                  <div className="text-xs text-gray-500 font-medium capitalize">
+                    {key.replace(/_/g, ' ')}
                   </div>
-                ))
-              }
+                  <div className="text-sm font-bold text-kaiju-navy capitalize truncate">
+                    {value}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -367,9 +443,9 @@ export default function MyKaijuPage() {
                   </div>
                   <div>
                     <div className="text-3xl font-black text-white mb-1">
-                      {new Set(kaijus.map(k => k.ipfsData?.attributes?.class)).size}
+                      {new Set(kaijus.map(k => k.batch)).size}
                     </div>
-                    <div className="text-white/80 font-medium">Unique Classes</div>
+                    <div className="text-white/80 font-medium">Unique Batches</div>
                   </div>
                 </div>
               </motion.div>
