@@ -64,8 +64,6 @@ export default function HowItWorksSection({
               backgroundColor={step.backgroundColor}
               rotation={rotations[i] || '0deg'}
               size="medium"
-              // Legacy support for imageSrc
-              imageSrc={step.imageSrc}
             />
           ))}
         </div>
