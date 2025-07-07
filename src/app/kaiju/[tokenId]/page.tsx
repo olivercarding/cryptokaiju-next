@@ -99,7 +99,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
   }
 
   const getTraits = () => {
-    const traits = []
+    const traits: Array<{trait_type: string, value: string, rarity?: number}> = []
     
     // Get traits from OpenSea if available
     if (openSeaData?.traits) {
