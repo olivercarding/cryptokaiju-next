@@ -525,7 +525,7 @@ class BlockchainCryptoKaijuService {
 
       if (ipfsResult.status === 'fulfilled' && ipfsResult.value) {
         kaiju.ipfsData = ipfsResult.value
-        console.log(`✅ IPFS: ${kaiju.ipfsData.name || 'Unnamed'}`)
+        console.log(`✅ IPFS: ${kaiju.ipfsData?.name || 'Unnamed'}`)
       } else {
         console.warn(`⚠️ IPFS failed or timed out`)
       }
@@ -632,7 +632,7 @@ class BlockchainCryptoKaijuService {
       
       if (ipfsResult.status === 'fulfilled' && ipfsResult.value) {
         kaiju.ipfsData = ipfsResult.value
-        console.log(`✅ IPFS: ${kaiju.ipfsData.name || 'Unnamed'}`)
+        console.log(`✅ IPFS: ${kaiju.ipfsData?.name || 'Unnamed'}`)
       }
       
       const finalOpenSeaData = openSeaResult.status === 'fulfilled' ? 
