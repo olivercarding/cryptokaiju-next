@@ -41,7 +41,7 @@ export interface KaijuBatch {
       id: '001',
       slug: 'uri',
       name: 'Uri',
-      type: 'Plush',
+      type: 'Vinyl',
       rarity: 'Rare',
       element: 'Ghost',
       power: 'Spectral Manipulation',
