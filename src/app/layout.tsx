@@ -3,6 +3,7 @@ import './globals.css'
 import { Open_Sans } from 'next/font/google'
 import type { Metadata } from 'next'
 import { ThirdwebProvider } from "thirdweb/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const openSans = Open_Sans({ 
   subsets: ['latin'],
