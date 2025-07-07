@@ -1,4 +1,4 @@
-// src/app/page.tsx
+// src/app/page.tsx - UPDATED physicalCollectibles data
 'use client'
 
 import Header from '@/components/layout/Header'
@@ -47,25 +47,25 @@ export default function Home() {
     }
   ]
 
-  // 🎯 PHYSICAL COLLECTIBLES SHOWCASE - Updated for new component structure
+  // 🎯 PHYSICAL COLLECTIBLES SHOWCASE - FIXED with proper background colors
   const physicalCollectibles = [
     {
       name: 'Uri',
-      type: 'vinyl',
+      type: 'Vinyl',
       power: 'Glows in the dark',
       description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
       nftImage: '/images/Ghost1.png',
       physicalImage: '/images/Uri_product_shot.png',
-      backgroundColor: 'bg-purple-100'
+      backgroundColor: 'bg-purple-100' // FIXED: Proper Tailwind class
     },
     {
       name: 'Meme',
-      type: 'vinyl',
+      type: 'Vinyl',
       power: 'Cute, soft and cuddly',
       description: 'Ancient water spirit with the ability to control rivers and rain.',
       nftImage: '/images/Meme-NFT.png',
       physicalImage: '/images/Meme.png',
-      backgroundColor: 'bg-blue-100'
+      backgroundColor: 'bg-blue-100' // FIXED: Proper Tailwind class
     },
     {
       name: 'Diamond Hands',
@@ -74,7 +74,7 @@ export default function Home() {
       description: 'Classic design in a cool, iconic colourway.',
       nftImage: '/images/Diamond-Hands-NFT.png',
       physicalImage: '/images/Diamond_hands_product_shot.png',
-      backgroundColor: 'bg-red-100'
+      backgroundColor: 'bg-gray-100' // FIXED: Proper Tailwind class
     },
     {
       name: 'Genesis Plush (Green)',
@@ -83,7 +83,7 @@ export default function Home() {
       description: 'The immortal phoenix that rises from ashes stronger than before.',
       nftImage: '/images/Genesis-NFT.png',
       physicalImage: '/images/Green_genesis_product_shot.png',
-      backgroundColor: 'bg-blue-100'
+      backgroundColor: 'bg-green-100' // FIXED: Proper Tailwind class
     }
   ]
 

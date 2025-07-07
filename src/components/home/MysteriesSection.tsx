@@ -29,7 +29,7 @@ const defaultCharacters: Character[] = [
     power: 'Glows in the dark',
     description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
     nftImage: '/images/Ghost1.png',
-    physicalImage: '/images/uri-physical.jpg', // Add these physical product images
+    physicalImage: '/images/uri-physical.jpg',
     backgroundColor: 'bg-purple-100'
   },
   {
@@ -61,7 +61,7 @@ const defaultCharacters: Character[] = [
   }
 ]
 
-// Physical Product Card Component
+// Physical Product Card Component - FIXED VERSION
 const PhysicalProductCard = ({ 
   character, 
   index, 
@@ -94,12 +94,12 @@ const PhysicalProductCard = ({
           <span className="text-white font-black text-lg">{index + 1}</span>
         </div>
 
-        {/* Image container with flip effect */}
-        <div className="relative h-96 md:h-[420px] mb-6 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+        {/* Image container with flip effect - FIXED */}
+        <div className={`relative h-96 md:h-[420px] mb-6 rounded-xl overflow-hidden ${character.backgroundColor}`}>
           
-          {/* Physical product image (front) */}
+          {/* Physical product image (front) - FIXED: Now uses object-contain and shows background */}
           <motion.div
-            className="absolute inset-0 backface-hidden"
+            className="absolute inset-0 backface-hidden p-4"
             style={{
               transform: isHovered ? 'rotateY(180deg)' : 'rotateY(0deg)',
               backfaceVisibility: 'hidden'
@@ -109,23 +109,20 @@ const PhysicalProductCard = ({
             <img
               src={character.physicalImage}
               alt={`${character.name} Physical Product`}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain drop-shadow-lg" // CHANGED: object-contain + padding shows background
               onError={(e) => {
-                // Fallback to a placeholder for physical images we don't have
                 const target = e.target as HTMLImageElement
                 target.src = '/images/placeholder-physical.jpg'
               }}
             />
             
             {/* Physical product overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-              <div className="text-white text-sm font-semibold">
-                {character.type} Collectible
-              </div>
+            <div className="absolute bottom-2 left-2 bg-kaiju-navy/80 backdrop-blur-sm text-white text-sm font-semibold px-3 py-1 rounded-full">
+              {character.type} Collectible
             </div>
           </motion.div>
 
-          {/* NFT image (back) */}
+          {/* NFT image (back) - FIXED: Better background integration */}
           <motion.div
             className="absolute inset-0 backface-hidden"
             style={{
@@ -134,11 +131,11 @@ const PhysicalProductCard = ({
             }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
           >
-            <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-kaiju-navy/10 via-kaiju-purple-light/10 to-kaiju-pink/10">
+            <div className={`w-full h-full flex items-center justify-center p-8 ${character.backgroundColor} bg-gradient-to-br from-white/20 to-transparent`}>
               <motion.img
                 src={character.nftImage}
                 alt={`${character.name} NFT`}
-                className="max-w-full max-h-full object-contain drop-shadow-2xl"
+                className="max-w-full max-h-full object-contain drop-shadow-2xl" // CHANGED: object-contain
                 animate={{
                   scale: isHovered ? 1.05 : 1
                 }}
@@ -153,10 +150,8 @@ const PhysicalProductCard = ({
             </div>
             
             {/* NFT overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-kaiju-pink/80 to-transparent p-4">
-              <div className="text-white text-sm font-semibold">
-                Digital NFT
-              </div>
+            <div className="absolute bottom-2 right-2 bg-kaiju-pink/90 backdrop-blur-sm text-white text-sm font-semibold px-3 py-1 rounded-full">
+              Digital NFT
             </div>
           </motion.div>
 
@@ -169,6 +164,11 @@ const PhysicalProductCard = ({
           >
             Hover to see NFT
           </motion.div>
+
+          {/* Character type indicator in top left */}
+          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-kaiju-navy text-xs font-bold px-2 py-1 rounded-full border border-gray-200">
+            {character.type}
+          </div>
         </div>
 
         {/* Character info */}
@@ -185,9 +185,11 @@ const PhysicalProductCard = ({
           
           <div className="space-y-2">
             <div className="flex items-center justify-center gap-2">
+              <Sparkles className="w-4 h-4 text-kaiju-pink" />
               <span className="text-sm font-semibold text-kaiju-pink">
                 {character.power}
               </span>
+              <Sparkles className="w-4 h-4 text-kaiju-pink" />
             </div>
             
             <p className="text-sm text-kaiju-navy/70 leading-relaxed line-clamp-3">
@@ -202,7 +204,10 @@ const PhysicalProductCard = ({
             whileHover={{ scale: 1.05, y: -2 }}
             whileTap={{ scale: 0.95 }}
           >
-            Discover {character.name}
+            <span className="flex items-center justify-center gap-2">
+              Discover {character.name}
+              <ChevronRight className="w-4 h-4" />
+            </span>
           </motion.button>
         </div>
       </div>
