@@ -133,7 +133,6 @@ export default function Home() {
           title="How it works"
           steps={howItWorksSteps}
           rotations={['-3deg', '2deg', '-2deg']}
-          useVideoCards={true}
         />
         
         <MysteriesSection 
