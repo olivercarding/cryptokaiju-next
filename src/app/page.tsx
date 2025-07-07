@@ -62,7 +62,7 @@ export default function Home() {
     {
       name: 'Meme',
       type: 'vinyl',
-      power: 'Cute, soft and cuddly.',
+      power: 'Cute, soft and cuddly',
       description: 'Ancient water spirit with the ability to control rivers and rain.',
       nftImage: '/images/Meme-NFT.png',
       physicalImage: '/images/Meme.png',
@@ -71,8 +71,8 @@ export default function Home() {
     {
       name: 'Diamond Hands',
       type: 'Vinyl',
-      power: 'Iconic, cuddly and soft.',
-      description: 'A cool Kaiju you'll want to hold, based on the iconic Genesis design.',
+      power: 'Iconic, cuddly and soft',
+      description: 'A cool Kaiju you will want to hold, based on the iconic Genesis design.',
       nftImage: '/images/dragon.png',
       physicalImage: '/images/Diamond_hands_product_shot.png',
       backgroundColor: 'bg-red-100'

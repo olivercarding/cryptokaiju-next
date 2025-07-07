@@ -102,7 +102,7 @@ const nextConfig = {
     ]
   },
   
-  // Enhanced webpack configuration to handle dependency issues
+  // Simplified webpack configuration to handle dependency issues
   webpack: (config, { isServer }) => {
     // Handle Node.js modules that don't work in the browser
     if (!isServer) {
@@ -127,31 +127,12 @@ const nextConfig = {
       }
     }
 
-    // Ignore specific modules that cause warnings
-    config.externals = config.externals || []
-    config.externals.push({
-      'pino-pretty': 'pino-pretty',
-      'lokijs': 'lokijs',
-      'encoding': 'encoding',
-    })
-
-    // Add module resolution for problematic packages
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'pino-pretty': false,
-    }
-
-    // Ignore specific require() calls that cause warnings
-    config.module.rules.push({
-      test: /node_modules\/pino\/lib\/tools\.js$/,
-      use: {
-        loader: 'string-replace-loader',
-        options: {
-          search: /require\(['"]pino-pretty['"]\)/g,
-          replace: 'null',
-        }
-      }
-    })
+    // Ignore problematic modules - simple approach
+    config.ignoreWarnings = [
+      { module: /node_modules\/pino\/lib\/tools\.js/ },
+      { module: /node_modules\/pino-pretty/ },
+      /Failed to parse source map/,
+    ]
     
     return config
   },
