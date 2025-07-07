@@ -40,6 +40,7 @@ export async function GET(
         })
       }
     } catch (error) {
+      // Fix TypeScript error by properly handling unknown error type
       const errorMessage = error instanceof Error ? error.message : 'Unknown error'
       console.warn(`⚠️ Gateway ${gateway} failed:`, errorMessage)
       continue

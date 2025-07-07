@@ -40,7 +40,8 @@ export async function GET(
         })
       }
     } catch (error) {
-      console.warn(`⚠️ Gateway ${gateway} failed:`, error.message)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.warn(`⚠️ Gateway ${gateway} failed:`, errorMessage)
       continue
     }
   }
