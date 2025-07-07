@@ -196,8 +196,8 @@ export default function HeroSection({
         value: priceInWei * BigInt(userClaims.length), // Use exact wei amount from contract
       })
 
-      // Send transaction with Universal Bridge
-      sendTransaction(transaction, {
+      // Send transaction with Universal Bridge - cast to correct type
+      sendTransaction(transaction as any, {
         onSuccess: (result) => {
           console.log("Transaction successful:", result)
           
