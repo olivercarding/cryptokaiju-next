@@ -6,7 +6,7 @@ import HeroSection from '@/components/home/HeroSection'
 import HowItWorksSection from '@/components/home/HowItWorksSection'
 import MysteriesSection from '@/components/home/MysteriesSection'
 import CTASection from '@/components/home/CTASection'
-import { defaultEasing } from 'framer-motion'
+// Removed the unused import: import { defaultEasing } from 'framer-motion'
 
 export default function Home() {
   
@@ -72,7 +72,7 @@ export default function Home() {
       name: 'Diamond Hands',
       type: 'Vinyl',
       power: 'Iconic, cuddly and soft.',
-      description: 'A cool Kaiju you’ll want to hold, based on the iconic Genesis design.',
+      description: 'A cool Kaiju you'll want to hold, based on the iconic Genesis design.',
       nftImage: '/images/dragon.png',
       physicalImage: '/images/Diamond_hands_product_shot.png',
       backgroundColor: 'bg-red-100'

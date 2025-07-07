@@ -102,9 +102,9 @@ const nextConfig = {
     ]
   },
   
-  // Webpack configuration to handle dependency issues
+  // Enhanced webpack configuration to handle dependency issues
   webpack: (config, { isServer }) => {
-    // Handle pino/pino-pretty issues
+    // Handle Node.js modules that don't work in the browser
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
@@ -120,8 +120,38 @@ const nextConfig = {
         assert: false,
         os: false,
         path: false,
+        util: false,
+        buffer: false,
+        events: false,
+        querystring: false,
       }
     }
+
+    // Ignore specific modules that cause warnings
+    config.externals = config.externals || []
+    config.externals.push({
+      'pino-pretty': 'pino-pretty',
+      'lokijs': 'lokijs',
+      'encoding': 'encoding',
+    })
+
+    // Add module resolution for problematic packages
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'pino-pretty': false,
+    }
+
+    // Ignore specific require() calls that cause warnings
+    config.module.rules.push({
+      test: /node_modules\/pino\/lib\/tools\.js$/,
+      use: {
+        loader: 'string-replace-loader',
+        options: {
+          search: /require\(['"]pino-pretty['"]\)/g,
+          replace: 'null',
+        }
+      }
+    })
     
     return config
   },
@@ -134,6 +164,11 @@ const nextConfig = {
   // ESLint configuration
   eslint: {
     ignoreDuringBuilds: false,
+  },
+
+  // Experimental features to help with Web3 compatibility
+  experimental: {
+    esmExternals: 'loose',
   },
 }
 
