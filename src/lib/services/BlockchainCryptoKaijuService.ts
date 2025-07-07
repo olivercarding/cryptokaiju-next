@@ -1,9 +1,9 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - OPTIMISED PARALLEL EXECUTION VERSION
+// src/lib/services/BlockchainCryptoKaijuService.ts - FIXED VERSION FOR MY-KAIJU
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
 
-// Complete CryptoKaiju NFT Contract ABI
+// Complete CryptoKaiju NFT Contract ABI - OPTIMIZED with tokensOf
 export const KAIJU_NFT_ABI = [
   {
     "inputs": [],
@@ -58,9 +58,16 @@ export const KAIJU_NFT_ABI = [
     "type": "function"
   },
   {
+    "inputs": [{"internalType": "address", "name": "_owner", "type": "address"}],
+    "name": "tokensOf", 
+    "outputs": [{"internalType": "uint256[]", "name": "_tokenIds", "type": "uint256[]"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
-      {"internalType": "address", "name": "owner", "type": "address"},
-      {"internalType": "uint256", "name": "index", "type": "uint256"}
+      {"internalType": "address", "name": "_owner", "type": "address"},
+      {"internalType": "uint256", "name": "_index", "type": "uint256"}
     ],
     "name": "tokenOfOwnerByIndex",
     "outputs": [{"internalType": "uint256", "name": "", "type": "uint256"}],
@@ -76,7 +83,7 @@ export interface KaijuNFT {
   owner: string
   tokenURI: string
   birthDate?: number
-  batch?: string // Added batch information from OpenSea traits
+  batch?: string
   ipfsData?: {
     name: string
     description: string
@@ -114,7 +121,7 @@ class BlockchainCryptoKaijuService {
   
   // 🚀 PERFORMANCE OPTIMIZATIONS
   private cache = new Map<string, { data: any; timestamp: number; ttl: number }>()
-  private pendingRequests = new Map<string, Promise<any>>() // Request deduplication
+  private pendingRequests = new Map<string, Promise<any>>()
   
   // Multiple IPFS gateways for racing
   private readonly IPFS_GATEWAYS = [
@@ -267,8 +274,6 @@ class BlockchainCryptoKaijuService {
 
   /**
    * 🎯 SIMPLE: Just use the exact URL the contract gives us!
-   * The contract returns the full IPFS URL (e.g., "https://ipfs.infura.io/ipfs/QmjhPr3M...")
-   * No need to race multiple gateways - just use what the contract tells us!
    */
   private async fetchIpfsMetadata(tokenURI: string): Promise<any> {
     const cacheKey = `ipfs:${tokenURI}`
@@ -279,7 +284,6 @@ class BlockchainCryptoKaijuService {
       try {
         console.log(`📡 Fetching IPFS metadata from contract URL: ${tokenURI}`)
         
-        // The contract gives us the EXACT URL - just use it!
         const response = await fetch(tokenURI, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
@@ -339,7 +343,6 @@ class BlockchainCryptoKaijuService {
 
     return this.deduplicate(cacheKey, async () => {
       try {
-        // Use your proxy endpoint for CORS-free access
         const proxyUrl = `/api/opensea/chain/ethereum/contract/${KAIJU_NFT_ADDRESS}/nfts/${tokenId}`
         console.log(`🌊 OpenSea proxy: ${proxyUrl} (timeout: ${this.TIMEOUTS.OPENSEA}ms)`)
         
@@ -664,43 +667,32 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * 🚀 OPTIMIZED: Get tokens owned by address with parallel processing
+   * 🚀 SUPER EFFICIENT: Get tokens owned by address using tokensOf()
+   * This is MUCH faster than scanning - gets all token IDs in one call!
    */
   async getTokensForAddress(address: string): Promise<KaijuNFT[]> {
     const startTime = Date.now()
     
     try {
-      console.log(`🚀 PARALLEL fetch for address: ${address}`)
+      console.log(`🚀 EFFICIENT fetch for address: ${address}`)
       
-      const balance = await this.callContractWithTimeout<bigint>("balanceOf", [address], `balance:${address}`)
-      const tokenCount = Number(balance)
+      // Use the tokensOf function to get ALL token IDs in one call! 🎯
+      console.log(`⚡ Getting all token IDs with tokensOf()...`)
+      const tokenIds = await this.callContractWithTimeout<bigint[]>("tokensOf", [address], `tokensOf:${address}`)
       
-      console.log(`📦 Address ${address} owns ${tokenCount} tokens`)
+      console.log(`✅ Got ${tokenIds.length} token IDs in ${Date.now() - startTime}ms`)
       
-      if (tokenCount === 0) return []
+      if (tokenIds.length === 0) return []
       
-      // 🚀 STEP 1: Get all token IDs in parallel
-      console.log(`⚡ Fetching ${tokenCount} token IDs in parallel...`)
-      const tokenIdPromises = Array.from({ length: tokenCount }, (_, i) =>
-        this.callContractWithTimeout<bigint>("tokenOfOwnerByIndex", [address, BigInt(i)])
-      )
-      
-      const tokenIds = await Promise.allSettled(tokenIdPromises)
-      const validTokenIds = tokenIds
-        .filter(result => result.status === 'fulfilled')
-        .map(result => (result as PromiseFulfilledResult<bigint>).value.toString())
-      
-      console.log(`✅ Got ${validTokenIds.length} token IDs in ${Date.now() - startTime}ms`)
-      
-      // 🚀 STEP 2: Fetch ALL token details in parallel (limited batches to avoid overwhelming)
-      console.log(`⚡ Fetching all token details in parallel...`)
+      // 🚀 STEP 2: Fetch ALL token details in parallel (with batching to avoid overwhelming APIs)
+      console.log(`⚡ Fetching details for ${tokenIds.length} tokens in parallel...`)
       const BATCH_SIZE = 10 // Process 10 at a time to avoid overwhelming APIs
       const results: KaijuNFT[] = []
       
-      for (let i = 0; i < validTokenIds.length; i += BATCH_SIZE) {
-        const batch = validTokenIds.slice(i, i + BATCH_SIZE)
+      for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
+        const batch = tokenIds.slice(i, i + BATCH_SIZE)
         const batchPromises = batch.map(async (tokenId) => {
-          const result = await this.getByTokenId(tokenId)
+          const result = await this.getByTokenId(tokenId.toString())
           return result.nft
         })
         
@@ -718,6 +710,68 @@ class BlockchainCryptoKaijuService {
       
     } catch (error) {
       console.error(`❌ Error fetching tokens for address ${address}:`, error)
+      
+      // Fallback to tokenOfOwnerByIndex if tokensOf fails
+      console.log(`🔄 Falling back to tokenOfOwnerByIndex approach...`)
+      return this.getTokensForAddressFallback(address)
+    }
+  }
+
+  /**
+   * Fallback method using tokenOfOwnerByIndex (still much better than scanning)
+   */
+  private async getTokensForAddressFallback(address: string): Promise<KaijuNFT[]> {
+    const startTime = Date.now()
+    
+    try {
+      console.log(`🔄 FALLBACK: Using tokenOfOwnerByIndex for ${address}`)
+      
+      const balance = await this.callContractWithTimeout<bigint>("balanceOf", [address], `balance:${address}`)
+      const tokenCount = Number(balance)
+      
+      console.log(`📦 Address ${address} owns ${tokenCount} tokens`)
+      
+      if (tokenCount === 0) return []
+      
+      // Get all token IDs using tokenOfOwnerByIndex
+      console.log(`⚡ Fetching ${tokenCount} token IDs with tokenOfOwnerByIndex...`)
+      const tokenIdPromises = Array.from({ length: tokenCount }, (_, i) =>
+        this.callContractWithTimeout<bigint>("tokenOfOwnerByIndex", [address, BigInt(i)])
+      )
+      
+      const tokenIds = await Promise.allSettled(tokenIdPromises)
+      const validTokenIds = tokenIds
+        .filter(result => result.status === 'fulfilled')
+        .map(result => (result as PromiseFulfilledResult<bigint>).value.toString())
+      
+      console.log(`✅ Got ${validTokenIds.length} token IDs in ${Date.now() - startTime}ms`)
+      
+      // Fetch ALL token details in parallel (with batching)
+      console.log(`⚡ Fetching all token details in parallel...`)
+      const BATCH_SIZE = 10
+      const results: KaijuNFT[] = []
+      
+      for (let i = 0; i < validTokenIds.length; i += BATCH_SIZE) {
+        const batch = validTokenIds.slice(i, i + BATCH_SIZE)
+        const batchPromises = batch.map(async (tokenId) => {
+          const result = await this.getByTokenId(tokenId)
+          return result.nft
+        })
+        
+        const batchResults = await Promise.allSettled(batchPromises)
+        const validResults = batchResults
+          .filter(result => result.status === 'fulfilled' && result.value)
+          .map(result => (result as PromiseFulfilledResult<KaijuNFT>).value)
+        
+        results.push(...validResults)
+        console.log(`✅ Fallback batch ${Math.floor(i/BATCH_SIZE) + 1} completed (${validResults.length} tokens)`)
+      }
+      
+      console.log(`🎉 Fallback total time: ${Date.now() - startTime}ms`)
+      return results
+      
+    } catch (error) {
+      console.error(`❌ Fallback method also failed:`, error)
       return []
     }
   }
@@ -801,10 +855,10 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Test service with performance timing
+   * Test service with performance timing - Updated for new efficient approach
    */
   async testService(): Promise<void> {
-    console.log('🚀 Testing OPTIMIZED Parallel Service...')
+    console.log('🚀 Testing SUPER EFFICIENT Service...')
     const totalStartTime = Date.now()
     
     try {
@@ -834,7 +888,19 @@ class BlockchainCryptoKaijuService {
         }
       }
       
-      // Test 4: Cache effectiveness
+      // Test 4: Test tokensOf function efficiency
+      console.log('⚡ Testing tokensOf function...')
+      const tokensOfStartTime = Date.now()
+      try {
+        // Test with a known address that should have tokens
+        const testAddress = result.nft?.owner || '0x0000000000000000000000000000000000000000'
+        const tokenIds = await this.callContractWithTimeout<bigint[]>("tokensOf", [testAddress])
+        console.log(`✅ tokensOf test: Found ${tokenIds.length} tokens (${Date.now() - tokensOfStartTime}ms)`)
+      } catch (error) {
+        console.log(`⚠️ tokensOf test failed - will use fallback method`)
+      }
+      
+      // Test 5: Cache effectiveness
       console.log('💾 Testing cache effectiveness...')
       const cacheStartTime = Date.now()
       await this.getByTokenId('1') // Should be instant from cache
@@ -844,7 +910,7 @@ class BlockchainCryptoKaijuService {
       console.log(`📊 Cache size: ${this.cache.size} entries`)
       
     } catch (error) {
-      console.error('❌ Optimized service test failed:', error)
+      console.error('❌ Efficient service test failed:', error)
       throw error
     }
   }
