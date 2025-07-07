@@ -6,16 +6,15 @@ import HeroSection from '@/components/home/HeroSection'
 import HowItWorksSection from '@/components/home/HowItWorksSection'
 import MysteriesSection from '@/components/home/MysteriesSection'
 import CTASection from '@/components/home/CTASection'
-// Removed the unused import: import { defaultEasing } from 'framer-motion'
 
 export default function Home() {
   
-  // Configuration data - could be moved to separate config files or fetched from API
+  // FIXED: Configuration data - updated to match HeroSection interface
   const mysteryDesigns = [
-    { type: 'Plush', rarity: 'Common', probability: '40%' },
-    { type: 'Vinyl', rarity: 'Common', probability: '35%' },
-    { type: 'Plush', rarity: 'Rare', probability: '20%' },
-    { type: 'Vinyl', rarity: 'Ultra Rare', probability: '5%' },
+    { type: 'Plush', power: 'Glows in the dark' },
+    { type: 'Vinyl', power: 'Water manipulation' },
+    { type: 'Plush', power: 'Fire breathing' },
+    { type: 'Vinyl', power: 'Eternal rebirth' },
   ]
 
   const heroStats = {
