@@ -296,7 +296,8 @@ class BlockchainCryptoKaijuService {
         return data
         
       } catch (error) {
-        console.warn(`⚠️ Contract IPFS URL failed: ${error.message}`)
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        console.warn(`⚠️ Contract IPFS URL failed: ${errorMessage}`)
         
         // Only if the contract URL fails, try our API proxy as fallback
         if (tokenURI.includes('/ipfs/')) {
@@ -318,7 +319,8 @@ class BlockchainCryptoKaijuService {
               return proxyData
             }
           } catch (proxyError) {
-            console.warn(`❌ API proxy fallback also failed: ${proxyError.message}`)
+            const proxyErrorMessage = proxyError instanceof Error ? proxyError.message : 'Unknown error'
+            console.warn(`❌ API proxy fallback also failed: ${proxyErrorMessage}`)
           }
         }
         
@@ -382,10 +384,11 @@ class BlockchainCryptoKaijuService {
         return this.createFallbackOpenSeaData(tokenId)
         
       } catch (error) {
-        if (error.name === 'AbortError') {
+        if (error instanceof Error && error.name === 'AbortError') {
           console.warn(`⏰ OpenSea timed out after ${this.TIMEOUTS.OPENSEA}ms`)
         } else {
-          console.warn(`⚠️ OpenSea failed:`, error.message)
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+          console.warn(`⚠️ OpenSea failed:`, errorMessage)
         }
         return this.createFallbackOpenSeaData(tokenId)
       }
@@ -456,7 +459,7 @@ class BlockchainCryptoKaijuService {
         return result as T
       } catch (error) {
         clearTimeout(timeoutId)
-        if (error.name === 'AbortError') {
+        if (error instanceof Error && error.name === 'AbortError') {
           throw new Error(`Contract call ${method} timed out after ${this.TIMEOUTS.CONTRACT}ms`)
         }
         throw error
