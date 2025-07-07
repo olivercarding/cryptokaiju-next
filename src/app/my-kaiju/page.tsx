@@ -3,9 +3,10 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Wallet, Package, ExternalLink, Heart, Sparkles, Filter, Zap, Database } from 'lucide-react'
+import { Search, Wallet, Package, ExternalLink, Heart, Sparkles, Filter, Zap, Database, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Header from '@/components/layout/Header'
 import { ConnectButton } from "thirdweb/react"
 import { thirdwebClient } from '@/lib/thirdweb'
 import { useBlockchainMyKaiju, useBlockchainKaijuSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
@@ -229,162 +230,208 @@ const SearchSection = () => {
 export default function MyKaijuPage() {
   const { kaijus, isLoading, error, isConnected } = useBlockchainMyKaiju()
 
-  if (!isConnected) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-kaiju-light-pink to-white">
-        {/* Header */}
-        <div className="pt-32 pb-16 px-6">
-          <div className="max-w-4xl mx-auto text-center">
+  return (
+    <>
+      <Header />
+      
+      <main className="text-kaiju-navy overflow-x-hidden">
+        {/* Dark Hero Section */}
+        <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
+          {/* Animated background elements */}
+          <div className="absolute inset-0">
+            <motion.div 
+              className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3]
+              }}
+              transition={{ duration: 8, repeat: Infinity }}
+            />
+            <motion.div 
+              className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_30%,theme(colors.kaiju-purple-light/30)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                opacity: [0.4, 0.2, 0.4]
+              }}
+              transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+            />
+          </div>
+
+          {/* Floating particles */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-kaiju-pink rounded-full opacity-60"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0]
+              }}
+              transition={{
+                duration: Math.random() * 3 + 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+          
+          <div className="relative z-10 max-w-7xl mx-auto px-6">
+            {/* Back Navigation */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-8"
+            >
+              <Link 
+                href="/kaijudex"
+                className="inline-flex items-center gap-2 text-white hover:text-kaiju-pink transition-colors font-mono"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Kaijudex
+              </Link>
+            </motion.div>
+
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
+              className="text-center mb-8"
             >
-              <div className="flex items-center justify-center gap-3 mb-6">
-                <Wallet className="w-8 h-8 text-kaiju-pink" />
-                <h1 className="text-4xl md:text-5xl font-black text-kaiju-navy">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Heart className="w-8 h-8 text-kaiju-pink" />
+                <h1 className="text-4xl md:text-5xl font-black text-white">
                   My Kaiju Collection
                 </h1>
               </div>
-              
-              <p className="text-xl text-kaiju-navy/70 mb-8 max-w-2xl mx-auto">
-                Connect your wallet to view your CryptoKaiju NFT collection directly from the blockchain
+              <p className="text-lg text-white/90 mb-4 max-w-2xl mx-auto">
+                Your personal collection of CryptoKaiju NFTs - verified on blockchain
               </p>
+              <div className="inline-flex items-center gap-2 bg-green-100/20 backdrop-blur-sm text-green-300 px-3 py-1 rounded-full text-sm font-medium border border-green-400/30">
+                <Database className="w-4 h-4" />
+                Live blockchain data
+              </div>
+            </motion.div>
 
-              <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100 max-w-md mx-auto">
+            {/* Wallet Connection Check */}
+            {!isConnected && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 max-w-md mx-auto"
+              >
                 <Database className="w-16 h-16 text-kaiju-pink mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-kaiju-navy mb-4">
+                <h3 className="text-xl font-bold text-white mb-4 text-center">
                   Connect Your Wallet
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-white/80 mb-6 text-center">
                   Connect your Ethereum wallet to view and manage your CryptoKaiju collection with instant blockchain verification.
                 </p>
-                <ConnectButton
-                  client={thirdwebClient}
-                  theme="light"
-                  connectModal={{
-                    size: "compact",
-                    title: "Connect to view your Kaiju",
-                    showThirdwebBranding: false,
-                  }}
-                />
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-kaiju-light-pink to-white">
-      {/* Header */}
-      <div className="pt-32 pb-8 px-6">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-8"
-          >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Heart className="w-8 h-8 text-kaiju-pink" />
-              <h1 className="text-4xl md:text-5xl font-black text-kaiju-navy">
-                My Kaiju Collection
-              </h1>
-            </div>
-            <p className="text-lg text-kaiju-navy/70 mb-4">
-              Your personal collection of CryptoKaiju NFTs - verified on blockchain
-            </p>
-            <div className="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              <Database className="w-4 h-4" />
-              Live blockchain data
-            </div>
-          </motion.div>
-
-          {/* Stats Bar */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-100 mb-8"
-          >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-              <div>
-                <div className="text-3xl font-black text-kaiju-pink mb-1">
-                  {kaijus.length}
+                <div className="flex justify-center">
+                  <ConnectButton
+                    client={thirdwebClient}
+                    theme="light"
+                    connectModal={{
+                      size: "compact",
+                      title: "Connect to view your Kaiju",
+                      showThirdwebBranding: false,
+                    }}
+                  />
                 </div>
-                <div className="text-gray-600 font-medium">Kaiju Owned</div>
-              </div>
-              <div>
-                <div className="text-3xl font-black text-kaiju-purple-dark mb-1">
-                  {kaijus.filter(k => k.nfcId).length}
-                </div>
-                <div className="text-gray-600 font-medium">With NFC Chips</div>
-              </div>
-              <div>
-                <div className="text-3xl font-black text-kaiju-navy mb-1">
-                  {new Set(kaijus.map(k => k.ipfsData?.attributes?.class)).size}
-                </div>
-                <div className="text-gray-600 font-medium">Unique Classes</div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+              </motion.div>
+            )}
 
-      {/* Search Section */}
-      <div className="px-6 mb-8">
-        <div className="max-w-7xl mx-auto">
-          <SearchSection />
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="px-6 pb-20">
-        <div className="max-w-7xl mx-auto">
-          {isLoading ? (
-            <div className="text-center py-20">
+            {/* Stats Bar - only show when connected */}
+            {isConnected && (
               <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full mx-auto mb-4"
-              />
-              <div className="text-kaiju-navy text-xl font-bold">Loading from blockchain...</div>
-              <div className="text-gray-600 mt-2">Fetching your NFTs directly from smart contract</div>
-            </div>
-          ) : error ? (
-            <div className="text-center py-20">
-              <div className="text-red-500 text-xl font-bold mb-4">Error loading collection</div>
-              <div className="text-gray-600">{error}</div>
-            </div>
-          ) : kaijus.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-center py-20"
-            >
-              <Package className="w-24 h-24 text-gray-300 mx-auto mb-6" />
-              <h3 className="text-2xl font-bold text-kaiju-navy mb-4">No Kaiju Found</h3>
-              <p className="text-gray-600 mb-8 max-w-md mx-auto">
-                You don't own any CryptoKaiju NFTs yet. Visit our marketplace to start your collection!
-              </p>
-              <Link
-                href="/#hero"
-                className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20"
               >
-                Mint Your First Kaiju
-              </Link>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {kaijus.map((kaiju, index) => (
-                <KaijuCard key={kaiju.tokenId} kaiju={kaiju} index={index} />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                  <div>
+                    <div className="text-3xl font-black text-kaiju-pink mb-1">
+                      {kaijus.length}
+                    </div>
+                    <div className="text-white/80 font-medium">Kaiju Owned</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-kaiju-purple-light mb-1">
+                      {kaijus.filter(k => k.nfcId).length}
+                    </div>
+                    <div className="text-white/80 font-medium">With NFC Chips</div>
+                  </div>
+                  <div>
+                    <div className="text-3xl font-black text-white mb-1">
+                      {new Set(kaijus.map(k => k.ipfsData?.attributes?.class)).size}
+                    </div>
+                    <div className="text-white/80 font-medium">Unique Classes</div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </section>
+
+        {/* Light Content Section */}
+        <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
+          <div className="max-w-7xl mx-auto">
+            {/* Only show search and collection if connected */}
+            {isConnected && (
+              <>
+                {/* Search Section */}
+                <SearchSection />
+
+                {/* Main Content */}
+                {isLoading ? (
+                  <div className="text-center py-20">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                      className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full mx-auto mb-4"
+                    />
+                    <div className="text-kaiju-navy text-xl font-bold">Loading from blockchain...</div>
+                    <div className="text-gray-600 mt-2">Fetching your NFTs directly from smart contract</div>
+                  </div>
+                ) : error ? (
+                  <div className="text-center py-20">
+                    <div className="text-red-500 text-xl font-bold mb-4">Error loading collection</div>
+                    <div className="text-gray-600">{error}</div>
+                  </div>
+                ) : kaijus.length === 0 ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-20"
+                  >
+                    <Package className="w-24 h-24 text-gray-300 mx-auto mb-6" />
+                    <h3 className="text-2xl font-bold text-kaiju-navy mb-4">No Kaiju Found</h3>
+                    <p className="text-gray-600 mb-8 max-w-md mx-auto">
+                      You don't own any CryptoKaiju NFTs yet. Visit our marketplace to start your collection!
+                    </p>
+                    <Link
+                      href="/#hero"
+                      className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-300"
+                    >
+                      Mint Your First Kaiju
+                    </Link>
+                  </motion.div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {kaijus.map((kaiju, index) => (
+                      <KaijuCard key={kaiju.tokenId} kaiju={kaiju} index={index} />
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </section>
+      </main>
+    </>
   )
 }

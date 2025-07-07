@@ -7,6 +7,7 @@ import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles
 import Link from 'next/link'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
+import Header from '@/components/layout/Header'
 import { useBlockchainNFTSearch, useBlockchainTest } from '@/lib/hooks/useBlockchainCryptoKaiju'
 
 // Import the test component
@@ -353,10 +354,10 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
       <div className="text-center mb-6">
         <div className="flex items-center justify-center gap-3 mb-4">
           <Database className="w-8 h-8 text-kaiju-pink" />
-          <h2 className="text-2xl font-bold text-kaiju-navy">Enhanced NFT Lookup</h2>
+          <h2 className="text-2xl font-bold text-kaiju-navy">NFT Lookup</h2>
         </div>
         <p className="text-gray-600">
-          Find your CryptoKaiju with improved error handling and CORS-free IPFS access
+          Find your CryptoKaiju with direct blockchain access
         </p>
       </div>
 
@@ -391,19 +392,6 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
           )}
         </button>
       </form>
-
-      <div className="mt-6 p-4 bg-green-50 rounded-xl border border-green-200">
-        <h4 className="font-semibold text-green-800 mb-2 flex items-center gap-2">
-          <Sparkles className="w-4 h-4" />
-          ⚡ Enhanced Features
-        </h4>
-        <ul className="text-sm text-green-700 space-y-1">
-          <li>• <strong>CORS-free IPFS access</strong> - No more browser blocking</li>
-          <li>• <strong>Multiple image fallbacks</strong> - Always displays something</li>
-          <li>• <strong>Enhanced error handling</strong> - Better debugging information</li>
-          <li>• <strong>Graceful degradation</strong> - Works even when APIs fail</li>
-        </ul>
-      </div>
     </motion.div>
   )
 }
@@ -417,7 +405,7 @@ export default function NFTLookupPage() {
   const [showConversion, setShowConversion] = useState(false)
 
   const handleSearch = (query: string) => {
-    console.log(`🔍 Starting enhanced search for: "${query}"`)
+    console.log(`🔍 Starting search for: "${query}"`)
     setSearchQuery(query)
     setHasSearched(true)
     search(query)
@@ -442,213 +430,260 @@ export default function NFTLookupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-kaiju-light-pink to-white">
-      {/* Header */}
-      <div className="pt-32 pb-8 px-6">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="mb-8"
-          >
-            <Link 
-              href="/kaijudex"
-              className="inline-flex items-center gap-2 text-kaiju-pink hover:text-kaiju-red transition-colors font-medium"
+    <>
+      <Header />
+      
+      <main className="text-kaiju-navy overflow-x-hidden">
+        {/* Dark Hero Section */}
+        <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
+          {/* Animated background elements */}
+          <div className="absolute inset-0">
+            <motion.div 
+              className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3]
+              }}
+              transition={{ duration: 8, repeat: Infinity }}
+            />
+            <motion.div 
+              className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_30%,theme(colors.kaiju-purple-light/30)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                opacity: [0.4, 0.2, 0.4]
+              }}
+              transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+            />
+          </div>
+
+          {/* Floating particles */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-kaiju-pink rounded-full opacity-60"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0]
+              }}
+              transition={{
+                duration: Math.random() * 3 + 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+          
+          <div className="relative z-10 max-w-7xl mx-auto px-6">
+            {/* Back Navigation */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-8"
             >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Kaijudex
-            </Link>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-12"
-          >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Zap className="w-8 h-8 text-kaiju-pink" />
-              <h1 className="text-4xl md:text-5xl font-black text-kaiju-navy">
-                NFT Lookup
-              </h1>
-            </div>
-            <p className="text-lg text-kaiju-navy/70 max-w-2xl mx-auto">
-              Find your CryptoKaiju NFT with enhanced blockchain search
-            </p>
-          </motion.div>
-
-          {/* Test Buttons */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="text-center mb-8 space-y-2"
-          >
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => setShowTest(!showTest)}
-                className="text-gray-500 hover:text-kaiju-pink text-sm font-medium transition-colors"
+              <Link 
+                href="/kaijudex"
+                className="inline-flex items-center gap-2 text-white hover:text-kaiju-pink transition-colors font-mono"
               >
-                🧪 Test Panel
-              </button>
-              <button
-                onClick={() => setShowConversion(!showConversion)}
-                className="text-gray-500 hover:text-blue-600 text-sm font-medium transition-colors"
-              >
-                <Settings className="w-4 h-4 inline mr-1" />
-                NFC Test
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </div>
+                <ArrowLeft className="w-4 h-4" />
+                Back to Kaijudex
+              </Link>
+            </motion.div>
 
-      {/* Test Panels */}
-      <AnimatePresence>
-        {showTest && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-6 mb-8"
-          >
-            <div className="max-w-4xl mx-auto bg-gray-900 text-white rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold">Blockchain Service Test</h3>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-12"
+            >
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <Zap className="w-8 h-8 text-kaiju-pink" />
+                <h1 className="text-4xl md:text-5xl font-black text-white">
+                  NFT Lookup
+                </h1>
+              </div>
+              <p className="text-lg text-white/90 max-w-2xl mx-auto">
+                Find your CryptoKaiju NFT with direct blockchain search
+              </p>
+            </motion.div>
+
+            {/* Test Buttons */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="text-center mb-8 space-y-2"
+            >
+              <div className="flex justify-center gap-4">
                 <button
-                  onClick={runTest}
-                  disabled={isTestRunning}
-                  className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded-lg font-medium transition-colors"
+                  onClick={() => setShowTest(!showTest)}
+                  className="text-white/70 hover:text-kaiju-pink text-sm font-medium transition-colors"
                 >
-                  {isTestRunning ? 'Testing...' : 'Run Test'}
+                  🧪 Test Panel
+                </button>
+                <button
+                  onClick={() => setShowConversion(!showConversion)}
+                  className="text-white/70 hover:text-blue-400 text-sm font-medium transition-colors"
+                >
+                  <Settings className="w-4 h-4 inline mr-1" />
+                  NFC Test
                 </button>
               </div>
-              <div className="bg-gray-800 rounded-lg p-4 max-h-60 overflow-y-auto">
-                {testResults.length > 0 ? (
-                  testResults.map((log, index) => (
-                    <div key={`log-${index}`} className="text-sm font-mono mb-1">
-                      {log}
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-gray-400 text-sm">Click "Run Test" to test blockchain connectivity</div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          </div>
+        </section>
 
-        {showConversion && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="px-6 mb-8"
-          >
-            <div className="max-w-7xl mx-auto">
-              <NFCConversionTest />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Main Content */}
-      <div className="px-6 pb-20">
-        <div className="max-w-7xl mx-auto">
-          {!hasSearched || (!result?.nft && !isLoading && !error) ? (
-            <SearchForm onSearch={handleSearch} isLoading={isLoading} />
-          ) : (
-            <div className="space-y-8">
-              {/* Search Again Bar */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-xl p-4 shadow-lg border border-gray-200 max-w-2xl mx-auto"
-              >
-                <div className="flex gap-3">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
-                    placeholder="Enter Token ID or NFC ID"
-                    className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:border-kaiju-pink focus:outline-none"
-                  />
+        {/* Test Panels */}
+        <AnimatePresence>
+          {showTest && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-gray-50 px-6 py-8"
+            >
+              <div className="max-w-4xl mx-auto bg-gray-900 text-white rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold">Blockchain Service Test</h3>
                   <button
-                    onClick={() => handleSearch(searchQuery)}
-                    disabled={isLoading}
-                    className="bg-kaiju-pink hover:bg-kaiju-red text-white font-bold px-6 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    onClick={runTest}
+                    disabled={isTestRunning}
+                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded-lg font-medium transition-colors"
                   >
-                    {isLoading ? (
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Zap className="w-4 h-4" />
-                    )}
-                    Search
+                    {isTestRunning ? 'Testing...' : 'Run Test'}
                   </button>
                 </div>
-              </motion.div>
-
-              {/* Results */}
-              <AnimatePresence mode="wait">
-                {isLoading && (
-                  <motion.div
-                    key="loading"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="text-center py-20"
-                  >
-                    <div className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                    <div className="text-kaiju-navy text-xl font-bold">Searching Blockchain...</div>
-                    <div className="text-gray-600 mt-2">Enhanced search with CORS-free IPFS access</div>
-                  </motion.div>
-                )}
-
-                {error && (
-                  <motion.div
-                    key="error"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="bg-white rounded-2xl p-8 shadow-xl border-2 border-red-200 max-w-2xl mx-auto text-center"
-                  >
-                    <div className="text-red-500 text-xl font-bold mb-4">NFT Not Found</div>
-                    <div className="text-gray-600 mb-6">
-                      Could not find a CryptoKaiju with "{searchQuery}" on the blockchain.
-                    </div>
-                    <button
-                      onClick={() => {
-                        setSearchQuery('')
-                        setHasSearched(false)
-                        clear()
-                      }}
-                      className="bg-kaiju-pink text-white font-bold px-6 py-3 rounded-xl hover:bg-kaiju-red transition-colors"
-                    >
-                      Try Another Search
-                    </button>
-                  </motion.div>
-                )}
-
-                {result?.nft && (
-                  <motion.div
-                    key="success"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                  >
-                    <NFTDisplayCard
-                      nft={result.nft}
-                      openSeaData={result.openSeaData}
-                      onShare={handleShare}
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                <div className="bg-gray-800 rounded-lg p-4 max-h-60 overflow-y-auto">
+                  {testResults.length > 0 ? (
+                    testResults.map((log, index) => (
+                      <div key={`log-${index}`} className="text-sm font-mono mb-1">
+                        {log}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-gray-400 text-sm">Click "Run Test" to test blockchain connectivity</div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
           )}
-        </div>
-      </div>
-    </div>
+
+          {showConversion && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-gray-50 px-6 py-8"
+            >
+              <div className="max-w-7xl mx-auto">
+                <NFCConversionTest />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Light Content Section */}
+        <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
+          <div className="max-w-7xl mx-auto">
+            {!hasSearched || (!result?.nft && !isLoading && !error) ? (
+              <SearchForm onSearch={handleSearch} isLoading={isLoading} />
+            ) : (
+              <div className="space-y-8">
+                {/* Search Again Bar */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-xl p-4 shadow-lg border border-gray-200 max-w-2xl mx-auto"
+                >
+                  <div className="flex gap-3">
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+                      placeholder="Enter Token ID or NFC ID"
+                      className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 focus:border-kaiju-pink focus:outline-none"
+                    />
+                    <button
+                      onClick={() => handleSearch(searchQuery)}
+                      disabled={isLoading}
+                      className="bg-kaiju-pink hover:bg-kaiju-red text-white font-bold px-6 py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {isLoading ? (
+                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        <Zap className="w-4 h-4" />
+                      )}
+                      Search
+                    </button>
+                  </div>
+                </motion.div>
+
+                {/* Results */}
+                <AnimatePresence mode="wait">
+                  {isLoading && (
+                    <motion.div
+                      key="loading"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="text-center py-20"
+                    >
+                      <div className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                      <div className="text-kaiju-navy text-xl font-bold">Searching Blockchain...</div>
+                      <div className="text-gray-600 mt-2">Querying smart contract directly</div>
+                    </motion.div>
+                  )}
+
+                  {error && (
+                    <motion.div
+                      key="error"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      className="bg-white rounded-2xl p-8 shadow-xl border-2 border-red-200 max-w-2xl mx-auto text-center"
+                    >
+                      <div className="text-red-500 text-xl font-bold mb-4">NFT Not Found</div>
+                      <div className="text-gray-600 mb-6">
+                        Could not find a CryptoKaiju with "{searchQuery}" on the blockchain.
+                      </div>
+                      <button
+                        onClick={() => {
+                          setSearchQuery('')
+                          setHasSearched(false)
+                          clear()
+                        }}
+                        className="bg-kaiju-pink text-white font-bold px-6 py-3 rounded-xl hover:bg-kaiju-red transition-colors"
+                      >
+                        Try Another Search
+                      </button>
+                    </motion.div>
+                  )}
+
+                  {result?.nft && (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                    >
+                      <NFTDisplayCard
+                        nft={result.nft}
+                        openSeaData={result.openSeaData}
+                        onShare={handleShare}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
+        </section>
+      </main>
+    </>
   )
 }

@@ -70,9 +70,9 @@ export default function Home() {
     {
       name: 'Diamond Hands',
       type: 'Vinyl',
-      power: 'Iconic, cuddly and soft',
-      description: 'A cool Kaiju you will want to hold, based on the iconic Genesis design.',
-      nftImage: '/images/dragon.png',
+      power: 'For those with hands stronger than steel',
+      description: 'Classic design in a cool, iconic colourway.',
+      nftImage: '/images/Diamond-Hands-NFT.png',
       physicalImage: '/images/Diamond_hands_product_shot.png',
       backgroundColor: 'bg-red-100'
     },
