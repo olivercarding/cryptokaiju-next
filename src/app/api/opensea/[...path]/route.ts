@@ -62,7 +62,9 @@ export async function GET(
     })
 
   } catch (error) {
-    console.error('❌ OpenSea proxy error:', error)
+    // Fix TypeScript error by properly handling unknown error type
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    console.error('❌ OpenSea proxy error:', errorMessage)
     return NextResponse.json(
       { error: 'Internal server error' }, 
       { status: 500 }
