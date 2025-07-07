@@ -1,14 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Optimize for Vercel deployment
-  output: 'standalone',
-  
-  // Reduce build time and improve stability
-  experimental: {
-    optimizeCss: true,
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
-  },
-  
   // Image optimization
   images: {
     remotePatterns: [
@@ -132,40 +123,17 @@ const nextConfig = {
       }
     }
     
-    // Optimize for thirdweb and web3 libraries
-    config.externals = config.externals || []
-    if (isServer) {
-      config.externals.push('pino-pretty')
-    }
-    
-    // Handle React version conflicts
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'react': require.resolve('react'),
-      'react-dom': require.resolve('react-dom'),
-    }
-    
     return config
   },
   
   // TypeScript configuration
   typescript: {
-    // Be more lenient during build (can be adjusted as needed)
     ignoreBuildErrors: false,
   },
   
   // ESLint configuration
   eslint: {
-    // Be more lenient during build
     ignoreDuringBuilds: false,
-  },
-  
-  // Build optimizations
-  swcMinify: true,
-  
-  // Handle environment variables
-  env: {
-    NEXT_PUBLIC_APP_ENV: process.env.NODE_ENV,
   },
 }
 
