@@ -85,7 +85,8 @@ class CryptoKaijuApiService {
       return data
       
     } catch (error) {
-      console.warn(`⚠️ IPFS fetch failed: ${error.message}`)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      console.warn(`⚠️ IPFS fetch failed: ${errorMessage}`)
       return null
     }
   }

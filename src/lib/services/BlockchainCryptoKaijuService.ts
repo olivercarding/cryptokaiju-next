@@ -1,4 +1,4 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - OPTIMIZED PARALLEL EXECUTION VERSION
+// src/lib/services/BlockchainCryptoKaijuService.ts - OPTIMISED PARALLEL EXECUTION VERSION
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
