@@ -26,6 +26,7 @@ export default function RootLayout({
       <body>
         <ThirdwebProvider>
           {children}
+          <SpeedInsights />
         </ThirdwebProvider>
       </body>
     </html>

@@ -1,4 +1,4 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - FIXED VERSION WITH OPENSEA FIX
+// src/lib/services/BlockchainCryptoKaijuService.ts - COMPLETE REWRITE WITH ENHANCED DEBUGGING
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
@@ -164,7 +164,7 @@ class BlockchainCryptoKaijuService {
   private readonly TIMEOUTS = {
     CONTRACT: 3000,    // 3s for blockchain calls
     IPFS: 5000,        // 5s for IPFS (need time for metadata)
-    OPENSEA: 8000,     // 8s for OpenSea account endpoint (can return many NFTs)
+    OPENSEA: 12000,    // 12s for OpenSea account endpoint (can return many NFTs)
     CACHE_TTL: 300000  // 5 minutes cache
   }
 
@@ -376,7 +376,7 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * 🆕 FIXED: Get tokens for address from OpenSea API (NO MORE 400 ERRORS!)
+   * 🆕 ENHANCED: Get tokens for address from OpenSea API with full pagination and debugging
    */
   private async getTokensForAddressFromOpenSea(address: string): Promise<KaijuNFT[]> {
     const cacheKey = `opensea-account:${address}`
@@ -385,67 +385,129 @@ class BlockchainCryptoKaijuService {
 
     return this.deduplicate(cacheKey, async () => {
       const startTime = Date.now()
+      let allCryptoKaijuNFTs: KaijuNFT[] = []
       
       try {
-        // 🚀 FIXED: Remove collection parameter that was causing 400 error
-        // OpenSea API v2 account endpoint doesn't support collection filtering
-        const url = `/api/opensea/chain/ethereum/account/${address}/nfts?limit=200`
-        console.log(`🌊 OpenSea account NFTs: ${url}`)
+        console.log(`🚀 ENHANCED DEBUG: Searching for CryptoKaiju NFTs for address: ${address}`)
+        console.log(`🔍 Target contract: ${KAIJU_NFT_ADDRESS.toLowerCase()}`)
         
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUTS.OPENSEA)
+        // Fetch multiple pages to find CryptoKaiju NFTs
+        let currentCursor = ''
+        let pageCount = 0
+        const maxPages = 20 // Check up to 1200 NFTs
+        let totalNFTsChecked = 0
         
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: { 
-            'Accept': 'application/json',
-            'User-Agent': 'CryptoKaiju/1.0'
-          },
-          signal: controller.signal
-        })
-        
-        clearTimeout(timeoutId)
-        
-        if (response.status === 503) {
-          console.warn(`⚠️ OpenSea API not configured, falling back to blockchain`)
-          throw new Error('OpenSea API not configured')
-        }
-        
-        if (!response.ok) {
-          const errorText = await response.text()
-          console.error(`❌ OpenSea API error: ${response.status} - ${errorText}`)
-          throw new Error(`OpenSea API returned ${response.status}: ${response.statusText}`)
-        }
-        
-        const data: OpenSeaAccountResponse = await response.json()
-        
-        if (!data.nfts || !Array.isArray(data.nfts)) {
-          console.warn(`⚠️ Invalid OpenSea response format`)
-          throw new Error('Invalid OpenSea response format')
-        }
-        
-        console.log(`📊 OpenSea returned ${data.nfts.length} total NFTs for address ${address}`)
-        
-        // 🚀 FIXED: Filter for CryptoKaiju NFTs by contract address AFTER fetching
-        const cryptoKaijuNFTs = data.nfts
-          .filter(nft => {
-            // Check if the NFT is from our CryptoKaiju contract
-            const isCorrectContract = nft.contract?.toLowerCase() === KAIJU_NFT_ADDRESS.toLowerCase()
-            
-            if (isCorrectContract) {
-              console.log(`✅ Found CryptoKaiju NFT: ${nft.name || nft.identifier}`)
-            }
-            
-            return isCorrectContract
+        while (pageCount < maxPages) {
+          const url = `/api/opensea/chain/ethereum/account/${address}/nfts?limit=100${currentCursor ? `&next=${currentCursor}` : ''}`
+          console.log(`🌊 Page ${pageCount + 1}: ${url}`)
+          
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUTS.OPENSEA)
+          
+          const response = await fetch(url, {
+            method: 'GET',
+            headers: { 
+              'Accept': 'application/json',
+              'User-Agent': 'CryptoKaiju/1.0'
+            },
+            signal: controller.signal
           })
-          .map(nft => this.convertOpenSeaNFTToKaiju(nft, address))
+          
+          clearTimeout(timeoutId)
+          
+          if (response.status === 503) {
+            console.warn(`⚠️ OpenSea API not configured, falling back to blockchain`)
+            throw new Error('OpenSea API not configured')
+          }
+          
+          if (!response.ok) {
+            const errorText = await response.text()
+            console.error(`❌ OpenSea API error on page ${pageCount + 1}: ${response.status} - ${errorText}`)
+            break
+          }
+          
+          const data = await response.json()
+          
+          if (!data.nfts || !Array.isArray(data.nfts)) {
+            console.warn(`⚠️ Invalid OpenSea response format on page ${pageCount + 1}`)
+            break
+          }
+          
+          console.log(`📊 Page ${pageCount + 1}: Found ${data.nfts.length} NFTs`)
+          totalNFTsChecked += data.nfts.length
+          
+          // 🔍 ENHANCED DEBUG: Show sample contracts on this page
+          if (data.nfts.length > 0) {
+            const contractCounts = new Map<string, number>()
+            data.nfts.forEach(nft => {
+              const contract = nft.contract?.toLowerCase() || 'unknown'
+              contractCounts.set(contract, (contractCounts.get(contract) || 0) + 1)
+            })
+            
+            console.log(`🔍 Page ${pageCount + 1} contract distribution (top 5):`)
+            Array.from(contractCounts.entries())
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 5)
+              .forEach(([contract, count]) => {
+                const isCryptoKaiju = contract === KAIJU_NFT_ADDRESS.toLowerCase()
+                const shortContract = contract === 'unknown' ? 'unknown' : `${contract.slice(0, 10)}...${contract.slice(-6)}`
+                console.log(`  ${isCryptoKaiju ? '🎯' : '📄'} ${shortContract}: ${count} NFTs${isCryptoKaiju ? ' <- CRYPTOKAIJU FOUND!' : ''}`)
+              })
+          }
+          
+          // Look for CryptoKaiju NFTs on this page
+          const pageKaijus = data.nfts
+            .filter(nft => {
+              const isCorrectContract = nft.contract?.toLowerCase() === KAIJU_NFT_ADDRESS.toLowerCase()
+              if (isCorrectContract) {
+                console.log(`✅ FOUND CryptoKaiju NFT: ${nft.name || nft.identifier} (Contract: ${nft.contract})`)
+              }
+              return isCorrectContract
+            })
+            .map(nft => this.convertOpenSeaNFTToKaiju(nft, address))
+          
+          if (pageKaijus.length > 0) {
+            console.log(`🎉 Page ${pageCount + 1}: Found ${pageKaijus.length} CryptoKaiju NFTs!`)
+            allCryptoKaijuNFTs.push(...pageKaijus)
+          }
+          
+          // Check if there are more pages
+          currentCursor = data.next || ''
+          if (!currentCursor || data.nfts.length < 100) {
+            console.log(`📄 Reached end of NFTs (no more pages)`)
+            break
+          }
+          
+          pageCount++
+          
+          // Add small delay between pages to be respectful
+          if (pageCount < maxPages && currentCursor) {
+            await new Promise(resolve => setTimeout(resolve, 300))
+          }
+        }
         
-        console.log(`🎉 OpenSea API SUCCESS: Found ${cryptoKaijuNFTs.length} CryptoKaiju NFTs out of ${data.nfts.length} total NFTs in ${Date.now() - startTime}ms`)
+        console.log(`🎉 OPENSEA SCAN COMPLETE:`)
+        console.log(`   📊 Total pages checked: ${pageCount + 1}`)
+        console.log(`   📊 Total NFTs checked: ${totalNFTsChecked}`)
+        console.log(`   🎯 CryptoKaiju NFTs found: ${allCryptoKaijuNFTs.length}`)
+        console.log(`   ⏱️ Time taken: ${Date.now() - startTime}ms`)
         
-        // Cache for 2 minutes (shorter than blockchain cache since OpenSea updates faster)
-        this.setCache(cacheKey, cryptoKaijuNFTs, 2 * 60 * 1000)
+        // If we still found 0, provide helpful debugging info
+        if (allCryptoKaijuNFTs.length === 0) {
+          console.log(`❌ NO CRYPTOKAIJU NFTS FOUND FOR ADDRESS: ${address}`)
+          console.log(`💡 This could mean:`)
+          console.log(`   1. The address doesn't own any CryptoKaiju NFTs`)
+          console.log(`   2. There are more than ${maxPages * 100} NFTs and CryptoKaiju are further down`)
+          console.log(`   3. The contract address is different than expected`)
+          console.log(`🔍 Manual verification:`)
+          console.log(`   Check: https://opensea.io/${address}`)
+          console.log(`   Search for "cryptokaiju" in the collections filter`)
+        }
         
-        return cryptoKaijuNFTs
+        // Cache for 3 minutes (shorter than blockchain cache since OpenSea updates faster)
+        this.setCache(cacheKey, allCryptoKaijuNFTs, 3 * 60 * 1000)
+        
+        return allCryptoKaijuNFTs
         
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -850,14 +912,14 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * 🚀 SUPER EFFICIENT: Get tokens owned by address - NOW WITH FIXED OPENSEA API!
+   * 🚀 SUPER EFFICIENT: Get tokens owned by address - NOW WITH ENHANCED OPENSEA API!
    * Uses OpenSea API first (1 fast call), blockchain fallback if needed
    */
   async getTokensForAddress(address: string): Promise<KaijuNFT[]> {
     const startTime = Date.now()
     
     try {
-      console.log(`🚀 OPENSEA FIRST approach for address: ${address}`)
+      console.log(`🚀 ENHANCED OPENSEA FIRST approach for address: ${address}`)
       
       // 🌊 STEP 1: Try OpenSea API first (should be super fast!)
       try {
@@ -867,7 +929,7 @@ class BlockchainCryptoKaijuService {
           console.log(`🎉 OpenSea API SUCCESS: ${openSeaResults.length} NFTs in ${Date.now() - startTime}ms`)
           return openSeaResults
         } else {
-          console.log(`📭 OpenSea returned 0 NFTs for address ${address}`)
+          console.log(`📭 OpenSea returned 0 NFTs for address ${address} - might be legitimate`)
           return []
         }
         
@@ -1024,60 +1086,10 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * 🚀 OPTIMIZED: Find known NFC IDs with parallel processing
-   */
-  async findKnownNFCs(maxTokens: number = 20): Promise<Array<{tokenId: string, nfcId: string}>> {
-    console.log(`🚀 PARALLEL NFC scanning for ${maxTokens} tokens...`)
-    const startTime = Date.now()
-    
-    const totalSupply = await this.getTotalSupply()
-    const scanLimit = Math.min(maxTokens, totalSupply)
-    
-    // Process in parallel batches
-    const BATCH_SIZE = 5
-    const nfcs: Array<{tokenId: string, nfcId: string}> = []
-    
-    for (let i = 0; i < scanLimit; i += BATCH_SIZE) {
-      const batch = Array.from(
-        { length: Math.min(BATCH_SIZE, scanLimit - i) }, 
-        (_, index) => i + index
-      )
-      
-      console.log(`⚡ Scanning batch: tokens ${batch[0]}-${batch[batch.length - 1]}`)
-      
-      const batchPromises = batch.map(async (tokenId) => {
-        try {
-          const result = await this.getByTokenId(tokenId.toString())
-          if (result.nft && result.nft.nfcId) {
-            return { tokenId: result.nft.tokenId, nfcId: result.nft.nfcId }
-          }
-        } catch (error) {
-          // Continue
-        }
-        return null
-      })
-      
-      const batchResults = await Promise.allSettled(batchPromises)
-      const validResults = batchResults
-        .filter(result => result.status === 'fulfilled' && result.value)
-        .map(result => (result as PromiseFulfilledResult<{tokenId: string, nfcId: string}>).value)
-      
-      nfcs.push(...validResults)
-      
-      if (validResults.length > 0) {
-        console.log(`🏷️ Batch found ${validResults.length} NFCs`)
-      }
-    }
-    
-    console.log(`🎉 Parallel scan completed in ${Date.now() - startTime}ms - found ${nfcs.length} NFCs`)
-    return nfcs
-  }
-
-  /**
-   * Test service with performance timing - Updated for OpenSea approach
+   * Test service with performance timing - Updated for enhanced OpenSea approach
    */
   async testService(): Promise<void> {
-    console.log('🚀 Testing OPENSEA-OPTIMIZED Service...')
+    console.log('🚀 Testing ENHANCED OPENSEA-OPTIMIZED Service...')
     const totalStartTime = Date.now()
     
     try {
@@ -1106,13 +1118,13 @@ class BlockchainCryptoKaijuService {
           }
         }
         
-        // Test 4: FIXED OpenSea account NFTs speed test
+        // Test 4: Enhanced OpenSea account NFTs speed test
         if (result.nft.owner) {
-          console.log('🌊 Testing FIXED OpenSea account NFTs API...')
+          console.log('🌊 Testing ENHANCED OpenSea account NFTs API...')
           const openSeaStartTime = Date.now()
           try {
             const accountNFTs = await this.getTokensForAddressFromOpenSea(result.nft.owner)
-            console.log(`✅ FIXED OpenSea account test: Found ${accountNFTs.length} NFTs (${Date.now() - openSeaStartTime}ms)`)
+            console.log(`✅ Enhanced OpenSea account test: Found ${accountNFTs.length} NFTs (${Date.now() - openSeaStartTime}ms)`)
           } catch (error) {
             console.log(`⚠️ OpenSea account test failed - blockchain fallback available`)
           }
@@ -1129,7 +1141,7 @@ class BlockchainCryptoKaijuService {
       console.log(`📊 Cache size: ${this.cache.size} entries`)
       
     } catch (error) {
-      console.error('❌ OpenSea-optimized service test failed:', error)
+      console.error('❌ Enhanced OpenSea-optimized service test failed:', error)
       throw error
     }
   }

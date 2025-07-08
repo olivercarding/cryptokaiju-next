@@ -1,9 +1,9 @@
-// src/app/my-kaiju/page.tsx - FIXED VERSION
+// src/app/my-kaiju/page.tsx - COMPLETE REWRITE WITH ENHANCED DEBUGGING
 'use client'
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Wallet, Package, ExternalLink, Heart, Sparkles, Filter, Zap, Database, ArrowLeft } from 'lucide-react'
+import { Search, Wallet, Package, ExternalLink, Heart, Sparkles, Filter, Zap, Database, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
@@ -303,8 +303,107 @@ const SearchSection = () => {
   )
 }
 
+// ENHANCED DEBUG COMPONENT
+const DebugPanel = ({ kaijus, isLoading, error, isConnected }: { 
+  kaijus: KaijuNFT[], 
+  isLoading: boolean, 
+  error: string | null, 
+  isConnected: boolean 
+}) => {
+  const [showDebug, setShowDebug] = useState(false)
+
+  if (!showDebug) {
+    return (
+      <button
+        onClick={() => setShowDebug(true)}
+        className="fixed bottom-4 right-4 bg-gray-800 text-white p-3 rounded-full shadow-lg hover:bg-gray-700 transition-colors z-50"
+        title="Show Debug Info"
+      >
+        <Database className="w-5 h-5" />
+      </button>
+    )
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 100 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="fixed bottom-4 right-4 bg-gray-800 text-white p-4 rounded-xl shadow-2xl max-w-md z-50"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-bold text-sm">🐛 Debug Panel</h3>
+        <button
+          onClick={() => setShowDebug(false)}
+          className="text-gray-400 hover:text-white"
+        >
+          ✕
+        </button>
+      </div>
+      
+      <div className="space-y-2 text-xs">
+        <div className="flex items-center gap-2">
+          {isConnected ? (
+            <CheckCircle className="w-4 h-4 text-green-400" />
+          ) : (
+            <AlertTriangle className="w-4 h-4 text-yellow-400" />
+          )}
+          <span>Wallet: {isConnected ? 'Connected' : 'Not Connected'}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {isLoading ? (
+            <div className="w-4 h-4 border border-blue-400 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <CheckCircle className="w-4 h-4 text-green-400" />
+          )}
+          <span>Loading: {isLoading ? 'Yes' : 'No'}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {error ? (
+            <AlertTriangle className="w-4 h-4 text-red-400" />
+          ) : (
+            <CheckCircle className="w-4 h-4 text-green-400" />
+          )}
+          <span>Error: {error ? 'Yes' : 'None'}</span>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Database className="w-4 h-4 text-blue-400" />
+          <span>NFTs Found: {kaijus.length}</span>
+        </div>
+        
+        {error && (
+          <div className="mt-2 p-2 bg-red-900/50 rounded text-red-200 text-xs">
+            {error}
+          </div>
+        )}
+        
+        {kaijus.length > 0 && (
+          <div className="mt-2 p-2 bg-green-900/50 rounded text-green-200">
+            <div className="text-xs font-medium mb-1">First NFT:</div>
+            <div className="text-xs">
+              ID: {kaijus[0].tokenId}<br/>
+              Name: {kaijus[0].ipfsData?.name || 'Unknown'}<br/>
+              NFC: {kaijus[0].nfcId || 'None'}
+            </div>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
 export default function MyKaijuPage() {
   const { kaijus, isLoading, error, isConnected } = useBlockchainMyKaiju()
+
+  // ENHANCED DEBUG LOGGING
+  console.log('🐛 MY-KAIJU PAGE DEBUG:')
+  console.log('   isConnected:', isConnected)
+  console.log('   isLoading:', isLoading)
+  console.log('   error:', error)
+  console.log('   kaijus.length:', kaijus.length)
+  console.log('   kaijus array:', kaijus)
 
   return (
     <>
@@ -384,11 +483,11 @@ export default function MyKaijuPage() {
                 </h1>
               </div>
               <p className="text-lg text-white/90 mb-4 max-w-2xl mx-auto">
-                All the CryptoKaiju you own ...
+                All the CryptoKaiju you own, verified directly from the blockchain
               </p>
               <div className="inline-flex items-center gap-2 bg-green-100/20 backdrop-blur-sm text-green-300 px-3 py-1 rounded-full text-sm font-medium border border-green-400/30">
                 <Database className="w-4 h-4" />
-                Scanning Blockchain (Please be patient, this may take a few seconds)
+                {isLoading ? 'Scanning Blockchain...' : isConnected ? 'Blockchain Verified' : 'Connect Wallet to Begin'}
               </div>
             </motion.div>
 
@@ -431,19 +530,19 @@ export default function MyKaijuPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                   <div>
                     <div className="text-3xl font-black text-kaiju-pink mb-1">
-                      {kaijus.length}
+                      {isLoading ? '...' : kaijus.length}
                     </div>
                     <div className="text-white/80 font-medium">Kaiju Owned</div>
                   </div>
                   <div>
                     <div className="text-3xl font-black text-kaiju-purple-light mb-1">
-                      {kaijus.filter(k => k.nfcId).length}
+                      {isLoading ? '...' : kaijus.filter(k => k.nfcId).length}
                     </div>
                     <div className="text-white/80 font-medium">With NFC Chips</div>
                   </div>
                   <div>
                     <div className="text-3xl font-black text-white mb-1">
-                      {new Set(kaijus.map(k => k.batch)).size}
+                      {isLoading ? '...' : new Set(kaijus.map(k => k.batch)).size}
                     </div>
                     <div className="text-white/80 font-medium">Unique Batches</div>
                   </div>
@@ -472,12 +571,23 @@ export default function MyKaijuPage() {
                     />
                     <div className="text-kaiju-navy text-xl font-bold">Loading from blockchain...</div>
                     <div className="text-gray-600 mt-2">Fetching your NFTs directly from smart contract</div>
+                    <div className="text-gray-500 mt-1 text-sm">This may take a few seconds</div>
                   </div>
                 ) : error ? (
-                  <div className="text-center py-20">
-                    <div className="text-red-500 text-xl font-bold mb-4">Error loading collection</div>
-                    <div className="text-gray-600">{error}</div>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-20"
+                  >
+                    <AlertTriangle className="w-24 h-24 text-red-400 mx-auto mb-6" />
+                    <h3 className="text-2xl font-bold text-red-600 mb-4">Error Loading Collection</h3>
+                    <div className="text-gray-600 mb-4 max-w-md mx-auto">
+                      {error}
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      This could be a temporary issue. Try refreshing the page.
+                    </div>
+                  </motion.div>
                 ) : kaijus.length === 0 ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
@@ -497,16 +607,38 @@ export default function MyKaijuPage() {
                     </Link>
                   </motion.div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {kaijus.map((kaiju, index) => (
-                      <KaijuCard key={kaiju.tokenId} kaiju={kaiju} index={index} />
-                    ))}
-                  </div>
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-center mb-8"
+                    >
+                      <h2 className="text-2xl font-bold text-kaiju-navy mb-2">
+                        🎉 Found {kaijus.length} CryptoKaiju NFT{kaijus.length === 1 ? '' : 's'}!
+                      </h2>
+                      <p className="text-gray-600">
+                        Your collection verified directly from the Ethereum blockchain
+                      </p>
+                    </motion.div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                      {kaijus.map((kaiju, index) => (
+                        <KaijuCard key={kaiju.tokenId} kaiju={kaiju} index={index} />
+                      ))}
+                    </div>
+                  </>
                 )}
               </>
             )}
           </div>
         </section>
+
+        {/* Enhanced Debug Panel */}
+        <DebugPanel 
+          kaijus={kaijus} 
+          isLoading={isLoading} 
+          error={error} 
+          isConnected={isConnected} 
+        />
       </main>
     </>
   )

@@ -1,319 +1,320 @@
-// src/lib/hooks/useBlockchainCryptoKaiju.ts
-import { useState, useEffect, useCallback } from 'react'
-import { useActiveAccount } from 'thirdweb/react'
-import BlockchainCryptoKaijuService, { KaijuNFT, OpenSeaAsset } from '../services/BlockchainCryptoKaijuService'
+// src/lib/hooks/useBlockchainCryptoKaiju.ts - COMPLETE HOOKS WITH ENHANCED DEBUGGING
+'use client'
 
-/**
- * Hook for managing user's owned Kaiju (blockchain-based)
- */
-export function useMyKaiju() {
+import { useState, useEffect, useCallback } from 'react'
+import { useActiveAccount } from "thirdweb/react"
+import BlockchainCryptoKaijuService, { type KaijuNFT } from '@/lib/services/BlockchainCryptoKaijuService'
+
+// Hook for getting user's Kaiju collection
+export function useBlockchainMyKaiju() {
   const account = useActiveAccount()
   const [kaijus, setKaijus] = useState<KaijuNFT[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchMyKaiju = useCallback(async () => {
-    if (!account?.address) {
-      setKaijus([])
-      return
-    }
-
+  const fetchKaijus = useCallback(async (address: string) => {
+    console.log('🚀 useBlockchainMyKaiju: Starting fetch for address:', address)
     setIsLoading(true)
     setError(null)
-
+    
     try {
-      console.log('🔗 Fetching Kaiju from blockchain for address:', account.address)
-      const userKaijus = await BlockchainCryptoKaijuService.getTokensForAddress(account.address)
-      setKaijus(userKaijus)
-      console.log(`✅ Found ${userKaijus.length} Kaiju on blockchain`)
+      console.log('📡 Calling BlockchainCryptoKaijuService.getTokensForAddress...')
+      const startTime = Date.now()
+      const fetchedKaijus = await BlockchainCryptoKaijuService.getTokensForAddress(address)
+      const endTime = Date.now()
+      
+      console.log('✅ useBlockchainMyKaiju: Fetch complete!')
+      console.log(`   📊 Time taken: ${endTime - startTime}ms`)
+      console.log(`   🎯 NFTs found: ${fetchedKaijus.length}`)
+      console.log(`   📋 NFT details:`, fetchedKaijus)
+      
+      setKaijus(fetchedKaijus)
+      
+      // Log individual NFTs for debugging
+      fetchedKaijus.forEach((kaiju, index) => {
+        console.log(`   ${index + 1}. Token ${kaiju.tokenId}: ${kaiju.ipfsData?.name || 'Unnamed'} (NFC: ${kaiju.nfcId || 'None'})`)
+      })
+      
     } catch (err) {
-      console.error('Error fetching user Kaiju from blockchain:', err)
-      setError('Failed to load your Kaiju collection from blockchain')
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('❌ useBlockchainMyKaiju: Error fetching kaijus:', err)
+      setError(errorMessage)
+      setKaijus([]) // Clear any previous results
     } finally {
       setIsLoading(false)
     }
-  }, [account?.address])
+  }, [])
 
   useEffect(() => {
-    fetchMyKaiju()
-  }, [fetchMyKaiju])
+    console.log('🔄 useBlockchainMyKaiju: Effect triggered')
+    console.log('   👤 Account:', account?.address)
+    console.log('   🔌 Account connected:', !!account)
+    
+    if (account?.address) {
+      console.log('✅ Account found, fetching kaijus...')
+      fetchKaijus(account.address)
+    } else {
+      console.log('⏸️ No account connected, clearing state...')
+      setKaijus([])
+      setError(null)
+      setIsLoading(false)
+    }
+  }, [account?.address, fetchKaijus])
+
+  // Debug logging whenever state changes
+  useEffect(() => {
+    console.log('🐛 useBlockchainMyKaiju State Update:')
+    console.log('   isLoading:', isLoading)
+    console.log('   error:', error)
+    console.log('   kaijus.length:', kaijus.length)
+    console.log('   isConnected:', !!account?.address)
+  }, [isLoading, error, kaijus.length, account?.address])
 
   return {
     kaijus,
     isLoading,
     error,
-    refetch: fetchMyKaiju,
-    isConnected: !!account?.address
+    isConnected: !!account?.address,
+    refresh: () => {
+      if (account?.address) {
+        console.log('🔄 Manual refresh triggered')
+        fetchKaijus(account.address)
+      }
+    }
   }
 }
 
-/**
- * Hook for searching Kaiju (blockchain-based)
- */
-export function useKaijuSearch() {
+// Hook for searching Kaiju
+export function useBlockchainKaijuSearch() {
   const [results, setResults] = useState<KaijuNFT[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [lastQuery, setLastQuery] = useState('')
+  const [query, setQuery] = useState<string>('')
 
-  const search = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setResults([])
-      setLastQuery('')
-      return
-    }
-
-    if (query === lastQuery) return // Avoid duplicate searches
-
+  const search = useCallback(async (searchQuery: string) => {
+    console.log('🔍 useBlockchainKaijuSearch: Starting search for:', searchQuery)
     setIsLoading(true)
     setError(null)
-    setLastQuery(query)
-
+    setQuery(searchQuery)
+    
     try {
-      console.log('🔍 Searching blockchain for:', query)
-      const searchResults = await BlockchainCryptoKaijuService.searchTokens(query)
+      console.log('📡 Calling BlockchainCryptoKaijuService.searchTokens...')
+      const startTime = Date.now()
+      const searchResults = await BlockchainCryptoKaijuService.searchTokens(searchQuery)
+      const endTime = Date.now()
+      
+      console.log('✅ useBlockchainKaijuSearch: Search complete!')
+      console.log(`   📊 Time taken: ${endTime - startTime}ms`)
+      console.log(`   🎯 Results found: ${searchResults.length}`)
+      console.log(`   📋 Results:`, searchResults)
+      
       setResults(searchResults)
-      console.log(`✅ Found ${searchResults.length} results on blockchain`)
+      
     } catch (err) {
-      console.error('Blockchain search error:', err)
-      setError('Search failed')
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('❌ useBlockchainKaijuSearch: Error searching:', err)
+      setError(errorMessage)
       setResults([])
     } finally {
       setIsLoading(false)
     }
-  }, [lastQuery])
+  }, [])
 
   const clear = useCallback(() => {
+    console.log('🧹 useBlockchainKaijuSearch: Clearing search results')
     setResults([])
     setError(null)
-    setLastQuery('')
+    setQuery('')
+    setIsLoading(false)
   }, [])
 
   return {
     results,
     isLoading,
     error,
+    hasQuery: query.length > 0,
     search,
-    clear,
-    hasQuery: !!lastQuery
+    clear
   }
 }
 
-/**
- * Hook for getting specific Kaiju details (blockchain-based)
- */
-export function useKaijuDetails(tokenId?: string, nfcId?: string) {
+// Hook for getting individual Kaiju by token ID
+export function useBlockchainKaiju(tokenId: string | null) {
   const [kaiju, setKaiju] = useState<KaijuNFT | null>(null)
-  const [openSeaData, setOpenSeaData] = useState<OpenSeaAsset | null>(null)
+  const [openSeaData, setOpenSeaData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchDetails = useCallback(async () => {
-    if (!tokenId && !nfcId) return
-
+  const fetchKaiju = useCallback(async (id: string) => {
+    console.log('🚀 useBlockchainKaiju: Starting fetch for token ID:', id)
     setIsLoading(true)
     setError(null)
-
+    
     try {
-      console.log('🔗 Fetching Kaiju details from blockchain...')
-      let result: { nft: KaijuNFT | null; openSeaData: OpenSeaAsset | null }
-
-      if (tokenId) {
-        result = await BlockchainCryptoKaijuService.getByTokenId(tokenId)
-      } else if (nfcId) {
-        result = await BlockchainCryptoKaijuService.getByNFCId(nfcId)
-      } else {
-        result = { nft: null, openSeaData: null }
-      }
-
-      if (result.nft) {
-        setKaiju(result.nft)
-        setOpenSeaData(result.openSeaData)
-        setError(null)
-        console.log('✅ Successfully fetched Kaiju from blockchain')
-      } else {
-        setKaiju(null)
-        setOpenSeaData(null)
-        setError('Kaiju not found on blockchain')
-      }
+      console.log('📡 Calling BlockchainCryptoKaijuService.getByTokenId...')
+      const startTime = Date.now()
+      const result = await BlockchainCryptoKaijuService.getByTokenId(id)
+      const endTime = Date.now()
+      
+      console.log('✅ useBlockchainKaiju: Fetch complete!')
+      console.log(`   📊 Time taken: ${endTime - startTime}ms`)
+      console.log(`   🎯 NFT found:`, !!result.nft)
+      console.log(`   📋 NFT details:`, result.nft)
+      
+      setKaiju(result.nft)
+      setOpenSeaData(result.openSeaData)
+      
     } catch (err) {
-      console.error('Error fetching Kaiju details from blockchain:', err)
-      setError('Failed to load Kaiju details from blockchain')
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('❌ useBlockchainKaiju: Error fetching kaiju:', err)
+      setError(errorMessage)
       setKaiju(null)
       setOpenSeaData(null)
     } finally {
       setIsLoading(false)
     }
-  }, [tokenId, nfcId])
+  }, [])
 
   useEffect(() => {
-    fetchDetails()
-  }, [fetchDetails])
+    console.log('🔄 useBlockchainKaiju: Effect triggered for token ID:', tokenId)
+    
+    if (tokenId) {
+      console.log('✅ Token ID provided, fetching kaiju...')
+      fetchKaiju(tokenId)
+    } else {
+      console.log('⏸️ No token ID provided, clearing state...')
+      setKaiju(null)
+      setOpenSeaData(null)
+      setError(null)
+      setIsLoading(false)
+    }
+  }, [tokenId, fetchKaiju])
 
   return {
     kaiju,
     openSeaData,
     isLoading,
     error,
-    refetch: fetchDetails
+    refresh: () => {
+      if (tokenId) {
+        console.log('🔄 Manual refresh triggered for token ID:', tokenId)
+        fetchKaiju(tokenId)
+      }
+    }
   }
 }
 
-/**
- * Hook for manual NFT search (used by search forms)
- */
-export function useNFTSearch() {
-  const [result, setResult] = useState<{
-    nft: KaijuNFT | null
-    openSeaData: OpenSeaAsset | null
-  } | null>(null)
+// Hook for getting Kaiju by NFC ID
+export function useBlockchainKaijuByNFC(nfcId: string | null) {
+  const [kaiju, setKaiju] = useState<KaijuNFT | null>(null)
+  const [openSeaData, setOpenSeaData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [lastQuery, setLastQuery] = useState('')
 
-  const search = useCallback(async (query: string) => {
-    if (!query.trim()) {
-      setResult(null)
-      setError(null)
-      setLastQuery('')
-      return
-    }
-
-    if (query === lastQuery && result) {
-      // Don't re-search the same query
-      return
-    }
-
+  const fetchKaiju = useCallback(async (id: string) => {
+    console.log('🚀 useBlockchainKaijuByNFC: Starting fetch for NFC ID:', id)
     setIsLoading(true)
     setError(null)
-    setLastQuery(query)
-
+    
     try {
-      let searchResult: { nft: KaijuNFT | null; openSeaData: OpenSeaAsset | null }
-
-      // Determine if query is Token ID (numeric) or NFC ID
-      const isTokenId = /^\d+$/.test(query.trim())
+      console.log('📡 Calling BlockchainCryptoKaijuService.getByNFCId...')
+      const startTime = Date.now()
+      const result = await BlockchainCryptoKaijuService.getByNFCId(id)
+      const endTime = Date.now()
       
-      if (isTokenId) {
-        console.log('🔢 Searching blockchain by Token ID:', query)
-        searchResult = await BlockchainCryptoKaijuService.getByTokenId(query.trim())
-      } else {
-        console.log('🏷️ Searching blockchain by NFC ID:', query)
-        searchResult = await BlockchainCryptoKaijuService.getByNFCId(query.trim())
-      }
-
-      setResult(searchResult)
+      console.log('✅ useBlockchainKaijuByNFC: Fetch complete!')
+      console.log(`   📊 Time taken: ${endTime - startTime}ms`)
+      console.log(`   🎯 NFT found:`, !!result.nft)
+      console.log(`   📋 NFT details:`, result.nft)
       
-      if (!searchResult.nft) {
-        setError('NFT not found on blockchain')
-      } else {
-        setError(null)
-        console.log('✅ Found NFT on blockchain')
-      }
+      setKaiju(result.nft)
+      setOpenSeaData(result.openSeaData)
+      
     } catch (err) {
-      console.error('Blockchain search error:', err)
-      setError('Search failed')
-      setResult(null)
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('❌ useBlockchainKaijuByNFC: Error fetching kaiju:', err)
+      setError(errorMessage)
+      setKaiju(null)
+      setOpenSeaData(null)
     } finally {
       setIsLoading(false)
     }
-  }, [lastQuery, result])
-
-  const clear = useCallback(() => {
-    setResult(null)
-    setError(null)
-    setLastQuery('')
   }, [])
-
-  return {
-    result,
-    isLoading,
-    error,
-    search,
-    clear,
-    hasQuery: !!lastQuery
-  }
-}
-
-/**
- * Hook for collection statistics (blockchain-based)
- */
-export function useKaijuStats() {
-  const [stats, setStats] = useState({
-    totalSupply: 0,
-    owners: 0,
-    floorPrice: 0
-  })
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        console.log('📊 Fetching collection stats from blockchain...')
-        const blockchainStats = await BlockchainCryptoKaijuService.getCollectionStats()
-        setStats(prev => ({
-          ...prev,
-          totalSupply: blockchainStats.totalSupply,
-          owners: blockchainStats.owners || prev.owners
-        }))
-        console.log('✅ Collection stats loaded from blockchain')
-      } catch (error) {
-        console.error('Error fetching collection stats from blockchain:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchStats()
-  }, [])
-
-  return { stats, isLoading }
-}
-
-/**
- * Hook for testing the blockchain service
- */
-export function useBlockchainTest() {
-  const [isTestRunning, setIsTestRunning] = useState(false)
-  const [testResults, setTestResults] = useState<string[]>([])
-
-  const runTest = useCallback(async () => {
-    setIsTestRunning(true)
-    setTestResults([])
-
-    // Capture console.log output
-    const originalLog = console.log
-    const logs: string[] = []
+    console.log('🔄 useBlockchainKaijuByNFC: Effect triggered for NFC ID:', nfcId)
     
-    console.log = (...args) => {
-      const message = args.join(' ')
-      logs.push(message)
-      originalLog(...args)
+    if (nfcId) {
+      console.log('✅ NFC ID provided, fetching kaiju...')
+      fetchKaiju(nfcId)
+    } else {
+      console.log('⏸️ No NFC ID provided, clearing state...')
+      setKaiju(null)
+      setOpenSeaData(null)
+      setError(null)
+      setIsLoading(false)
     }
-
-    try {
-      await BlockchainCryptoKaijuService.testService()
-      setTestResults([...logs, '✅ Blockchain test completed successfully'])
-    } catch (error) {
-      setTestResults([...logs, `❌ Blockchain test failed: ${error}`])
-    } finally {
-      console.log = originalLog
-      setIsTestRunning(false)
-    }
-  }, [])
+  }, [nfcId, fetchKaiju])
 
   return {
-    runTest,
-    isTestRunning,
-    testResults
+    kaiju,
+    openSeaData,
+    isLoading,
+    error,
+    refresh: () => {
+      if (nfcId) {
+        console.log('🔄 Manual refresh triggered for NFC ID:', nfcId)
+        fetchKaiju(nfcId)
+      }
+    }
   }
 }
 
-// Export the main hooks with clear names
-export {
-  useKaijuDetails as useBlockchainKaijuDetails,
-  useNFTSearch as useBlockchainNFTSearch,
-  useMyKaiju as useBlockchainMyKaiju,
-  useKaijuSearch as useBlockchainKaijuSearch,
-  useKaijuStats as useBlockchainKaijuStats
+// Hook for collection statistics
+export function useBlockchainCollectionStats() {
+  const [stats, setStats] = useState<{ totalSupply: number; owners?: number } | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchStats = useCallback(async () => {
+    console.log('🚀 useBlockchainCollectionStats: Starting fetch...')
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      console.log('📡 Calling BlockchainCryptoKaijuService.getCollectionStats...')
+      const startTime = Date.now()
+      const collectionStats = await BlockchainCryptoKaijuService.getCollectionStats()
+      const endTime = Date.now()
+      
+      console.log('✅ useBlockchainCollectionStats: Fetch complete!')
+      console.log(`   📊 Time taken: ${endTime - startTime}ms`)
+      console.log(`   📋 Stats:`, collectionStats)
+      
+      setStats(collectionStats)
+      
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('❌ useBlockchainCollectionStats: Error fetching stats:', err)
+      setError(errorMessage)
+      setStats(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    console.log('🔄 useBlockchainCollectionStats: Effect triggered, fetching stats...')
+    fetchStats()
+  }, [fetchStats])
+
+  return {
+    stats,
+    isLoading,
+    error,
+    refresh: () => {
+      console.log('🔄 Manual refresh triggered for collection stats')
+      fetchStats()
+    }
+  }
 }
