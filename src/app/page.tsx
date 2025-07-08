@@ -34,7 +34,7 @@ export default function Home() {
     {
       title: "Open Mystery Box",
       description: "Mint your box to reveal which of the 4 Kaiju you've found.",
-      mediaSrc: "/videos/Comp2.webm",
+      mediaSrc: "/videos/comp2.webm",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-purple-light/20"
     },

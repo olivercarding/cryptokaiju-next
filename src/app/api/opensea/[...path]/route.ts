@@ -1,4 +1,4 @@
-// src/app/api/opensea/[...path]/route.ts
+// src/app/api/opensea/[...path]/route.ts - UPDATED for account NFTs endpoint
 import { NextRequest, NextResponse } from 'next/server'
 
 const OPENSEA_BASE_URL = 'https://api.opensea.io/api/v2'
@@ -27,13 +27,17 @@ export async function GET(
       )
     }
 
+    // Determine cache time based on endpoint type
+    const isAccountEndpoint = apiPath.includes('/account/')
+    const cacheTime = isAccountEndpoint ? 120 : 300 // 2 min for account, 5 min for individual NFTs
+
     const response = await fetch(openSeaUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
         'X-API-KEY': OPENSEA_API_KEY,
       },
-      next: { revalidate: 300 } // Cache for 5 minutes
+      next: { revalidate: cacheTime }
     })
 
     if (!response.ok) {
@@ -55,9 +59,14 @@ export async function GET(
 
     const data = await response.json()
     
+    // Add helpful logging for account endpoints
+    if (isAccountEndpoint && data.nfts) {
+      console.log(`📊 OpenSea account endpoint returned ${data.nfts.length} NFTs`)
+    }
+    
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'public, max-age=300, s-maxage=300', // Cache for 5 minutes
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
       }
     })
 
