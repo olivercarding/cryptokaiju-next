@@ -138,6 +138,9 @@ export function useBlockchainKaijuSearch() {
   }
 }
 
+// ALIAS: Export the same hook with the expected name for backward compatibility
+export const useBlockchainNFTSearch = useBlockchainKaijuSearch
+
 // Hook for getting individual Kaiju by token ID
 export function useBlockchainKaiju(tokenId: string | null) {
   const [kaiju, setKaiju] = useState<KaijuNFT | null>(null)
@@ -316,5 +319,41 @@ export function useBlockchainCollectionStats() {
       console.log('🔄 Manual refresh triggered for collection stats')
       fetchStats()
     }
+  }
+}
+
+// NEW: Hook for testing blockchain service
+export function useBlockchainTest() {
+  const [isTestRunning, setIsTestRunning] = useState(false)
+  const [testResults, setTestResults] = useState<string[]>([])
+
+  const runTest = useCallback(async () => {
+    setIsTestRunning(true)
+    setTestResults([])
+    
+    const addLog = (message: string) => {
+      console.log(message)
+      setTestResults(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`])
+    }
+
+    try {
+      addLog('🚀 Starting blockchain service test...')
+      
+      // Test basic service
+      await BlockchainCryptoKaijuService.testService()
+      addLog('✅ Blockchain service test completed successfully!')
+      
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      addLog(`❌ Blockchain service test failed: ${errorMessage}`)
+    } finally {
+      setIsTestRunning(false)
+    }
+  }, [])
+
+  return {
+    isTestRunning,
+    testResults,
+    runTest
   }
 }

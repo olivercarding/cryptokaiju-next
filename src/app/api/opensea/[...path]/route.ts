@@ -110,7 +110,7 @@ export async function GET(
       console.error(`❌ Request URL: ${openSeaUrl}`)
       
       // Try to parse error as JSON for structured error info
-      let errorDetails = errorText
+      let errorDetails: any = errorText
       try {
         const errorJson = JSON.parse(errorText)
         console.error(`❌ Parsed error:`, errorJson)
@@ -127,8 +127,9 @@ export async function GET(
         case 400:
           userMessage = 'Invalid request parameters'
           errorCode = 'BAD_REQUEST'
-          if (typeof errorDetails === 'object' && errorDetails.errors) {
-            if (errorDetails.errors.includes('Limit must be a maximum of 100')) {
+          // FIXED: Properly check if errorDetails is an object and has errors property
+          if (typeof errorDetails === 'object' && errorDetails !== null && 'errors' in errorDetails) {
+            if (Array.isArray(errorDetails.errors) && errorDetails.errors.includes('Limit must be a maximum of 100')) {
               userMessage = 'Request limit too high. Maximum 100 items per request.'
               errorCode = 'LIMIT_EXCEEDED'
             }
