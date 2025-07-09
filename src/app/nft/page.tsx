@@ -9,6 +9,7 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import Header from '@/components/layout/Header'
 import { useBlockchainNFTSearch, useBlockchainTest } from '@/lib/hooks/useBlockchainCryptoKaiju'
+import type { KaijuNFT } from '@/lib/services/BlockchainCryptoKaijuService'
 
 // Import the test component
 const NFCConversionTest = dynamic(() => import('@/components/dev/NFCConversionTest'), { ssr: false })
@@ -16,23 +17,17 @@ const NFCConversionTest = dynamic(() => import('@/components/dev/NFCConversionTe
 // Enhanced Image Component with fallbacks
 const KaijuImage = ({ 
   nft, 
-  openSeaData, 
   onError 
 }: { 
-  nft: any
-  openSeaData: any
+  nft: KaijuNFT
   onError?: () => void
 }) => {
   const [imageError, setImageError] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   // Build image source priority list
-  const getImageSources = () => {
+  const getImageSources = (): string[] => {
     const sources: string[] = []
-    
-    // OpenSea sources (highest priority)
-    if (openSeaData?.display_image_url) sources.push(openSeaData.display_image_url)
-    if (openSeaData?.image_url) sources.push(openSeaData.image_url)
     
     // IPFS sources (via our proxy to avoid CORS)
     if (nft?.ipfsData?.image) {
@@ -88,7 +83,7 @@ const KaijuImage = ({
   return (
     <Image
       src={currentSrc}
-      alt={openSeaData?.name || nft?.ipfsData?.name || `Kaiju #${nft?.tokenId}`}
+      alt={nft?.ipfsData?.name || `Kaiju #${nft?.tokenId}`}
       fill
       className="object-contain p-6"
       onError={handleImageError}
@@ -100,16 +95,14 @@ const KaijuImage = ({
 
 const NFTDisplayCard = ({ 
   nft, 
-  openSeaData, 
   onShare 
 }: { 
-  nft: any
-  openSeaData: any
+  nft: KaijuNFT
   onShare: () => void
 }) => {
   const [showDebugInfo, setShowDebugInfo] = useState(false)
 
-  const formatDate = (timestamp: number) => {
+  const formatDate = (timestamp: number): string => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -118,15 +111,13 @@ const NFTDisplayCard = ({
   }
 
   // Get the display name with fallback priority
-  const getDisplayName = () => {
-    if (openSeaData?.name && !openSeaData.name.includes('Kaiju #')) return openSeaData.name
+  const getDisplayName = (): string => {
     if (nft?.ipfsData?.name) return nft.ipfsData.name
     return `CryptoKaiju #${nft?.tokenId || 'Unknown'}`
   }
 
   // Get description with fallback
-  const getDescription = () => {
-    if (openSeaData?.description && !openSeaData.description.includes('unique CryptoKaiju')) return openSeaData.description
+  const getDescription = (): string => {
     if (nft?.ipfsData?.description) return nft.ipfsData.description
     return 'A unique CryptoKaiju NFT with physical collectible counterpart.'
   }
@@ -142,7 +133,7 @@ const NFTDisplayCard = ({
         {/* NFT Image */}
         <div className="relative">
           <div className="relative h-80 lg:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
-            <KaijuImage nft={nft} openSeaData={openSeaData} />
+            <KaijuImage nft={nft} />
             
             {/* Blockchain badge */}
             <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
@@ -155,11 +146,6 @@ const NFTDisplayCard = ({
               {nft?.ipfsData && (
                 <div className="bg-blue-500/90 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-bold">
                   IPFS ✓
-                </div>
-              )}
-              {openSeaData && !openSeaData.name?.includes('Kaiju #') && (
-                <div className="bg-purple-500/90 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-bold">
-                  OpenSea ✓
                 </div>
               )}
             </div>
@@ -183,7 +169,7 @@ const NFTDisplayCard = ({
                 <Share2 className="w-4 h-4" />
               </motion.button>
               <motion.a
-                href={openSeaData?.opensea_url || `https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${nft?.tokenId}`}
+                href={`https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${nft?.tokenId}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 whileHover={{ scale: 1.1 }}
@@ -234,11 +220,9 @@ const NFTDisplayCard = ({
                   <div>Owner: {nft?.owner ? `${nft.owner.slice(0, 8)}...` : 'None'}</div>
                   <div>NFC ID: {nft?.nfcId || 'None'}</div>
                   <div>Has IPFS Data: {nft?.ipfsData ? '✅' : '❌'}</div>
-                  <div>Has OpenSea Data: {openSeaData && !openSeaData.name?.includes('Kaiju #') ? '✅' : '❌ (Fallback)'}</div>
                   <div>Token URI: {nft?.tokenURI || 'None'}</div>
                   <div>IPFS Image: {nft?.ipfsData?.image || 'None'}</div>
-                  <div>OpenSea Image: {openSeaData?.image_url || 'None'}</div>
-                  <div>OpenSea Display: {openSeaData?.display_image_url || 'None'}</div>
+                  <div>Batch: {nft?.batch || 'None'}</div>
                 </div>
               </motion.div>
             )}
@@ -256,18 +240,18 @@ const NFTDisplayCard = ({
               </div>
             </div>
 
-              {/* Add batch information */}
-              {nft?.batch && (
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-gray-600 text-sm font-medium mb-1">
-                    <Package className="w-4 h-4" />
-                    BATCH
-                  </div>
-                  <div className="text-kaiju-pink font-bold text-sm">
-                    {nft.batch}
-                  </div>
+            {/* Add batch information */}
+            {nft?.batch && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-center gap-2 text-gray-600 text-sm font-medium mb-1">
+                  <Package className="w-4 h-4" />
+                  BATCH
                 </div>
-              )}
+                <div className="text-kaiju-pink font-bold text-sm">
+                  {nft.batch}
+                </div>
+              </div>
+            )}
             
             {nft?.birthDate && (
               <div className="bg-gray-50 rounded-lg p-4">
@@ -293,7 +277,7 @@ const NFTDisplayCard = ({
           {/* External Links */}
           <div className="flex flex-col sm:flex-row gap-3">
             <a
-              href={openSeaData?.opensea_url || `https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${nft?.tokenId}`}
+              href={`https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${nft?.tokenId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-center flex items-center justify-center gap-2"
@@ -397,12 +381,15 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
 }
 
 export default function NFTLookupPage() {
-  const { result, isLoading, error, search, clear } = useBlockchainNFTSearch()
+  const { results, isLoading, error, search, clear } = useBlockchainNFTSearch()
   const { runTest, isTestRunning, testResults } = useBlockchainTest()
   const [searchQuery, setSearchQuery] = useState('')
   const [hasSearched, setHasSearched] = useState(false)
   const [showTest, setShowTest] = useState(false)
   const [showConversion, setShowConversion] = useState(false)
+
+  // Get the first result (since search typically returns one result)
+  const nft = results.length > 0 ? results[0] : null
 
   const handleSearch = (query: string) => {
     console.log(`🔍 Starting search for: "${query}"`)
@@ -412,20 +399,24 @@ export default function NFTLookupPage() {
   }
 
   const handleShare = async () => {
-    if (navigator.share && result?.nft) {
+    if (navigator.share && nft) {
       try {
         await navigator.share({
-          title: `${result.nft.ipfsData?.name || `Kaiju #${result.nft.tokenId}`} | CryptoKaiju`,
-          text: `Check out this CryptoKaiju NFT: ${result.nft.ipfsData?.name || `#${result.nft.tokenId}`}`,
+          title: `${nft.ipfsData?.name || `Kaiju #${nft.tokenId}`} | CryptoKaiju`,
+          text: `Check out this CryptoKaiju NFT: ${nft.ipfsData?.name || `#${nft.tokenId}`}`,
           url: window.location.href,
         })
       } catch (err) {
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(window.location.href)
+          alert('URL copied to clipboard!')
+        }
+      }
+    } else {
+      if (navigator.clipboard) {
         navigator.clipboard.writeText(window.location.href)
         alert('URL copied to clipboard!')
       }
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-      alert('URL copied to clipboard!')
     }
   }
 
@@ -589,7 +580,7 @@ export default function NFTLookupPage() {
         {/* Light Content Section */}
         <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
           <div className="max-w-7xl mx-auto">
-            {!hasSearched || (!result?.nft && !isLoading && !error) ? (
+            {!hasSearched || (!nft && !isLoading && !error) ? (
               <SearchForm onSearch={handleSearch} isLoading={isLoading} />
             ) : (
               <div className="space-y-8">
@@ -664,7 +655,7 @@ export default function NFTLookupPage() {
                     </motion.div>
                   )}
 
-                  {result?.nft && (
+                  {nft && (
                     <motion.div
                       key="success"
                       initial={{ opacity: 0, y: 20 }}
@@ -672,8 +663,7 @@ export default function NFTLookupPage() {
                       exit={{ opacity: 0, y: -20 }}
                     >
                       <NFTDisplayCard
-                        nft={result.nft}
-                        openSeaData={result.openSeaData}
+                        nft={nft}
                         onShare={handleShare}
                       />
                     </motion.div>
