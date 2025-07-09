@@ -1,7 +1,7 @@
 // src/lib/services/CryptoKaijuApiService.ts
 import { Contract } from 'thirdweb'
 import { getContract, readContract } from 'thirdweb'
-import { client } from '../client'
+import { thirdwebClient } from '../thirdweb'
 import { ethereum } from 'thirdweb/chains'
 
 // CryptoKaiju contract address
@@ -90,7 +90,7 @@ class CryptoKaijuApiService {
 
   constructor() {
     this.contract = getContract({
-      client,
+      client:thirdwebClient,
       chain: ethereum,
       address: CRYPTO_KAIJU_CONTRACT_ADDRESS
     })
