@@ -527,25 +527,18 @@ export default function MyKaijuPage() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20"
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                  <div>
-                    <div className="text-3xl font-black text-kaiju-pink mb-1">
-                      {isLoading ? '...' : kaijus.length}
-                    </div>
-                    <div className="text-white/80 font-medium">Kaiju Owned</div>
+                <div className="text-center">
+                  <div className="text-4xl font-black text-kaiju-pink mb-2">
+                    {isLoading ? '...' : kaijus.length}
                   </div>
-                  <div>
-                    <div className="text-3xl font-black text-kaiju-purple-light mb-1">
-                      {isLoading ? '...' : kaijus.filter(k => k.nfcId).length}
-                    </div>
-                    <div className="text-white/80 font-medium">With NFC Chips</div>
+                  <div className="text-white/80 font-medium text-lg">
+                    CryptoKaiju Owned
                   </div>
-                  <div>
-                    <div className="text-3xl font-black text-white mb-1">
-                      {isLoading ? '...' : new Set(kaijus.map(k => k.batch)).size}
+                  {!isLoading && kaijus.length > 0 && (
+                    <div className="text-white/60 text-sm mt-1">
+                      Verified directly from the Ethereum blockchain
                     </div>
-                    <div className="text-white/80 font-medium">Unique Batches</div>
-                  </div>
+                  )}
                 </div>
               </motion.div>
             )}
