@@ -8,10 +8,40 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ConnectButton } from "thirdweb/react"
 import { thirdwebClient } from '@/lib/thirdweb'
+import { Twitter, Instagram, MessageCircle, Send, ChevronDown, User } from 'lucide-react'
+
+// Social media links configuration
+const socialLinks = [
+  {
+    name: 'X (Twitter)',
+    icon: Twitter,
+    url: 'https://twitter.com/cryptokaiju',
+    color: 'hover:text-blue-400'
+  },
+  {
+    name: 'Instagram',
+    icon: Instagram,
+    url: 'https://instagram.com/cryptokaiju',
+    color: 'hover:text-pink-400'
+  },
+  {
+    name: 'Discord',
+    icon: MessageCircle,
+    url: 'https://discord.gg/cryptokaiju',
+    color: 'hover:text-indigo-400'
+  },
+  {
+    name: 'Telegram',
+    icon: Send,
+    url: 'https://t.me/cryptokaiju',
+    color: 'hover:text-blue-500'
+  }
+]
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false)
   const { scrollY } = useScroll()
   const router = useRouter()
   
@@ -23,17 +53,36 @@ export default function Header() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50)
     }
+    
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isAccountDropdownOpen) {
+        const target = event.target as Element
+        if (!target.closest('[data-account-dropdown]')) {
+          setIsAccountDropdownOpen(false)
+        }
+      }
+    }
+    
     window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+    document.addEventListener('click', handleClickOutside)
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      document.removeEventListener('click', handleClickOutside)
+    }
+  }, [isAccountDropdownOpen])
 
   const navItems = [
     { label: 'Mint', href: '/#hero' },
     { label: 'How It Works', href: '/#how' },
     { label: 'Designs', href: '/#mysteries' },
     { label: 'Kaijudex', href: '/kaijudex' },
-    { label: 'My Collection', href: '/my-kaiju' },
     { label: 'Community', href: '/#community' },
+  ]
+
+  const accountItems = [
+    { label: 'My Collection', href: '/my-kaiju' },
+    { label: 'NFT Lookup', href: '/nft' },
   ]
 
   const handleNavClick = (href: string) => {
@@ -170,7 +219,7 @@ export default function Header() {
             </motion.div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-8">
+            <nav className="hidden lg:flex items-center space-x-10">
               {navItems.map((item, index) => (
                 <motion.button
                   key={item.label}
@@ -190,16 +239,85 @@ export default function Header() {
                   />
                 </motion.button>
               ))}
+              
+              {/* Account Dropdown */}
+              <div className="relative">
+                <motion.button
+                  onClick={() => setIsAccountDropdownOpen(!isAccountDropdownOpen)}
+                  className={`relative ${textColor} font-semibold transition-colors duration-300 ${hoverColor} flex items-center gap-1`}
+                  whileHover={{ y: -1 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: navItems.length * 0.1 }}
+                >
+                  <User className="w-4 h-4" />
+                  Account
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isAccountDropdownOpen ? 'rotate-180' : ''}`} />
+                  <motion.div
+                    className="absolute -bottom-1 left-0 h-0.5 bg-kaiju-pink"
+                    initial={{ width: 0 }}
+                    whileHover={{ width: '100%' }}
+                    transition={{ duration: 0.3 }}
+                  />
+                </motion.button>
+
+                {/* Dropdown Menu */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                  animate={isAccountDropdownOpen ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 10, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className={`absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-200 overflow-hidden z-50 ${isAccountDropdownOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+                >
+                  {accountItems.map((item, index) => (
+                    <motion.button
+                      key={item.label}
+                      onClick={() => {
+                        handleNavClick(item.href)
+                        setIsAccountDropdownOpen(false)
+                      }}
+                      className="w-full text-left px-4 py-3 text-kaiju-navy font-medium hover:bg-kaiju-light-pink hover:text-kaiju-pink transition-colors border-b border-gray-100 last:border-b-0"
+                      whileHover={{ x: 4 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {item.label}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              </div>
             </nav>
 
-            {/* Thirdweb Connect Button + Mobile Menu */}
-            <div className="flex items-center space-x-4">
+            {/* Desktop Social Links + Connect Button + Mobile Menu */}
+            <div className="flex items-center">
+              {/* Subtle Separator */}
+              <div className={`hidden lg:block w-px h-6 ${isScrolled ? 'bg-kaiju-navy/20' : 'bg-white/20'} mx-6`}></div>
+              
+              {/* Desktop Social Links */}
+              <div className="hidden lg:flex items-center space-x-4 mr-6">
+                {socialLinks.map((social, index) => (
+                  <motion.a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${textColor} ${social.color} transition-colors duration-300 p-2`}
+                    whileHover={{ scale: 1.1, y: -1 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.5 + index * 0.1 }}
+                    title={social.name}
+                  >
+                    <social.icon className="w-5 h-5" />
+                  </motion.a>
+                ))}
+              </div>
+
               {/* Thirdweb Connect Button */}
               <motion.div
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 }}
-                className="connect-button-container"
+                className="connect-button-container mr-4"
               >
                 <ConnectButton
                   client={thirdwebClient}
@@ -254,6 +372,28 @@ export default function Header() {
             transition={{ duration: 0.3 }}
           >
             <div className="pt-4 pb-6 space-y-4 bg-white/95 backdrop-blur-md rounded-lg mt-4 border border-kaiju-light-gray/30 shadow-xl">
+              {/* Mobile Social Links */}
+              <div className="flex items-center justify-center space-x-6 pb-4 border-b border-kaiju-light-gray/30 mx-6">
+                {socialLinks.map((social, index) => (
+                  <motion.a
+                    key={social.name}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-kaiju-navy ${social.color} transition-colors duration-300 p-2`}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={isMenuOpen ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.8 }}
+                    transition={{ delay: index * 0.1 }}
+                    title={social.name}
+                  >
+                    <social.icon className="w-6 h-6" />
+                  </motion.a>
+                ))}
+              </div>
+
+              {/* Mobile Navigation Items */}
               {navItems.map((item, index) => (
                 <motion.button
                   key={item.label}
@@ -261,11 +401,33 @@ export default function Header() {
                   className="block w-full text-left text-kaiju-navy font-semibold py-3 px-6 rounded-lg hover:bg-kaiju-light-pink hover:text-kaiju-pink transition-colors text-lg"
                   initial={{ opacity: 0, x: -20 }}
                   animate={isMenuOpen ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
-                  transition={{ delay: index * 0.1 }}
+                  transition={{ delay: index * 0.1 + 0.2 }}
                 >
                   {item.label}
                 </motion.button>
               ))}
+
+              {/* Mobile Account Section */}
+              <div className="border-t border-kaiju-light-gray/30 mt-4 pt-4">
+                <div className="px-6 mb-3">
+                  <div className="flex items-center gap-2 text-kaiju-navy/60 text-sm font-medium">
+                    <User className="w-4 h-4" />
+                    Account
+                  </div>
+                </div>
+                {accountItems.map((item, index) => (
+                  <motion.button
+                    key={item.label}
+                    onClick={() => handleNavClick(item.href)}
+                    className="block w-full text-left text-kaiju-navy font-semibold py-3 px-8 rounded-lg hover:bg-kaiju-light-pink hover:text-kaiju-pink transition-colors text-lg"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={isMenuOpen ? { opacity: 1, x: 0 } : { opacity: 0, x: -20 }}
+                    transition={{ delay: (navItems.length + index) * 0.1 + 0.3 }}
+                  >
+                    {item.label}
+                  </motion.button>
+                ))}
+              </div>
             </div>
           </motion.nav>
         </div>

@@ -93,58 +93,136 @@ export default function AboutPage() {
 
         {/* Light Content Section */}
         <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
+            
+            {/* Pioneer Story */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
               className="text-center mb-16"
             >
-              <h2 className="text-3xl font-bold text-kaiju-navy mb-6">Coming Soon</h2>
-              <p className="text-lg text-kaiju-navy/70 leading-relaxed max-w-2xl mx-auto">
-                We're working on an amazing story about CryptoKaiju's mission to revolutionize the collectibles space. 
-                Check back soon to learn more about our journey and vision.
+              <div className="inline-flex items-center gap-2 bg-kaiju-pink/10 text-kaiju-pink font-bold px-4 py-2 rounded-full mb-6">
+                <Zap className="w-4 h-4" />
+                World's First
+              </div>
+              <h2 className="text-3xl font-bold text-kaiju-navy mb-6">Pioneering Connected Collectibles</h2>
+              <p className="text-lg text-kaiju-navy/70 leading-relaxed max-w-3xl mx-auto">
+                CryptoKaiju stands as the <strong>world's first vinyl toy company</strong> to fully bridge physical and digital realms through blockchain technology. Spun out of KnownOrigin and founded in 2018 by Oliver Carding, we created connected products that solve authenticity and provenance challenges in the collectibles market by linking physical toys to verifiable digital ownership and exclusive experiences.
               </p>
             </motion.div>
 
-            {/* Feature Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-                className="bg-white rounded-2xl p-6 shadow-xl border-2 border-gray-100 text-center"
-              >
-                <Heart className="w-12 h-12 text-kaiju-pink mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-kaiju-navy mb-3">Passion</h3>
-                <p className="text-gray-600">
-                  We're passionate about creating unique collectibles that bridge digital and physical worlds.
-                </p>
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="bg-white rounded-2xl p-6 shadow-xl border-2 border-gray-100 text-center"
-              >
+            {/* Innovation Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="bg-white rounded-3xl p-8 shadow-xl border-2 border-gray-100 mb-12"
+            >
+              <div className="text-center mb-8">
                 <Zap className="w-12 h-12 text-kaiju-pink mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-kaiju-navy mb-3">Innovation</h3>
-                <p className="text-gray-600">
-                  Using cutting-edge blockchain technology to create verifiable, unique digital assets.
+                <h3 className="text-2xl font-bold text-kaiju-navy mb-4">The Innovation That Changed Everything</h3>
+                <p className="text-kaiju-navy/70 max-w-2xl mx-auto">
+                  Each collectible contains a tamper-resistant NFC chip encrypted with a unique serial number that cannot be duplicated. When scanned, it reveals attributes that directly correspond to an ERC-721 compliant NFT on the Ethereum blockchain, creating our breakthrough connected products technology.
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Partnerships Grid */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+              className="mb-12"
+            >
+              <h3 className="text-2xl font-bold text-kaiju-navy text-center mb-8">Groundbreaking Partnerships</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 border-2 border-purple-200">
+                  <div className="flex justify-center mb-6">
+                    <img src="/logos/sandbox-logo.png" alt="The Sandbox" className="h-16 w-auto object-contain" />
+                  </div>
+                  <h4 className="font-bold text-kaiju-navy mb-2 text-center">The Sandbox</h4>
+                  <p className="text-sm text-kaiju-navy/70 text-center">
+                    Created toys that unlock metaverse assets, wearables, and in-game characters.
+                  </p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 border-2 border-orange-200">
+                  <div className="flex justify-center mb-6">
+                    <img src="/logos/kings-logo.png" alt="Sacramento Kings" className="h-16 w-auto object-contain" />
+                  </div>
+                  <h4 className="font-bold text-kaiju-navy mb-2 text-center">Sacramento Kings</h4>
+                  <p className="text-sm text-kaiju-navy/70 text-center">
+                    <strong>First physical crypto-collectible in professional sports</strong> with scavenger hunts offering exclusive experiences and prizes.
+                  </p>
+                </div>
+                
+                <div className="bg-gradient-to-br from-pink-50 to-pink-100 rounded-2xl p-6 border-2 border-pink-200">
+                  <div className="flex justify-center mb-6">
+                    <img src="/images/dapper_labs_logo.svg" alt="Dapper Labs" className="h-16 w-auto object-contain" />
+                  </div>
+                  <h4 className="font-bold text-kaiju-navy mb-2 text-center">Dapper Labs</h4>
+                  <p className="text-sm text-kaiju-navy/70 text-center">
+                    CryptoKitties collaboration linking individual toys to specific digital cats.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Stats Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="bg-gradient-to-r from-kaiju-navy to-kaiju-purple-dark rounded-3xl p-8 text-white mb-12"
+            >
+              <h3 className="text-2xl font-bold text-center mb-8">Proven Track Record</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+                <div>
+                  <div className="text-3xl font-black text-kaiju-pink mb-2">1,600+</div>
+                  <div className="text-sm opacity-90">Toys Delivered</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-black text-kaiju-pink mb-2">100%</div>
+                  <div className="text-sm opacity-90">Delivery Record</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-black text-kaiju-pink mb-2">30+</div>
+                  <div className="text-sm opacity-90">Countries</div>
+                </div>
+                <div>
+                  <div className="text-3xl font-black text-kaiju-pink mb-2">6</div>
+                  <div className="text-sm opacity-90">Years Strong</div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Recognition & Community */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+                className="bg-white rounded-2xl p-6 shadow-xl border-2 border-gray-100"
+              >
+                <Zap className="w-12 h-12 text-kaiju-pink mb-4" />
+                <h4 className="text-xl font-bold text-kaiju-navy mb-3">Industry Recognition</h4>
+                <p className="text-kaiju-navy/70 text-sm mb-4">
+                  Featured in <strong>Forbes</strong> and recognized as the "blockchain-enabled Amiibo" of Ethereum. 
+                  Established thought leadership at NFT.NYC and Berlin Blockchain Week.
                 </p>
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-                className="bg-white rounded-2xl p-6 shadow-xl border-2 border-gray-100 text-center"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.6 }}
+                className="bg-white rounded-2xl p-6 shadow-xl border-2 border-gray-100"
               >
-                <Users className="w-12 h-12 text-kaiju-pink mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-kaiju-navy mb-3">Community</h3>
-                <p className="text-gray-600">
-                  Building a vibrant community of collectors who love both digital and physical collectibles.
+                <Users className="w-12 h-12 text-kaiju-pink mb-4" />
+                <h4 className="text-xl font-bold text-kaiju-navy mb-3">Community-Driven Excellence</h4>
+                <p className="text-kaiju-navy/70 text-sm">
+                  We've built more than a product—we've cultivated a passionate community of collectors who value authenticity, innovation, and quality through organic growth.
                 </p>
               </motion.div>
             </div>
@@ -153,9 +231,12 @@ export default function AboutPage() {
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="text-center mt-16"
+              transition={{ duration: 0.8, delay: 0.7 }}
+              className="text-center"
             >
+              <div className="mb-4">
+                <p className="text-lg font-bold text-kaiju-navy">Where physical meets digital, and collecting meets innovation.</p>
+              </div>
               <Link
                 href="/#hero"
                 className="inline-flex items-center gap-3 bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"

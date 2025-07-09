@@ -268,7 +268,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     rarity: 'Legendary',
     element: 'Heritage',
     power: 'Provenance Shield',
-    description: 'A one of a kind Kaiju that celebrates the purchase of KnownOrigin by eBay and guards the moment when creativity meets commerce.',
+    description: 'A one of a kind Kaiju that celebrates KnownOrigin being purchased by eBay for $68 million.',
     nftImage: '/images/knownorigin.png',
     physicalImage: '/images/knownorigin-physical.png',
     backgroundColor: 'bg-violet-200',
