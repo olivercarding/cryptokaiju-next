@@ -1,5 +1,4 @@
 // src/lib/services/CryptoKaijuApiService.ts
-import { Contract } from 'thirdweb'
 import { getContract, readContract } from 'thirdweb'
 import { thirdwebClient } from '../thirdweb'
 import { ethereum } from 'thirdweb/chains'
@@ -91,13 +90,13 @@ export interface PaginatedResponse<T> {
 }
 
 class CryptoKaijuApiService {
-  private contract: Contract
+  private contract: any
   private cache = new Map<string, { data: any; expires: number }>()
   private readonly cacheTimeout = 5 * 60 * 1000 // 5 minutes
 
   constructor() {
     this.contract = getContract({
-      client:thirdwebClient,
+      client: thirdwebClient,
       chain: ethereum,
       address: CRYPTO_KAIJU_CONTRACT_ADDRESS
     })
