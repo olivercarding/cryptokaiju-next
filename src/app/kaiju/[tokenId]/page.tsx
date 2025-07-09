@@ -14,6 +14,23 @@ interface KaijuDetailsPageProps {
   }
 }
 
+interface TraitData {
+  trait_type: string
+  value: string
+  rarity?: number
+}
+
+interface OpenSeaTrait {
+  trait_type: string
+  value: any
+}
+
+interface IPFSAttribute {
+  trait_type?: string
+  value?: any
+  [key: string]: any
+}
+
 const TraitCard = ({ traitType, value, rarity }: { 
   traitType: string
   value: string
@@ -80,7 +97,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
   const [activeTab, setActiveTab] = useState<'overview' | 'traits' | 'history'>('overview')
   const [imageError, setImageError] = useState(false)
 
-  const getImageSrc = () => {
+  const getImageSrc = (): string => {
     if (imageError) return '/images/placeholder-kaiju.png'
     
     // Prefer OpenSea image if available
@@ -98,17 +115,19 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
     return '/images/placeholder-kaiju.png'
   }
 
-  const getTraits = () => {
-    const traits: Array<{trait_type: string, value: string, rarity?: number}> = []
+  const getTraits = (): TraitData[] => {
+    const traits: TraitData[] = []
     
     // Get traits from OpenSea if available
-    if (openSeaData?.traits) {
-      openSeaData.traits.forEach(trait => {
-        traits.push({
-          trait_type: trait.trait_type,
-          value: trait.value.toString(),
-          rarity: 0 // Calculate from trait counts if needed
-        })
+    if (openSeaData?.traits && Array.isArray(openSeaData.traits)) {
+      openSeaData.traits.forEach((trait: OpenSeaTrait) => {
+        if (trait.trait_type && trait.value !== undefined && trait.value !== null) {
+          traits.push({
+            trait_type: trait.trait_type,
+            value: trait.value.toString(),
+            rarity: 0 // Calculate from trait counts if needed
+          })
+        }
       })
     }
     
@@ -116,7 +135,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
     if (traits.length === 0 && kaiju?.ipfsData?.attributes) {
       if (Array.isArray(kaiju.ipfsData.attributes)) {
         // Handle array format
-        kaiju.ipfsData.attributes.forEach((attr: any) => {
+        kaiju.ipfsData.attributes.forEach((attr: IPFSAttribute) => {
           if (attr.trait_type && attr.value && !['dob', 'nfc'].includes(attr.trait_type.toLowerCase())) {
             traits.push({
               trait_type: attr.trait_type,
@@ -125,10 +144,10 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
             })
           }
         })
-      } else if (typeof kaiju.ipfsData.attributes === 'object') {
+      } else if (typeof kaiju.ipfsData.attributes === 'object' && kaiju.ipfsData.attributes !== null) {
         // Handle object format
         Object.entries(kaiju.ipfsData.attributes).forEach(([key, value]) => {
-          if (value && !['dob', 'nfc'].includes(key)) {
+          if (value && !['dob', 'nfc'].includes(key.toLowerCase())) {
             traits.push({
               trait_type: key,
               value: value.toString(),
@@ -145,7 +164,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
   const generateBattleStats = () => {
     // Generate pseudo-random stats based on token ID for consistency
     const seed = parseInt(params.tokenId) || 1
-    const random = (min: number, max: number, offset: number = 0) => {
+    const random = (min: number, max: number, offset: number = 0): number => {
       return Math.floor(((seed + offset) * 9301 + 49297) % 233280 / 233280 * (max - min) + min)
     }
     
@@ -157,7 +176,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
     }
   }
 
-  const formatDate = (timestamp: number) => {
+  const formatDate = (timestamp: number): string => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -165,7 +184,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
     })
   }
 
-  const handleShare = async () => {
+  const handleShare = async (): Promise<void> => {
     if (navigator.share && kaiju) {
       try {
         await navigator.share({
@@ -176,13 +195,17 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
       } catch (err) {
         console.log('Error sharing:', err)
         // Fallback to copying URL
-        navigator.clipboard.writeText(window.location.href)
-        alert('URL copied to clipboard!')
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(window.location.href)
+          alert('URL copied to clipboard!')
+        }
       }
     } else {
       // Fallback for browsers that don't support Web Share API
-      navigator.clipboard.writeText(window.location.href)
-      alert('URL copied to clipboard!')
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(window.location.href)
+        alert('URL copied to clipboard!')
+      }
     }
   }
 
@@ -470,7 +493,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
               >
                 {traits.map((trait, index) => (
                   <motion.div
-                    key={`${trait.trait_type}-${trait.value}`}
+                    key={`${trait.trait_type}-${trait.value}-${index}`}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: index * 0.1 }}
