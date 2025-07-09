@@ -1,370 +1,413 @@
 // src/config/batches.ts
 export interface KaijuBatch {
-    id: string
-    slug: string
-    name: string
-    type: 'Plush' | 'Vinyl'
-    rarity: 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'
-    element: string
-    power: string
-    description: string
-    lore: string
-    
-    // Visual assets
-    nftImage: string
-    physicalImage: string
-    conceptArt?: string[]
-    backgroundColor: string
-    
-    // Character details
-    origin: string
-    abilities: string[]
-    personalityTraits: string[]
-    weaknesses: string[]
-    habitat: string
-    
-    // Collection stats (approximate)
-    estimatedSupply: number
-    discoveredDate: string
-    
-    // Battle stats for fun
-    battleStats: {
-      attack: number
-      defense: number
-      speed: number
-      special: number
-    }
+  id: string
+  slug: string
+  name: string
+  type: 'Plush' | 'Vinyl'
+  rarity: 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'
+  element: string
+  power: string
+  description: string
+  lore: string
+
+  // Visual assets
+  nftImage: string
+  physicalImage: string
+  conceptArt?: string[]
+  backgroundColor: string
+
+  // Character details
+  origin: string
+  abilities: string[]
+  personalityTraits: string[]
+  weaknesses: string[]
+  habitat: string
+
+  // Collection stats (approximate)
+  estimatedSupply: number
+  discoveredDate: string
+
+  // Battle stats for fun
+  battleStats: {
+    attack: number
+    defense: number
+    speed: number
+    special: number
   }
-  
-  export const KAIJU_BATCHES: KaijuBatch[] = [
-    {
-      id: '001',
-      slug: 'genesis',
-      name: 'Genesis',
-      type: 'Vinyl',
-      rarity: 'Rare',
-      element: 'Ghost',
-      power: 'Spectral Manipulation',
-      description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
-      lore: 'Uri emerged from the liminal space between worlds, a being of pure ethereal energy that defies conventional understanding. First documented during the Great Convergence Event, Uri exhibits the unique ability to phase between dimensions.',
-      nftImage: '/images/Ghost1.png',
-      physicalImage: '/images/Uri_product_shot.png',
-      conceptArt: ['/images/uri-concept-1.jpg', '/images/uri-concept-2.jpg'],
-      backgroundColor: 'bg-purple-100',
-      origin: 'The Ethereal Plane',
-      abilities: ['Phase Shifting', 'Spectral Projection', 'Ethereal Communication', 'Dimensional Sensing', 'Energy Absorption'],
-      personalityTraits: ['Mysterious and enigmatic', 'Protective of smaller entities', 'Drawn to sources of spiritual energy'],
-      weaknesses: ['Vulnerable to iron-based materials', 'Loses power in areas of high electromagnetic interference'],
-      habitat: 'Ethereal Plane intersections, ancient temples, areas of high spiritual activity',
-      estimatedSupply: 125,
-      discoveredDate: '2018.11.27',
-      battleStats: { attack: 65, defense: 80, speed: 95, special: 100 }
-    },
-    {
-      id: '002',
-      slug: 'meme',
-      name: 'Meme',
-      type: 'Vinyl',
-      rarity: 'Common',
-      element: 'Water',
-      power: 'Aquatic Mastery',
-      description: 'Ancient water spirit with the ability to control rivers and rain.',
-      lore: 'Meme is one of the oldest known Kaiju, with legends dating back over a thousand years. This aquatic guardian has been protector of waterways and marine life throughout the ages.',
-      nftImage: '/images/Meme-NFT.png',
-      physicalImage: '/images/Meme.png',
-      backgroundColor: 'bg-blue-100',
-      origin: 'Ancient Ocean Depths',
-      abilities: ['Water Manipulation', 'Tsunami Generation', 'Rain Calling', 'Marine Telepathy', 'Healing Springs'],
-      personalityTraits: ['Wise and ancient', 'Protector of marine life', 'Calm but fierce when threatened'],
-      weaknesses: ['Vulnerable in arid environments', 'Loses power away from water sources'],
-      habitat: 'Oceans, rivers, lakes, underwater caverns',
-      estimatedSupply: 800,
-      discoveredDate: '2023.11.20',
-      battleStats: { attack: 75, defense: 85, speed: 70, special: 90 }
-    },
-    {
-      id: '003',
-      slug: 'diamond-hands',
-      name: 'Diamond Hands',
-      type: 'Vinyl',
-      rarity: 'Ultra Rare',
-      element: 'Earth',
-      power: 'Crystalline Transformation',
-      description: 'A legendary Kaiju with diamond-hard appendages and unbreakable resolve.',
-      lore: 'Born from the pressure of millennia deep within the Earth\'s core, Diamond Hands represents the ultimate fusion of patience and strength. Its crystalline form can withstand any force.',
-      nftImage: '/images/dragon.png',
-      physicalImage: '/images/Diamond_hands_product_shot.png',
-      backgroundColor: 'bg-gray-100',
-      origin: 'Earth\'s Core',
-      abilities: ['Diamond Skin', 'Crystal Shard Projection', 'Seismic Tremors', 'Mineral Detection', 'Pressure Resistance'],
-      personalityTraits: ['Incredibly patient', 'Unshakeable determination', 'Values long-term thinking'],
-      weaknesses: ['Slow movement speed', 'Vulnerable to sonic attacks'],
-      habitat: 'Deep caves, mountain peaks, crystal formations',
-      estimatedSupply: 200,
-      discoveredDate: '2024.01.10',
-      battleStats: { attack: 95, defense: 100, speed: 40, special: 85 }
-    },
-    {
-      id: '004',
-      slug: 'genesis-green',
-      name: 'Genesis (Green)',
-      type: 'Plush',
-      rarity: 'Legendary',
-      element: 'Nature',
-      power: 'Life Force Manipulation',
-      description: 'The original Kaiju design, representing the birth of all CryptoKaiju.',
-      lore: 'Genesis Green is the primordial Kaiju from which all others are said to have evolved. Its connection to the life force of the planet makes it incredibly powerful and wise.',
-      nftImage: '/images/Genesis-NFT.png',
-      physicalImage: '/images/Green_genesis_product_shot.png',
-      backgroundColor: 'bg-green-100',
-      origin: 'The First Dimension',
-      abilities: ['Life Restoration', 'Plant Growth', 'Nature Communication', 'Healing Aura', 'Ecosystem Balance'],
-      personalityTraits: ['Ancient wisdom', 'Nurturing protector', 'Connected to all life'],
-      weaknesses: ['Affected by environmental destruction', 'Vulnerable to corruption'],
-      habitat: 'Primordial forests, sacred groves, life nexus points',
-      estimatedSupply: 100,
-      discoveredDate: '2023.10.01',
-      battleStats: { attack: 80, defense: 90, speed: 75, special: 100 }
-    },
-    {
-      id: '005',
-      slug: 'genesis-blue',
-      name: 'Genesis (Blue)',
-      type: 'Plush',
-      rarity: 'Legendary',
-      element: 'Ice',
-      power: 'Cryogenic Control',
-      description: 'The ice variant of the original Genesis design, master of frozen realms.',
-      lore: 'Genesis Blue emerged during the Great Freeze, adapting the original Genesis form to survive in the harshest cold. It now governs all frozen territories.',
-      nftImage: '/images/Genesis-Blue-NFT.png',
-      physicalImage: '/images/Blue_genesis_product_shot.png',
-      backgroundColor: 'bg-blue-200',
-      origin: 'The Frozen Wastes',
-      abilities: ['Ice Manipulation', 'Blizzard Creation', 'Cryo-preservation', 'Absolute Zero Touch', 'Glacier Formation'],
-      personalityTraits: ['Cool and calculating', 'Preserves ancient knowledge', 'Stoic guardian'],
-      weaknesses: ['Vulnerable to extreme heat', 'Slower in warm climates'],
-      habitat: 'Arctic regions, mountain glaciers, frozen caverns',
-      estimatedSupply: 100,
-      discoveredDate: '2023.10.01',
-      battleStats: { attack: 85, defense: 95, speed: 60, special: 100 }
-    },
-    {
-      id: '006',
-      slug: 'kappa',
-      name: 'Kappa',
-      type: 'Vinyl',
-      rarity: 'Common',
-      element: 'Water',
-      power: 'River Guardianship',
-      description: 'Traditional water sprite known for protecting sacred waterways.',
-      lore: 'Based on ancient Japanese folklore, Kappa serves as guardian of rivers and streams. Despite its mischievous nature, it\'s fiercely protective of aquatic ecosystems.',
-      nftImage: '/images/kappa.png',
-      physicalImage: '/images/kappa-physical.jpg',
-      backgroundColor: 'bg-teal-100',
-      origin: 'Japanese Folklore Realm',
-      abilities: ['Water Blessing', 'Current Control', 'Aquatic Camouflage', 'River Purification', 'Swimmer\'s Aid'],
-      personalityTraits: ['Mischievous but honorable', 'Respectful of traditions', 'Protective of water sources'],
-      weaknesses: ['Power diminishes if head bowl empties', 'Bound by ancient codes'],
-      habitat: 'Rivers, streams, traditional Japanese gardens',
-      estimatedSupply: 600,
-      discoveredDate: '2024.02.14',
-      battleStats: { attack: 60, defense: 70, speed: 85, special: 75 }
-    },
-    {
-      id: '007',
-      slug: 'phoenix',
-      name: 'Phoenix',
-      type: 'Vinyl',
-      rarity: 'Ultra Rare',
-      element: 'Fire',
-      power: 'Eternal Rebirth',
-      description: 'The immortal phoenix that rises from ashes stronger than before.',
-      lore: 'Every thousand years, Phoenix undergoes a spectacular rebirth, emerging more powerful than before. Its eternal cycle represents hope and renewal.',
-      nftImage: '/images/phoenix.png',
-      physicalImage: '/images/phoenix-physical.jpg',
-      backgroundColor: 'bg-orange-100',
-      origin: 'The Eternal Flame',
-      abilities: ['Rebirth Cycle', 'Fire Mastery', 'Healing Tears', 'Solar Energy', 'Ash Transformation'],
-      personalityTraits: ['Wise from countless lifetimes', 'Symbol of hope', 'Patient but passionate'],
-      weaknesses: ['Vulnerable during rebirth process', 'Weakened by despair'],
-      habitat: 'Volcanic peaks, solar temples, places of renewal',
-      estimatedSupply: 150,
-      discoveredDate: '2024.04.01',
-      battleStats: { attack: 90, defense: 70, speed: 95, special: 100 }
-    },
-    {
-      id: '008',
-      slug: 'dragon',
-      name: 'Dragon',
-      type: 'Plush',
-      rarity: 'Rare',
-      element: 'Fire',
-      power: 'Ancient Wisdom',
-      description: 'Legendary dragon whose flames can forge the strongest metals.',
-      lore: 'One of the most ancient and revered Kaiju, Dragon has witnessed the rise and fall of civilizations. Its knowledge spans eons, and its fire can create as well as destroy.',
-      nftImage: '/images/dragon.png',
-      physicalImage: '/images/dragon-physical.jpg',
-      backgroundColor: 'bg-red-100',
-      origin: 'The Ancient Peaks',
-      abilities: ['Flame Breath', 'Metal Forging', 'Ancient Knowledge', 'Flight', 'Treasure Sensing'],
-      personalityTraits: ['Ancient and wise', 'Proud but fair', 'Collector of knowledge'],
-      weaknesses: ['Pride can be exploited', 'Vulnerable to betrayal'],
-      habitat: 'Mountain peaks, ancient ruins, treasure vaults',
-      estimatedSupply: 400,
-      discoveredDate: '2023.12.05',
-      battleStats: { attack: 95, defense: 85, speed: 80, special: 90 }
-    },
-    {
-      id: '009',
-      slug: 'lightning',
-      name: 'Lightning',
-      type: 'Vinyl',
-      rarity: 'Rare',
-      element: 'Electric',
-      power: 'Storm Generation',
-      description: 'Master of electrical storms and lightning strikes.',
-      lore: 'Born from the first lightning strike, this Kaiju embodies the raw power of storms. Its presence heralds great changes and new beginnings.',
-      nftImage: '/images/lightning.png',
-      physicalImage: '/images/lightning-physical.jpg',
-      backgroundColor: 'bg-yellow-100',
-      origin: 'The Storm Realm',
-      abilities: ['Lightning Control', 'Storm Summoning', 'Electrical Absorption', 'Speed Boost', 'EMP Generation'],
-      personalityTraits: ['Energetic and unpredictable', 'Brings change', 'Quick to act'],
-      weaknesses: ['Grounded by earth elements', 'Unstable in calm weather'],
-      habitat: 'Storm clouds, electrical facilities, mountain tops',
-      estimatedSupply: 300,
-      discoveredDate: '2024.05.20',
-      battleStats: { attack: 85, defense: 60, speed: 100, special: 95 }
-    },
-    {
-      id: '010',
-      slug: 'shadow',
-      name: 'Shadow',
-      type: 'Plush',
-      rarity: 'Ultra Rare',
-      element: 'Dark',
-      power: 'Shadow Manipulation',
-      description: 'Dweller of darkness with the ability to travel between shadows.',
-      lore: 'Shadow exists in the spaces between light, a guardian of secrets and hidden knowledge. It moves unseen, protecting those who travel in darkness.',
-      nftImage: '/images/shadow.png',
-      physicalImage: '/images/shadow-physical.jpg',
-      backgroundColor: 'bg-gray-900',
-      origin: 'The Void Between',
-      abilities: ['Shadow Travel', 'Invisibility', 'Dark Energy', 'Secret Keeping', 'Night Vision'],
-      personalityTraits: ['Mysterious and secretive', 'Loyal guardian', 'Values privacy'],
-      weaknesses: ['Weakened by bright light', 'Cannot exist without shadows'],
-      habitat: 'Dark caves, moonless nights, hidden sanctuaries',
-      estimatedSupply: 180,
-      discoveredDate: '2024.06.15',
-      battleStats: { attack: 80, defense: 75, speed: 90, special: 95 }
-    },
-    {
-      id: '011',
-      slug: 'crystal',
-      name: 'Crystal',
-      type: 'Vinyl',
-      rarity: 'Rare',
-      element: 'Earth',
-      power: 'Prismatic Energy',
-      description: 'Crystalline being that refracts light into powerful energy beams.',
-      lore: 'Formed in the deepest crystal caves, this Kaiju has learned to harness and focus light energy through its crystalline body, creating spectacular displays of power.',
-      nftImage: '/images/crystal.png',
-      physicalImage: '/images/crystal-physical.jpg',
-      backgroundColor: 'bg-indigo-100',
-      origin: 'The Crystal Caverns',
-      abilities: ['Light Refraction', 'Energy Beam', 'Crystal Growth', 'Hardness Control', 'Prismatic Shield'],
-      personalityTraits: ['Reflective and thoughtful', 'Seeks clarity', 'Values precision'],
-      weaknesses: ['Can be shattered by sonic attacks', 'Dulled by dirt and grime'],
-      habitat: 'Crystal caves, geode formations, light temples',
-      estimatedSupply: 350,
-      discoveredDate: '2024.07.10',
-      battleStats: { attack: 75, defense: 90, speed: 65, special: 85 }
-    },
-    {
-      id: '012',
-      slug: 'wind',
-      name: 'Wind',
-      type: 'Plush',
-      rarity: 'Common',
-      element: 'Air',
-      power: 'Atmospheric Control',
-      description: 'Ethereal being of pure air that commands the winds and weather.',
-      lore: 'Wind is everywhere and nowhere, a gentle breeze one moment and a powerful gale the next. It carries messages across vast distances and brings change to stagnant places.',
-      nftImage: '/images/wind.png',
-      physicalImage: '/images/wind-physical.jpg',
-      backgroundColor: 'bg-sky-100',
-      origin: 'The Endless Sky',
-      abilities: ['Wind Control', 'Weather Change', 'Message Carrying', 'Flight Assistance', 'Air Purification'],
-      personalityTraits: ['Free-spirited and wandering', 'Brings news and change', 'Never stays in one place'],
-      weaknesses: ['Cannot act in vacuum', 'Dispersed by extreme temperatures'],
-      habitat: 'Open skies, mountain passes, windy plains',
-      estimatedSupply: 700,
-      discoveredDate: '2024.08.05',
-      battleStats: { attack: 65, defense: 55, speed: 95, special: 80 }
-    },
-    {
-      id: '013',
-      slug: 'metal',
-      name: 'Metal',
-      type: 'Vinyl',
-      rarity: 'Rare',
-      element: 'Metal',
-      power: 'Metallic Transformation',
-      description: 'Robotic Kaiju with the ability to transform and adapt its metallic body.',
-      lore: 'Created from the fusion of ancient magic and modern technology, Metal represents the harmony between tradition and innovation. Its adaptive abilities make it incredibly versatile.',
-      nftImage: '/images/metal.png',
-      physicalImage: '/images/metal-physical.jpg',
-      backgroundColor: 'bg-slate-100',
-      origin: 'The Forge of Worlds',
-      abilities: ['Shape Shifting', 'Metal Manipulation', 'Technological Interface', 'Self-Repair', 'Magnetic Control'],
-      personalityTraits: ['Logical but adaptable', 'Values innovation', 'Bridges old and new'],
-      weaknesses: ['Vulnerable to rust and corrosion', 'EMP attacks disrupt systems'],
-      habitat: 'Industrial zones, tech laboratories, metal refineries',
-      estimatedSupply: 320,
-      discoveredDate: '2024.09.12',
-      battleStats: { attack: 85, defense: 95, speed: 70, special: 80 }
-    },
-    {
-      id: '014',
-      slug: 'cosmic',
-      name: 'Cosmic',
-      type: 'Plush',
-      rarity: 'Legendary',
-      element: 'Space',
-      power: 'Stellar Manipulation',
-      description: 'Celestial being that channels the power of stars and cosmic forces.',
-      lore: 'Cosmic arrived from beyond the known universe, bringing with it the wisdom of distant galaxies. Its power is linked to stellar phenomena and cosmic events.',
-      nftImage: '/images/cosmic.png',
-      physicalImage: '/images/cosmic-physical.jpg',
-      backgroundColor: 'bg-purple-900',
-      origin: 'The Far Galaxy',
-      abilities: ['Star Power', 'Cosmic Radiation', 'Gravity Control', 'Teleportation', 'Stellar Navigation'],
-      personalityTraits: ['Otherworldly perspective', 'Vast knowledge', 'Peaceful but powerful'],
-      weaknesses: ['Weakened by planetary atmospheres', 'Needs starlight to recharge'],
-      habitat: 'Observatories, mountain peaks, open space',
-      estimatedSupply: 80,
-      discoveredDate: '2024.10.31',
-      battleStats: { attack: 90, defense: 80, speed: 85, special: 100 }
-    }
-  ]
-  
-  // Helper functions
-  export const getBatchBySlug = (slug: string): KaijuBatch | undefined => {
-    return KAIJU_BATCHES.find(batch => batch.slug === slug)
+}
+
+export const KAIJU_BATCHES: KaijuBatch[] = [
+  {
+    id: '001',
+    slug: 'genesis',
+    name: 'Genesis',
+    type: 'Vinyl',
+    rarity: 'Rare',
+    element: 'Digital Fire',
+    power: 'Spark of Creation',
+    description: 'Genesis carries the first cryptographic spark and wears a playful dinosaur costume.',
+    lore: 'Genesis was the first CryptoKaiju to cross from Komorebi. Wherever he walks, circuits stay calm and seedlings thrive.',
+    nftImage: '/images/genesis.png',
+    physicalImage: '/images/genesis-physical.png',
+    backgroundColor: 'bg-orange-200',
+    origin: 'Komorebi',
+    abilities: ['Ignite Innovation', 'Calm Circuits', 'Seedling Shield'],
+    personalityTraits: ['Brave', 'Patient', 'Thoughtful'],
+    weaknesses: ['Overheats in prolonged stillness', 'Drawn to unsolved puzzles'],
+    habitat: 'Workshops, learning circles',
+    estimatedSupply: 300,
+    discoveredDate: '2025.01.01',
+    battleStats: { attack: 70, defense: 80, speed: 65, special: 90 }
+  },
+  {
+    id: '002',
+    slug: 'jaiantokoin',
+    name: 'Jaiantokoin',
+    type: 'Vinyl',
+    rarity: 'Common',
+    element: 'Digital Earth',
+    power: 'Bridge Builder',
+    description: 'Jaiantokoin is a towering coin with vintage cartoon limbs and a smile that lights villages.',
+    lore: 'He embodies shared strength and lifts bridges and spirits on every side of a gateway.',
+    nftImage: '/images/jaiantokoin.png',
+    physicalImage: '/images/jaiantokoin-physical.png',
+    backgroundColor: 'bg-brown-200',
+    origin: 'Komorebi',
+    abilities: ['Giant Embrace', 'Load Bearing Cheer', 'Community Rally'],
+    personalityTraits: ['Gentle', 'Reliable', 'Strong'],
+    weaknesses: ['Becomes sluggish after large meals', 'Hesitates in tight spaces'],
+    habitat: 'Open plazas, construction sites',
+    estimatedSupply: 500,
+    discoveredDate: '2025.02.01',
+    battleStats: { attack: 60, defense: 90, speed: 40, special: 70 }
+  },
+  {
+    id: '003',
+    slug: 'spookymon',
+    name: 'Spookymon',
+    type: 'Vinyl',
+    rarity: 'Rare',
+    element: 'Moonlight',
+    power: 'Glow Aura',
+    description: 'A glow in the dark dino who loves gentle spooky tales.',
+    lore: 'Spookymon arrives on bright moonlit nights and spins cozy stories that finish with friendly giggles.',
+    nftImage: '/images/spookymon.png',
+    physicalImage: '/images/spookymon-physical.png',
+    backgroundColor: 'bg-indigo-100',
+    origin: 'Komorebi',
+    abilities: ['Story Spinner', 'Moonlit Lantern', 'Comforting Chill'],
+    personalityTraits: ['Playful', 'Mysterious', 'Warm'],
+    weaknesses: ['Drowsy at dawn', 'Distracted by campfire snacks'],
+    habitat: 'Quiet rooftops, campfires',
+    estimatedSupply: 300,
+    discoveredDate: '2025.03.13',
+    battleStats: { attack: 55, defense: 65, speed: 75, special: 85 }
+  },
+  {
+    id: '004',
+    slug: 'cryptokitty',
+    name: 'CryptoKitty',
+    type: 'Vinyl',
+    rarity: 'Common',
+    element: 'Creative Air',
+    power: 'Idea Knead',
+    description: 'A playful Kaiju created in collaboration with Dapper Labs and CryptoKaiju.',
+    lore: 'CryptoKitty purrs when creativity blooms and kneads fresh ideas for artists across Komorebi and beyond.',
+    nftImage: '/images/cryptokitty.png',
+    physicalImage: '/images/cryptokitty-physical.png',
+    backgroundColor: 'bg-blue-100',
+    origin: 'Komorebi',
+    abilities: ['Soothing Purr', 'Canvas Leap', 'Inspiration Spark'],
+    personalityTraits: ['Curious', 'Helpful', 'Alert'],
+    weaknesses: ['Easily sidetracked by string', 'Sneezes in dusty rooms'],
+    habitat: 'Studios, craft rooms',
+    estimatedSupply: 600,
+    discoveredDate: '2025.04.05',
+    battleStats: { attack: 50, defense: 55, speed: 80, special: 70 }
+  },
+  {
+    id: '005',
+    slug: 'dogejira',
+    name: 'Dogejira',
+    type: 'Vinyl',
+    rarity: 'Common',
+    element: 'Meme Wind',
+    power: 'Viral Charm',
+    description: 'Dogejira is a Shiba faced dino whose grin brightens every meme market.',
+    lore: 'He speaks in simple phrases and spreads contagious laughter through every network breeze.',
+    nftImage: '/images/dogejira.png',
+    physicalImage: '/images/dogejira-physical.png',
+    backgroundColor: 'bg-yellow-100',
+    origin: 'Komorebi',
+    abilities: ['Laughter Wave', 'Good Vibe Gust', 'Emoji Echo'],
+    personalityTraits: ['Cheerful', 'Optimistic', 'Loyal'],
+    weaknesses: ['Drops focus when patted on the head', 'Confused by serious debates'],
+    habitat: 'Internet cafes, meme gardens',
+    estimatedSupply: 800,
+    discoveredDate: '2025.05.12',
+    battleStats: { attack: 55, defense: 50, speed: 85, special: 60 }
+  },
+  {
+    id: '006',
+    slug: 'sushi',
+    name: 'Sushi',
+    type: 'Plush',
+    rarity: 'Common',
+    element: 'Tide',
+    power: 'Picnic Aura',
+    description: 'An anthropomorphic nigiri plush with a plump prawn hat who is always playful.',
+    lore: 'Sushi invites friends to share snacks and code beneath sunny skies and spreads picnic vibes wherever it rolls.',
+    nftImage: '/images/sushi.png',
+    physicalImage: '/images/sushi-physical.png',
+    backgroundColor: 'bg-teal-100',
+    origin: 'Komorebi',
+    abilities: ['Rolling Waddle', 'Flavor Burst', 'Tide Tune'],
+    personalityTraits: ['Friendly', 'Playful', 'Easygoing'],
+    weaknesses: ['Gets soggy in heavy rain', 'Distracted by soy sauce'],
+    habitat: 'Parks, riversides',
+    estimatedSupply: 700,
+    discoveredDate: '2025.06.18',
+    battleStats: { attack: 45, defense: 60, speed: 70, special: 55 }
+  },
+  {
+    id: '007',
+    slug: 'mr-wasabi',
+    name: 'Mr Wasabi',
+    type: 'Plush',
+    rarity: 'Rare',
+    element: 'Spice',
+    power: 'Zing Burst',
+    description: 'A small emerald sphere with a zingy sense of humour.',
+    lore: 'Mr Wasabi keeps projects agile and conversations lively with flashes of spice that wake tired minds.',
+    nftImage: '/images/mr-wasabi.png',
+    physicalImage: '/images/mr-wasabi-physical.png',
+    backgroundColor: 'bg-green-200',
+    origin: 'Komorebi',
+    abilities: ['Stealth Dash', 'Flavor Shock', 'Rapid Remix'],
+    personalityTraits: ['Energetic', 'Mischievous', 'Loyal'],
+    weaknesses: ['Overreacts to citrus scents', 'Fizzles in extreme cold'],
+    habitat: 'Kitchen counters, hackathons',
+    estimatedSupply: 400,
+    discoveredDate: '2025.07.22',
+    battleStats: { attack: 70, defense: 55, speed: 90, special: 75 }
+  },
+  {
+    id: '008',
+    slug: 'sacramento-kings',
+    name: 'Sacramento Kings',
+    type: 'Vinyl',
+    rarity: 'Rare',
+    element: 'Court',
+    power: 'Hoop Leap',
+    description: 'A Kaiju produced in collaboration with the Sacramento Kings basketball team who loves friendly games.',
+    lore: 'This court loving giant brings people together through sport and reminds them that teamwork is the true victory.',
+    nftImage: '/images/sacramento-kings.png',
+    physicalImage: '/images/sacramento-kings-physical.png',
+    backgroundColor: 'bg-purple-300',
+    origin: 'Komorebi',
+    abilities: ['Team Rally', 'Three Point Pulse', 'Arena Echo'],
+    personalityTraits: ['Competitive', 'Encouraging', 'Fair'],
+    weaknesses: ['Deflates when seats are empty', 'Distracted by squeaky shoes'],
+    habitat: 'Basketball courts',
+    estimatedSupply: 300,
+    discoveredDate: '2025.08.15',
+    battleStats: { attack: 80, defense: 70, speed: 75, special: 65 }
+  },
+  {
+    id: '009',
+    slug: 'meme',
+    name: 'Meme',
+    type: 'Vinyl',
+    rarity: 'Common',
+    element: 'Tropic',
+    power: 'Pineapple Breeze',
+    description: 'A beach loving Kaiju created with the MEME project and marked with a pineapple emblem.',
+    lore: 'Meme wafts fruit scented air along the shore and builds sand castles from bright ideas.',
+    nftImage: '/images/meme.png',
+    physicalImage: '/images/meme-physical.png',
+    backgroundColor: 'bg-amber-200',
+    origin: 'Komorebi',
+    abilities: ['Idea Sandcastle', 'Beach Boogie', 'Sun Block Shield'],
+    personalityTraits: ['Relaxed', 'Imaginative', 'Cheery'],
+    weaknesses: ['Wilts in cold seasons', 'Slips on seaweed'],
+    habitat: 'Beaches, boardwalks',
+    estimatedSupply: 500,
+    discoveredDate: '2025.09.09',
+    battleStats: { attack: 60, defense: 55, speed: 80, special: 60 }
+  },
+  {
+    id: '010',
+    slug: 'diamond-hands',
+    name: 'Diamond Hands',
+    type: 'Vinyl',
+    rarity: 'Ultra Rare',
+    element: 'Crystal',
+    power: 'Steady Grip',
+    description: 'A classy azure dino who loves sneakers and fine timepieces.',
+    lore: 'Diamond Hands shows that style holds firm even when markets wobble and trends swirl.',
+    nftImage: '/images/diamond-hands.png',
+    physicalImage: '/images/diamond-hands-physical.png',
+    backgroundColor: 'bg-cyan-200',
+    origin: 'Komorebi',
+    abilities: ['Style Flex', 'Price Freeze', 'Timekeeper Pulse'],
+    personalityTraits: ['Steadfast', 'Stylish', 'Confident'],
+    weaknesses: ['Glints attract magpies', 'Heavy limbs hinder quick turns'],
+    habitat: 'Fashion districts, trading floors',
+    estimatedSupply: 250,
+    discoveredDate: '2025.10.18',
+    battleStats: { attack: 85, defense: 95, speed: 45, special: 80 }
+  },
+  {
+    id: '011',
+    slug: 'spangle',
+    name: 'Spangle',
+    type: 'Vinyl',
+    rarity: 'Rare',
+    element: 'Starfire',
+    power: 'Firework Cheer',
+    description: 'An all American dino with stars and stripes who lights July skies.',
+    lore: 'Spangle hosts cookouts and teaches neighbours to trade recipes and bright ideas beneath summer fireworks.',
+    nftImage: '/images/spangle.png',
+    physicalImage: '/images/spangle-physical.png',
+    backgroundColor: 'bg-red-200',
+    origin: 'Komorebi',
+    abilities: ['Grill Master', 'Patriotic Pulse', 'Sky Paint'],
+    personalityTraits: ['Festive', 'Hospitable', 'Energetic'],
+    weaknesses: ['Wind can fizzle sparks', 'Feels homesick outside July'],
+    habitat: 'Backyards, open skies',
+    estimatedSupply: 300,
+    discoveredDate: '2025.11.04',
+    battleStats: { attack: 75, defense: 70, speed: 70, special: 75 }
+  },
+  {
+    id: '012',
+    slug: 'halloween-celebration',
+    name: 'Halloween Celebration',
+    type: 'Vinyl',
+    rarity: 'Rare',
+    element: 'Autumn Flame',
+    power: 'Lantern Glow',
+    description: 'A pumpkin bellied Kaiju who guides gentle Halloween gatherings.',
+    lore: 'Under crisp leaves this Kaiju helps children craft costumes from recycled code and lights every jack o lantern with a gentle whisper.',
+    nftImage: '/images/halloween-celebration.png',
+    physicalImage: '/images/halloween-celebration-physical.png',
+    backgroundColor: 'bg-orange-300',
+    origin: 'Komorebi',
+    abilities: ['Costume Craft', 'Harvest Hug', 'Spiced Candle Scent'],
+    personalityTraits: ['Whimsical', 'Caring', 'Slightly spooky'],
+    weaknesses: ['Fades at first frost', 'Startles at sudden flashlights'],
+    habitat: 'Porches, town squares',
+    estimatedSupply: 280,
+    discoveredDate: '2025.10.31',
+    battleStats: { attack: 65, defense: 60, speed: 60, special: 85 }
+  },
+  {
+    id: '013',
+    slug: 'pretty-fine-plushies',
+    name: 'Pretty Fine Plushies',
+    type: 'Plush',
+    rarity: 'Legendary',
+    element: 'Comfort',
+    power: 'Dream Soothe',
+    description: 'A cuddly plush version of Genesis designed for gentle reassurance.',
+    lore: 'Perfect for nights when digital dreams feel jittery, this soft guardian brings warm hugs and calm thoughts.',
+    nftImage: '/images/pretty-fine-plushies.png',
+    physicalImage: '/images/pretty-fine-plushies-physical.png',
+    backgroundColor: 'bg-pink-100',
+    origin: 'Komorebi',
+    abilities: ['Warm Hug', 'Silent Lullaby', 'Peace Field'],
+    personalityTraits: ['Nurturing', 'Calming', 'Quiet'],
+    weaknesses: ['Collects lint easily', 'Dozes off during action films'],
+    habitat: 'Bedrooms, quiet corners',
+    estimatedSupply: 150,
+    discoveredDate: '2026.01.05',
+    battleStats: { attack: 40, defense: 65, speed: 40, special: 90 }
+  },
+  {
+    id: '014',
+    slug: 'knownorigin',
+    name: 'KnownOrigin',
+    type: 'Vinyl',
+    rarity: 'Legendary',
+    element: 'Heritage',
+    power: 'Provenance Shield',
+    description: 'A one of a kind Kaiju honouring the acquisition of KnownOrigin by eBay.',
+    lore: 'This keeper of stories safeguards the tale of creativity meeting commerce and encourages everyone to honour their origins.',
+    nftImage: '/images/knownorigin.png',
+    physicalImage: '/images/knownorigin-physical.png',
+    backgroundColor: 'bg-violet-200',
+    origin: 'Komorebi',
+    abilities: ['Marketplace Insight', 'Authenticity Pulse', 'History Echo'],
+    personalityTraits: ['Wise', 'Proud', 'Reflective'],
+    weaknesses: ['Overloaded by counterfeit chatter', 'Grows somber in empty galleries'],
+    habitat: 'Galleries, marketplaces',
+    estimatedSupply: 1,
+    discoveredDate: '2026.02.12',
+    battleStats: { attack: 80, defense: 85, speed: 55, special: 95 }
+  },
+  {
+    id: '015',
+    slug: 'meebit',
+    name: 'Meebit',
+    type: 'Vinyl',
+    rarity: 'Ultra Rare',
+    element: 'Voxel',
+    power: 'Block Shift',
+    description: 'A prototype Kaiju inspired by Meebit avatars.',
+    lore: 'Meebit explores blocky realms and experiments with layouts for future generations.',
+    nftImage: '/images/meebit.png',
+    physicalImage: '/images/meebit-physical.png',
+    backgroundColor: 'bg-gray-200',
+    origin: 'Komorebi',
+    abilities: ['Voxel Jump', 'Pixel Repair', 'Grid Flex'],
+    personalityTraits: ['Experimental', 'Energetic', 'Adaptive'],
+    weaknesses: ['Blurs in high resolution', 'Snaps under curved pressure'],
+    habitat: 'Digital dioramas, test servers',
+    estimatedSupply: 1,
+    discoveredDate: '2026.03.08',
+    battleStats: { attack: 70, defense: 60, speed: 85, special: 80 }
+  },
+  {
+    id: '016',
+    slug: 'aavegotchi',
+    name: 'Aavegotchi',
+    type: 'Vinyl',
+    rarity: 'Ultra Rare',
+    element: 'Spectral Finance',
+    power: 'Liquidity Drift',
+    description: 'A one of one prototype Kaiju that bridges playful ghosts and defi dreams.',
+    lore: 'Carrying the echo of pixel ghosts, Aavegotchi floats through markets and lends courage while yielding smiles.',
+    nftImage: '/images/aavegotchi.png',
+    physicalImage: '/images/aavegotchi-physical.png',
+    backgroundColor: 'bg-purple-300',
+    origin: 'Komorebi',
+    abilities: ['Yield Chant', 'Collateral Cloak', 'Friendly Haunt'],
+    personalityTraits: ['Friendly', 'Fickle', 'Resourceful'],
+    weaknesses: ['Dissolves in bearish gloom', 'Loses shape without community'],
+    habitat: 'Defi dashboards, pixel graveyards',
+    estimatedSupply: 1,
+    discoveredDate: '2026.04.14',
+    battleStats: { attack: 75, defense: 70, speed: 80, special: 90 }
   }
-  
-  export const getBatchById = (id: string): KaijuBatch | undefined => {
-    return KAIJU_BATCHES.find(batch => batch.id === id)
-  }
-  
-  export const getBatchesByType = (type: 'Plush' | 'Vinyl'): KaijuBatch[] => {
-    return KAIJU_BATCHES.filter(batch => batch.type === type)
-  }
-  
-  export const getBatchesByRarity = (rarity: string): KaijuBatch[] => {
-    return KAIJU_BATCHES.filter(batch => batch.rarity === rarity)
-  }
-  
-  export const getTotalEstimatedSupply = (): number => {
-    return KAIJU_BATCHES.reduce((total, batch) => total + batch.estimatedSupply, 0)
-  }
+]
+
+// Helper functions
+export const getBatchBySlug = (slug: string): KaijuBatch | undefined => {
+  return KAIJU_BATCHES.find(batch => batch.slug === slug)
+}
+
+export const getBatchById = (id: string): KaijuBatch | undefined => {
+  return KAIJU_BATCHES.find(batch => batch.id === id)
+}
+
+export const getBatchesByType = (type: 'Plush' | 'Vinyl'): KaijuBatch[] => {
+  return KAIJU_BATCHES.filter(batch => batch.type === type)
+}
+
+export const getBatchesByRarity = (rarity: KaijuBatch['rarity']): KaijuBatch[] => {
+  return KAIJU_BATCHES.filter(batch => batch.rarity === rarity)
+}
+
+export const getTotalEstimatedSupply = (): number => {
+  return KAIJU_BATCHES.reduce((total, batch) => total + batch.estimatedSupply, 0)
+}
