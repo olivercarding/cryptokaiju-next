@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Heart, Shield, Zap, Star } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useKaijuDetails } from '@/lib/hooks/useCryptoKaiju'
+import { useBlockchainKaiju } from '@/lib/hooks/useBlockchainCryptoKaiju'
 
 interface KaijuDetailsPageProps {
   params: {
@@ -76,7 +76,7 @@ const StatBar = ({
 }
 
 export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
-  const { kaiju, openSeaData, isLoading, error } = useKaijuDetails(params.tokenId)
+  const { kaiju, openSeaData, isLoading, error } = useBlockchainKaiju(params.tokenId)
   const [activeTab, setActiveTab] = useState<'overview' | 'traits' | 'history'>('overview')
   const [imageError, setImageError] = useState(false)
 
@@ -114,15 +114,29 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
     
     // Fall back to IPFS attributes
     if (traits.length === 0 && kaiju?.ipfsData?.attributes) {
-      Object.entries(kaiju.ipfsData.attributes).forEach(([key, value]) => {
-        if (value && !['dob', 'nfc'].includes(key)) {
-          traits.push({
-            trait_type: key,
-            value: value.toString(),
-            rarity: 0
-          })
-        }
-      })
+      if (Array.isArray(kaiju.ipfsData.attributes)) {
+        // Handle array format
+        kaiju.ipfsData.attributes.forEach((attr: any) => {
+          if (attr.trait_type && attr.value && !['dob', 'nfc'].includes(attr.trait_type.toLowerCase())) {
+            traits.push({
+              trait_type: attr.trait_type,
+              value: attr.value.toString(),
+              rarity: 0
+            })
+          }
+        })
+      } else if (typeof kaiju.ipfsData.attributes === 'object') {
+        // Handle object format
+        Object.entries(kaiju.ipfsData.attributes).forEach(([key, value]) => {
+          if (value && !['dob', 'nfc'].includes(key)) {
+            traits.push({
+              trait_type: key,
+              value: value.toString(),
+              rarity: 0
+            })
+          }
+        })
+      }
     }
     
     return traits
@@ -280,6 +294,11 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
                   {kaiju.nfcId && (
                     <span className="text-white/60 font-mono text-sm">NFC: {kaiju.nfcId}</span>
                   )}
+                  {kaiju.batch && (
+                    <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">
+                      Batch: {kaiju.batch}
+                    </span>
+                  )}
                 </div>
                 
                 <h1 className="text-5xl font-black text-white mb-2">
@@ -350,7 +369,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
                 )}
                 
                 <a
-                  href={`https://etherscan.io/token/0x0aa42b44ce63e4ba6c9b2c4a7bb7dd6d9f1b3f4a?a=${kaiju.tokenId}`}
+                  href={`https://etherscan.io/token/0x102c527714ab7e652630cac7a30abb482b041fd0?a=${kaiju.tokenId}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white font-bold px-6 py-3 rounded-xl hover:bg-white/20 transition-colors"
@@ -413,7 +432,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div className="flex justify-between">
                       <span className="text-white/60 font-mono">Contract:</span>
-                      <span className="text-white">0x0aa...3f4a</span>
+                      <span className="text-white">0x102c...1fd0</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-white/60 font-mono">Token Standard:</span>
@@ -427,7 +446,7 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
                       <div className="flex justify-between">
                         <span className="text-white/60 font-mono">Metadata:</span>
                         <a 
-                          href={`https://cryptokaiju.mypinata.cloud/ipfs/${kaiju.tokenURI}`}
+                          href={kaiju.tokenURI}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-kaiju-pink hover:text-white transition-colors"
@@ -511,6 +530,12 @@ export default function KaijuDetailsPage({ params }: KaijuDetailsPageProps) {
                       <span className="text-white/60 font-mono">Status:</span>
                       <span className="text-green-400">Active</span>
                     </div>
+                    {kaiju.batch && (
+                      <div className="flex justify-between">
+                        <span className="text-white/60 font-mono">Batch:</span>
+                        <span className="text-kaiju-pink">{kaiju.batch}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>

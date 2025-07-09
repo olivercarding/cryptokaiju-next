@@ -29,6 +29,7 @@ export interface KaijuNFT {
   ipfsData?: any
   openSeaData?: any
   lastUpdated?: string
+  birthDate?: number
   _meta?: {
     source: string
     fetchedAt: string
@@ -42,8 +43,10 @@ export interface OpenSeaAsset {
   name: string
   description: string
   image_url: string
+  display_image_url?: string
   animation_url?: string
   metadata_url?: string
+  opensea_url?: string
   traits: Array<{
     trait_type: string
     value: string | number
@@ -59,6 +62,10 @@ export interface OpenSeaAsset {
   }
   creator?: string
   owner?: string
+  rarity?: {
+    rank: number
+    score: number
+  }
 }
 
 export interface CollectionStats {
@@ -261,9 +268,28 @@ class CryptoKaijuApiService {
       const data = await response.json()
       
       if (data.nft) {
+        // Ensure the data has the required properties
+        const openSeaAsset: OpenSeaAsset = {
+          identifier: data.nft.identifier || tokenId,
+          name: data.nft.name || '',
+          description: data.nft.description || '',
+          image_url: data.nft.image_url || '',
+          display_image_url: data.nft.display_image_url || data.nft.image_url || '',
+          animation_url: data.nft.animation_url,
+          metadata_url: data.nft.metadata_url,
+          opensea_url: data.nft.opensea_url || `https://opensea.io/assets/ethereum/${CRYPTO_KAIJU_CONTRACT_ADDRESS}/${tokenId}`,
+          traits: data.nft.traits || [],
+          collection: data.nft.collection || 'cryptokaiju',
+          contract: data.nft.contract || CRYPTO_KAIJU_CONTRACT_ADDRESS,
+          last_sale: data.nft.last_sale,
+          creator: data.nft.creator,
+          owner: data.nft.owner,
+          rarity: data.nft.rarity
+        }
+        
         console.log(`✅ OpenSea data found for token ${tokenId}`)
-        this.setCache(cacheKey, data.nft)
-        return data.nft
+        this.setCache(cacheKey, openSeaAsset)
+        return openSeaAsset
       }
 
       return null
@@ -370,7 +396,8 @@ class CryptoKaijuApiService {
                        ipfsData?.description || 
                        'A mysterious and powerful Kaiju from the blockchain realm.'
                        
-    const image = openSeaNFT.image_url || 
+    const image = openSeaNFT.display_image_url || 
+                  openSeaNFT.image_url || 
                   openSeaNFT.image || 
                   ipfsData?.image || 
                   '/images/placeholder-kaiju.png'
