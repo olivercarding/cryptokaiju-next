@@ -439,7 +439,8 @@ class BlockchainCryptoKaijuService {
           // 🔍 ENHANCED DEBUG: Show sample contracts on this page
           if (data.nfts.length > 0) {
             const contractCounts = new Map<string, number>()
-            data.nfts.forEach(nft => {
+            // FIXED: Add explicit type annotation for nft parameter
+            data.nfts.forEach((nft: OpenSeaAccountNFT) => {
               const contract = nft.contract?.toLowerCase() || 'unknown'
               contractCounts.set(contract, (contractCounts.get(contract) || 0) + 1)
             })
@@ -457,14 +458,14 @@ class BlockchainCryptoKaijuService {
           
           // Look for CryptoKaiju NFTs on this page
           const pageKaijus = data.nfts
-            .filter(nft => {
+            .filter((nft: OpenSeaAccountNFT) => {
               const isCorrectContract = nft.contract?.toLowerCase() === KAIJU_NFT_ADDRESS.toLowerCase()
               if (isCorrectContract) {
                 console.log(`✅ FOUND CryptoKaiju NFT: ${nft.name || nft.identifier} (Contract: ${nft.contract})`)
               }
               return isCorrectContract
             })
-            .map(nft => this.convertOpenSeaNFTToKaiju(nft, address))
+            .map((nft: OpenSeaAccountNFT) => this.convertOpenSeaNFTToKaiju(nft, address))
           
           if (pageKaijus.length > 0) {
             console.log(`🎉 Page ${pageCount + 1}: Found ${pageKaijus.length} CryptoKaiju NFTs!`)
