@@ -77,7 +77,6 @@ export default function Header() {
     { label: 'How It Works', href: '/#how' },
     { label: 'Designs', href: '/#mysteries' },
     { label: 'Kaijudex', href: '/kaijudex' },
-    { label: 'Community', href: '/#community' },
   ]
 
   const accountItems = [
