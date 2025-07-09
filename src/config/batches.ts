@@ -1,4 +1,4 @@
-// src/config/batches.ts
+// src/config/batches.ts - UPDATED WITHOUT ABILITIES AND BATTLE STATS
 export interface KaijuBatch {
   id: string
   slug: string
@@ -17,20 +17,11 @@ export interface KaijuBatch {
 
   // Character details
   origin: string
-  abilities: string[]
   habitat: string
 
   // Collection stats (approximate)
   estimatedSupply: number
   discoveredDate: string
-
-  // Battle stats for fun
-  battleStats: {
-    attack: number
-    defense: number
-    speed: number
-    special: number
-  }
 }
 
 export const KAIJU_BATCHES: KaijuBatch[] = [
@@ -48,11 +39,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/genesis-physical.png',
     backgroundColor: 'bg-orange-200',
     origin: 'Komorebi',
-    abilities: ['Ignite Innovation', 'Calm Circuits', 'Seedling Shield'],
     habitat: 'Workshops and learning circles',
     estimatedSupply: 300,
-    discoveredDate: '2025.01.01',
-    battleStats: { attack: 70, defense: 80, speed: 65, special: 90 }
+    discoveredDate: '2025.01.01'
   },
   // 002 Jaiantokoin
   {
@@ -68,11 +57,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/jaiantokoin-physical.png',
     backgroundColor: 'bg-brown-200',
     origin: 'Komorebi',
-    abilities: ['Giant Embrace', 'Load Bearing Cheer', 'Community Rally'],
     habitat: 'Open plazas and construction sites',
     estimatedSupply: 500,
-    discoveredDate: '2025.02.01',
-    battleStats: { attack: 60, defense: 90, speed: 40, special: 70 }
+    discoveredDate: '2025.02.01'
   },
   // 003 Spookymon
   {
@@ -88,11 +75,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/spookymon-physical.png',
     backgroundColor: 'bg-indigo-100',
     origin: 'Komorebi',
-    abilities: ['Story Spinner', 'Moonlit Lantern', 'Comforting Chill'],
     habitat: 'Quiet rooftops and campfires',
     estimatedSupply: 300,
-    discoveredDate: '2025.03.13',
-    battleStats: { attack: 55, defense: 65, speed: 75, special: 85 }
+    discoveredDate: '2025.03.13'
   },
   // 004 CryptoKitty
   {
@@ -108,11 +93,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/cryptokitty-physical.png',
     backgroundColor: 'bg-blue-100',
     origin: 'Komorebi',
-    abilities: ['Soothing Purr', 'Canvas Leap', 'Inspiration Spark'],
     habitat: 'Studios and craft rooms',
     estimatedSupply: 600,
-    discoveredDate: '2025.04.05',
-    battleStats: { attack: 50, defense: 55, speed: 80, special: 70 }
+    discoveredDate: '2025.04.05'
   },
   // 005 Dogejira
   {
@@ -128,11 +111,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/dogejira-physical.png',
     backgroundColor: 'bg-yellow-100',
     origin: 'Komorebi',
-    abilities: ['Laughter Wave', 'Good Vibe Gust', 'Emoji Echo'],
     habitat: 'Internet cafés and meme gardens',
     estimatedSupply: 800,
-    discoveredDate: '2025.05.12',
-    battleStats: { attack: 55, defense: 50, speed: 85, special: 60 }
+    discoveredDate: '2025.05.12'
   },
   // 006 Sushi
   {
@@ -148,11 +129,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/sushi-physical.png',
     backgroundColor: 'bg-teal-100',
     origin: 'Komorebi',
-    abilities: ['Rolling Waddle', 'Flavor Burst', 'Tide Tune'],
     habitat: 'Parks and riversides',
     estimatedSupply: 700,
-    discoveredDate: '2025.06.18',
-    battleStats: { attack: 45, defense: 60, speed: 70, special: 55 }
+    discoveredDate: '2025.06.18'
   },
   // 007 Mr Wasabi
   {
@@ -168,11 +147,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/mr-wasabi-physical.png',
     backgroundColor: 'bg-green-200',
     origin: 'Komorebi',
-    abilities: ['Stealth Dash', 'Flavor Shock', 'Rapid Remix'],
     habitat: 'Kitchen counters and hackathons',
     estimatedSupply: 400,
-    discoveredDate: '2025.07.22',
-    battleStats: { attack: 70, defense: 55, speed: 90, special: 75 }
+    discoveredDate: '2025.07.22'
   },
   // 008 Sacramento Kings
   {
@@ -188,11 +165,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/sacramento-kings-physical.png',
     backgroundColor: 'bg-purple-300',
     origin: 'Komorebi',
-    abilities: ['Team Rally', 'Three Point Pulse', 'Arena Echo'],
     habitat: 'Basketball arenas and city blacktops',
     estimatedSupply: 300,
-    discoveredDate: '2025.08.15',
-    battleStats: { attack: 80, defense: 70, speed: 75, special: 65 }
+    discoveredDate: '2025.08.15'
   },
   // 009 Meme
   {
@@ -208,11 +183,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/meme-physical.png',
     backgroundColor: 'bg-amber-200',
     origin: 'Komorebi',
-    abilities: ['Idea Sandcastle', 'Beach Boogie', 'Sun Block Shield'],
     habitat: 'Beaches and boardwalks',
     estimatedSupply: 500,
-    discoveredDate: '2025.09.09',
-    battleStats: { attack: 60, defense: 55, speed: 80, special: 60 }
+    discoveredDate: '2025.09.09'
   },
   // 010 Diamond Hands
   {
@@ -228,11 +201,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/diamond-hands-physical.png',
     backgroundColor: 'bg-cyan-200',
     origin: 'Komorebi',
-    abilities: ['Style Flex', 'Price Freeze', 'Timekeeper Pulse'],
     habitat: 'Skyline apartments and music venues of coastal Takeshima',
     estimatedSupply: 250,
-    discoveredDate: '2025.10.18',
-    battleStats: { attack: 85, defense: 95, speed: 45, special: 80 }
+    discoveredDate: '2025.10.18'
   },
   // 011 Spangle
   {
@@ -248,11 +219,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/spangle-physical.png',
     backgroundColor: 'bg-red-200',
     origin: 'Komorebi',
-    abilities: ['Grill Master', 'Patriotic Pulse', 'Sky Paint'],
     habitat: 'Backyards and open skies',
     estimatedSupply: 300,
-    discoveredDate: '2025.11.04',
-    battleStats: { attack: 75, defense: 70, speed: 70, special: 75 }
+    discoveredDate: '2025.11.04'
   },
   // 012 Halloween Celebration
   {
@@ -268,11 +237,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/halloween-celebration-physical.png',
     backgroundColor: 'bg-orange-300',
     origin: 'Komorebi',
-    abilities: ['Costume Craft', 'Harvest Hug', 'Spiced Candle Scent'],
     habitat: 'Porches and town squares',
     estimatedSupply: 280,
-    discoveredDate: '2025.10.31',
-    battleStats: { attack: 65, defense: 60, speed: 60, special: 85 }
+    discoveredDate: '2025.10.31'
   },
   // 013 Pretty Fine Plushies
   {
@@ -288,11 +255,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/pretty-fine-plushies-physical.png',
     backgroundColor: 'bg-pink-100',
     origin: 'Komorebi',
-    abilities: ['Warm Hug', 'Silent Lullaby', 'Peace Field'],
     habitat: 'Bedrooms and arts and craft studios',
     estimatedSupply: 150,
-    discoveredDate: '2026.01.05',
-    battleStats: { attack: 40, defense: 65, speed: 40, special: 90 }
+    discoveredDate: '2026.01.05'
   },
   // 014 KnownOrigin
   {
@@ -308,11 +273,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/knownorigin-physical.png',
     backgroundColor: 'bg-violet-200',
     origin: 'Komorebi',
-    abilities: ['Marketplace Insight', 'Authenticity Pulse', 'History Echo'],
     habitat: 'Galleries and marketplaces',
     estimatedSupply: 1,
-    discoveredDate: '2026.02.12',
-    battleStats: { attack: 80, defense: 85, speed: 55, special: 95 }
+    discoveredDate: '2026.02.12'
   },
   // 015 Meebit
   {
@@ -328,11 +291,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/meebit-physical.png',
     backgroundColor: 'bg-gray-200',
     origin: 'Komorebi',
-    abilities: ['Voxel Jump', 'Pixel Repair', 'Grid Flex'],
     habitat: 'Digital dioramas and test servers',
     estimatedSupply: 1,
-    discoveredDate: '2026.03.08',
-    battleStats: { attack: 70, defense: 60, speed: 85, special: 80 }
+    discoveredDate: '2026.03.08'
   },
   // 016 Aavegotchi
   {
@@ -348,11 +309,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/aavegotchi-physical.png',
     backgroundColor: 'bg-purple-300',
     origin: 'Komorebi',
-    abilities: ['Yield Chant', 'Collateral Cloak', 'Friendly Haunt'],
     habitat: 'Defi dashboards and pixel graveyards',
     estimatedSupply: 1,
-    discoveredDate: '2026.04.14',
-    battleStats: { attack: 75, defense: 70, speed: 80, special: 90 }
+    discoveredDate: '2026.04.14'
   },
   // 017 Uri
   {
@@ -368,11 +327,9 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/uri-physical.png',
     backgroundColor: 'bg-indigo-200',
     origin: 'Komorebi',
-    abilities: ['Phase Step', 'Forest Whisper', 'Ethereal Light'],
     habitat: 'Haunted houses and Virdara forest paths',
     estimatedSupply: 125,
-    discoveredDate: '2026.05.30',
-    battleStats: { attack: 65, defense: 80, speed: 95, special: 100 }
+    discoveredDate: '2026.05.30'
   }
 ]
 
