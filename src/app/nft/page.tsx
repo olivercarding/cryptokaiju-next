@@ -1,18 +1,14 @@
-// src/app/nft/page.tsx - COMPLETE WORKING VERSION
+// src/app/nft/page.tsx - FIXED VERSION WITHOUT TEST PANELS
 'use client'
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database, Zap, Settings, AlertCircle, Package } from 'lucide-react'
+import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database, Zap, AlertCircle, Package } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import dynamic from 'next/dynamic'
 import Header from '@/components/layout/Header'
-import { useBlockchainNFTSearch, useBlockchainTest } from '@/lib/hooks/useBlockchainCryptoKaiju'
+import { useBlockchainNFTSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
 import type { KaijuNFT } from '@/lib/services/BlockchainCryptoKaijuService'
-
-// Import the test component
-const NFCConversionTest = dynamic(() => import('@/components/dev/NFCConversionTest'), { ssr: false })
 
 // Enhanced Image Component with fallbacks
 const KaijuImage = ({ 
@@ -382,11 +378,8 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
 
 export default function NFTLookupPage() {
   const { results, isLoading, error, search, clear } = useBlockchainNFTSearch()
-  const { runTest, isTestRunning, testResults } = useBlockchainTest()
   const [searchQuery, setSearchQuery] = useState('')
   const [hasSearched, setHasSearched] = useState(false)
-  const [showTest, setShowTest] = useState(false)
-  const [showConversion, setShowConversion] = useState(false)
 
   // Get the first result (since search typically returns one result)
   const nft = results.length > 0 ? results[0] : null
@@ -501,81 +494,8 @@ export default function NFTLookupPage() {
                 Find your CryptoKaiju NFT with direct blockchain search
               </p>
             </motion.div>
-
-            {/* Test Buttons */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-center mb-8 space-y-2"
-            >
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={() => setShowTest(!showTest)}
-                  className="text-white/70 hover:text-kaiju-pink text-sm font-medium transition-colors"
-                >
-                  🧪 Test Panel
-                </button>
-                <button
-                  onClick={() => setShowConversion(!showConversion)}
-                  className="text-white/70 hover:text-blue-400 text-sm font-medium transition-colors"
-                >
-                  <Settings className="w-4 h-4 inline mr-1" />
-                  NFC Test
-                </button>
-              </div>
-            </motion.div>
           </div>
         </section>
-
-        {/* Test Panels */}
-        <AnimatePresence>
-          {showTest && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-gray-50 px-6 py-8"
-            >
-              <div className="max-w-4xl mx-auto bg-gray-900 text-white rounded-xl p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold">Blockchain Service Test</h3>
-                  <button
-                    onClick={runTest}
-                    disabled={isTestRunning}
-                    className="bg-green-600 hover:bg-green-700 disabled:opacity-50 px-4 py-2 rounded-lg font-medium transition-colors"
-                  >
-                    {isTestRunning ? 'Testing...' : 'Run Test'}
-                  </button>
-                </div>
-                <div className="bg-gray-800 rounded-lg p-4 max-h-60 overflow-y-auto">
-                  {testResults.length > 0 ? (
-                    testResults.map((log, index) => (
-                      <div key={`log-${index}`} className="text-sm font-mono mb-1">
-                        {log}
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-gray-400 text-sm">Click "Run Test" to test blockchain connectivity</div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {showConversion && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bg-gray-50 px-6 py-8"
-            >
-              <div className="max-w-7xl mx-auto">
-                <NFCConversionTest />
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         {/* Light Content Section */}
         <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">

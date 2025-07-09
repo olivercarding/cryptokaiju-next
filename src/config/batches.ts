@@ -39,8 +39,8 @@ export interface KaijuBatch {
   export const KAIJU_BATCHES: KaijuBatch[] = [
     {
       id: '001',
-      slug: 'uri',
-      name: 'Uri',
+      slug: 'genesis',
+      name: 'Genesis',
       type: 'Vinyl',
       rarity: 'Rare',
       element: 'Ghost',
@@ -56,8 +56,8 @@ export interface KaijuBatch {
       personalityTraits: ['Mysterious and enigmatic', 'Protective of smaller entities', 'Drawn to sources of spiritual energy'],
       weaknesses: ['Vulnerable to iron-based materials', 'Loses power in areas of high electromagnetic interference'],
       habitat: 'Ethereal Plane intersections, ancient temples, areas of high spiritual activity',
-      estimatedSupply: 500,
-      discoveredDate: '2024.03.15',
+      estimatedSupply: 125,
+      discoveredDate: '2018.11.27',
       battleStats: { attack: 65, defense: 80, speed: 95, special: 100 }
     },
     {
