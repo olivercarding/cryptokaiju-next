@@ -64,8 +64,8 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
   // 003 Spookymon
   {
     id: '003',
-    slug: 'spookymon',
-    name: 'Spookymon',
+    slug: 'spooky',
+    name: 'Spooky',
     type: 'Vinyl',
     rarity: 'Rare',
     element: 'Moonlight',
@@ -179,7 +179,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     element: 'Tropic',
     power: 'Pineapple Breeze',
     description: 'Made with the MEME project and marked by a pineapple crest, Meme sends fruit scented breezes across the shore and builds sandcastles from bright ideas.',
-    nftImage: '/images/meme.png',
+    nftImage: '/images/meme-NFT.png',
     physicalImage: '/images/meme-physical.png',
     backgroundColor: 'bg-amber-200',
     origin: 'Komorebi',
