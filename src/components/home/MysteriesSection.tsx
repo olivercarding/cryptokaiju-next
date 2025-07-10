@@ -8,7 +8,7 @@ import { ChevronRight, Sparkles } from 'lucide-react'
 interface Character {
   name: string
   type: string
-  essence: string  // UPDATED: Changed from 'power' to 'essence'
+  essence: string  // UPDATED: Changed from 'powers' to 'essence'
   description: string
   nftImage: string
   physicalImage: string
