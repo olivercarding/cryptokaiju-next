@@ -16,7 +16,7 @@ import { useMintPrice } from '@/lib/hooks/useMintPrice'
 interface HeroSectionProps {
   mysteryDesigns?: Array<{
     type: string
-    power: string
+    essence: string  // UPDATED: Changed from 'power' to 'essence'
   }>
   stats?: {
     boxesLeft: number
@@ -46,10 +46,10 @@ interface ContractClaim {
 
 export default function HeroSection({ 
   mysteryDesigns = [
-    { type: 'Plush', power: 'Glows in the dark' },
-    { type: 'Vinyl', power: 'Water manipulation' },
-    { type: 'Plush', power: 'Fire breathing' },
-    { type: 'Vinyl', power: 'Eternal rebirth' },
+    { type: 'Plush', essence: 'Glows in the dark' },  // UPDATED: Changed from 'power' to 'essence'
+    { type: 'Vinyl', essence: 'Water manipulation' },
+    { type: 'Plush', essence: 'Fire breathing' },
+    { type: 'Vinyl', essence: 'Eternal rebirth' },
   ],
   stats = {
     boxesLeft: 427
