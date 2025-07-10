@@ -10,7 +10,7 @@ export interface KaijuBatch {
   description: string
 
   // Visual assets
-  nftImage: string
+  nftImage?: string // FIXED: Made optional since some batches don't have NFT images
   physicalImage: string
   conceptArt?: string[]
   backgroundColor: string
@@ -259,7 +259,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     estimatedSupply: 150,
     discoveredDate: '2026.01.05'
   },
-  // 014 KnownOrigin
+  // 014 KnownOrigin - NO NFT IMAGE (never minted)
   {
     id: '014',
     slug: 'knownorigin',
@@ -276,7 +276,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     estimatedSupply: 1,
     discoveredDate: '2026.02.12'
   },
-  // 015 Meebit
+  // 015 Meebit - NO NFT IMAGE (never minted)
   {
     id: '015',
     slug: 'meebit',
@@ -293,7 +293,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     estimatedSupply: 1,
     discoveredDate: '2026.03.08'
   },
-  // 016 Aavegotchi
+  // 016 Aavegotchi - NO NFT IMAGE (never minted)
   {
     id: '016',
     slug: 'aavegotchi',
