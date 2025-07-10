@@ -7,7 +7,7 @@ import { motion, useMotionValue, useTransform } from 'framer-motion'
 interface MysteryBoxProps {
   mysteryDesigns: Array<{
     type: string
-    power: string
+    essence: string
   }>
   size?: 'small' | 'medium' | 'large'
   showBreakdown?: boolean
