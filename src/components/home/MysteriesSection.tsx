@@ -8,7 +8,7 @@ import { ChevronRight, Sparkles } from 'lucide-react'
 interface Character {
   name: string
   type: string
-  essence: string  // UPDATED: Changed from 'powers' to 'essence'
+  essence: string
   description: string
   nftImage: string
   physicalImage: string
@@ -26,7 +26,7 @@ const defaultCharacters: Character[] = [
   {
     name: 'Uri',
     type: 'Plush',
-    essence: 'Glows in the dark',  // UPDATED: Changed from 'power' to 'essence'
+    essence: 'Glows in the dark',
     description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
     nftImage: '/images/Ghost1.png',
     physicalImage: '/images/uri-physical.jpg',
@@ -35,7 +35,7 @@ const defaultCharacters: Character[] = [
   {
     name: 'Kappa',
     type: 'Vinyl',
-    essence: 'Water manipulation',  // UPDATED: Changed from 'power' to 'essence'
+    essence: 'Water manipulation',
     description: 'Ancient water spirit with the ability to control rivers and rain.',
     nftImage: '/images/kappa.png',
     physicalImage: '/images/kappa-physical.jpg',
@@ -44,7 +44,7 @@ const defaultCharacters: Character[] = [
   {
     name: 'Ryuu',
     type: 'Plush',
-    essence: 'Fire breathing',  // UPDATED: Changed from 'power' to 'essence'
+    essence: 'Fire breathing',
     description: 'A legendary dragon whose flames can forge the strongest metals.',
     nftImage: '/images/dragon.png',
     physicalImage: '/images/ryuu-physical.jpg',
@@ -53,7 +53,7 @@ const defaultCharacters: Character[] = [
   {
     name: 'Fenikkusu',
     type: 'Vinyl',
-    essence: 'Eternal rebirth',  // UPDATED: Changed from 'power' to 'essence'
+    essence: 'Eternal rebirth',
     description: 'The immortal phoenix that rises from ashes stronger than before.',
     nftImage: '/images/phoenix.png',
     physicalImage: '/images/phoenix-physical.jpg',
@@ -61,7 +61,6 @@ const defaultCharacters: Character[] = [
   }
 ]
 
-// Physical Product Card Component - FIXED VERSION
 const PhysicalProductCard = ({ 
   character, 
   index, 
@@ -86,18 +85,14 @@ const PhysicalProductCard = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Polaroid-style card */}
       <div className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl border-4 border-gray-100 hover:shadow-3xl transition-all duration-500">
         
-        {/* Product number badge */}
         <div className="absolute -top-3 -left-3 w-12 h-12 bg-kaiju-pink rounded-full border-4 border-white shadow-lg flex items-center justify-center z-10">
           <span className="text-white font-black text-lg">{index + 1}</span>
         </div>
 
-        {/* Image container with flip effect - FIXED */}
         <div className={`relative h-96 md:h-[420px] mb-6 rounded-xl overflow-hidden ${character.backgroundColor}`}>
           
-          {/* Physical product image (front) - FIXED: Now uses object-contain and shows background */}
           <motion.div
             className="absolute inset-0 backface-hidden p-4"
             style={{
@@ -109,20 +104,18 @@ const PhysicalProductCard = ({
             <img
               src={character.physicalImage}
               alt={`${character.name} Physical Product`}
-              className="w-full h-full object-contain drop-shadow-lg" // CHANGED: object-contain + padding shows background
+              className="w-full h-full object-contain drop-shadow-lg"
               onError={(e) => {
                 const target = e.target as HTMLImageElement
                 target.src = '/images/placeholder-physical.jpg'
               }}
             />
             
-            {/* Physical product overlay */}
             <div className="absolute bottom-2 left-2 bg-kaiju-navy/80 backdrop-blur-sm text-white text-sm font-semibold px-3 py-1 rounded-full">
               {character.type} Collectible
             </div>
           </motion.div>
 
-          {/* NFT image (back) - FIXED: Better background integration */}
           <motion.div
             className="absolute inset-0 backface-hidden"
             style={{
@@ -135,7 +128,7 @@ const PhysicalProductCard = ({
               <motion.img
                 src={character.nftImage}
                 alt={`${character.name} NFT`}
-                className="max-w-full max-h-full object-contain drop-shadow-2xl" // CHANGED: object-contain
+                className="max-w-full max-h-full object-contain drop-shadow-2xl"
                 animate={{
                   scale: isHovered ? 1.05 : 1
                 }}
@@ -149,13 +142,11 @@ const PhysicalProductCard = ({
               />
             </div>
             
-            {/* NFT overlay */}
             <div className="absolute bottom-2 right-2 bg-kaiju-pink/90 backdrop-blur-sm text-white text-sm font-semibold px-3 py-1 rounded-full">
               Digital NFT
             </div>
           </motion.div>
 
-          {/* Hover instruction */}
           <motion.div
             className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full"
             initial={{ opacity: 0 }}
@@ -165,13 +156,11 @@ const PhysicalProductCard = ({
             Hover to see NFT
           </motion.div>
 
-          {/* Character type indicator in top left */}
           <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-kaiju-navy text-xs font-bold px-2 py-1 rounded-full border border-gray-200">
             {character.type}
           </div>
         </div>
 
-        {/* Character info */}
         <div className="text-center space-y-4">
           <motion.h3 
             className="text-2xl font-black text-kaiju-navy tracking-tight"
@@ -197,7 +186,6 @@ const PhysicalProductCard = ({
             </p>
           </div>
 
-          {/* Learn more button */}
           <motion.button
             onClick={() => onLearnMore?.(character.name)}
             className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mt-4"
@@ -238,7 +226,6 @@ export default function MysteriesSection({
   return (
     <section className="bg-kaiju-light-pink py-20 px-6" id="mysteries" ref={ref}>
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <motion.div
           className="text-center mb-16"
           initial={{ opacity: 0, y: 30 }}
@@ -253,7 +240,6 @@ export default function MysteriesSection({
           </p>
         </motion.div>
 
-        {/* Product Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 mb-16 max-w-4xl mx-auto">
           {characters.map((character, index) => (
             <PhysicalProductCard
@@ -265,7 +251,6 @@ export default function MysteriesSection({
           ))}
         </div>
 
-        {/* Call to Action */}
         <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 30 }}
