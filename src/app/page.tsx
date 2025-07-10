@@ -1,4 +1,4 @@
-// src/app/page.tsx - UPDATED physicalCollectibles data
+// src/app/page.tsx - UPDATED with new shipping flow
 'use client'
 
 import Header from '@/components/layout/Header'
@@ -39,8 +39,8 @@ export default function Home() {
       backgroundColor: "bg-kaiju-purple-light/20"
     },
     {
-      title: "Claim Physical",
-      description: "Enter your physical address, pay the shipping fee, and enjoy your new CryptoKaiju!", 
+      title: "Enter Shipping Info",
+      description: "Complete your order with shipping details and receive your NFC-chipped collectible!", 
       mediaSrc: "/videos/Comp 1_9.mp4",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-navy/10"
@@ -97,22 +97,34 @@ export default function Home() {
   // Event handlers
   const handleMint = (quantity: number) => {
     console.log(`Mint button clicked - Quantity: ${quantity}`)
-    // Mint logic will be handled in HeroSection with Thirdweb
+    // Mint logic is handled in HeroSection with Thirdweb
   }
 
   const handleViewPossibilities = () => {
     console.log('View possibilities clicked')
-    // Add navigation or modal logic here
+    // Navigate to mysteries section
+    const element = document.querySelector('#mysteries')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   const handleCTAAction = () => {
     console.log('CTA action clicked')
-    // Add CTA logic here
+    // Navigate to hero section for minting
+    const element = document.querySelector('#hero')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   const handleLearnMore = (characterName: string) => {
     console.log(`Learn more about ${characterName}`)
-    // Could open a modal or navigate to character details
+    // Navigate to hero section for minting
+    const element = document.querySelector('#hero')
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' })
+    }
   }
 
   return (

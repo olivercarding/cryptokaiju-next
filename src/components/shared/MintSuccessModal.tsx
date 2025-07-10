@@ -3,7 +3,8 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Package, Sparkles } from 'lucide-react'
+import { X, Package, Sparkles, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import axios from 'axios'
 
 interface NFTMetadata {
@@ -36,6 +37,7 @@ export default function MintSuccessModal({
   mintedNFTs,
   onEnterShipping
 }: MintSuccessModalProps) {
+  const router = useRouter()
   const [nftsWithMetadata, setNftsWithMetadata] = useState<MintedNFT[]>([])
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
   const [currentNFTIndex, setCurrentNFTIndex] = useState(0)
@@ -87,12 +89,21 @@ export default function MintSuccessModal({
 
     const interval = setInterval(() => {
       setCurrentNFTIndex((prev) => (prev + 1) % nftsWithMetadata.length)
-    }, 3000) // Change every 3 seconds
+    }, 3000)
 
     return () => clearInterval(interval)
   }, [nftsWithMetadata.length])
 
   const currentNFT = nftsWithMetadata[currentNFTIndex]
+
+  const handleEnterShipping = () => {
+    // Store minted NFTs in sessionStorage for the success page
+    sessionStorage.setItem('mintedNFTs', JSON.stringify(nftsWithMetadata))
+    
+    // Close modal and navigate to success page
+    onClose()
+    router.push('/success')
+  }
 
   if (!isOpen) return null
 
@@ -285,41 +296,26 @@ export default function MintSuccessModal({
                 <span className="text-white font-bold text-lg">Physical Collectible Available!</span>
               </div>
               <p className="text-white/80 text-sm">
-                Your Kaiju comes with a real-world collectible! 
-                {mintedNFTs.some(nft => nft.metadata?.attributes?.some(attr => 
-                  attr.trait_type.toLowerCase().includes('plush') || 
-                  attr.value.toLowerCase().includes('plush')
-                )) 
-                  ? " We'll ship your NFC-chipped plush directly to your door."
-                  : " Your vinyl figure will be shipped directly to you."
-                }
+                Your Kaiju comes with a real-world collectible! Enter your shipping information to receive your NFC-chipped collectible.
               </p>
             </motion.div>
 
-            {/* Action Buttons */}
+            {/* Action Button - Single Button Now */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.4 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
+              className="flex justify-center"
             >
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={onEnterShipping}
+                onClick={handleEnterShipping}
                 className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold text-lg px-8 py-4 rounded-xl shadow-xl border-2 border-kaiju-pink/50 hover:shadow-kaiju-pink/25 transition-all duration-300 flex items-center justify-center gap-3"
               >
                 <Package size={20} />
                 Enter Shipping Information
-              </motion.button>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onClose}
-                className="bg-white/10 backdrop-blur-sm text-white font-semibold px-8 py-4 rounded-xl border border-white/20 hover:bg-white/20 transition-colors"
-              >
-                View Later
+                <ArrowRight size={20} />
               </motion.button>
             </motion.div>
 

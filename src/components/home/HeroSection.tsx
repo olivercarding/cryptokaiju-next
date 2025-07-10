@@ -241,13 +241,6 @@ export default function HeroSection({
     }
   }
 
-  // Handle shipping information
-  const handleEnterShipping = () => {
-    setShowSuccessModal(false)
-    // Redirect to the shipping page
-    window.location.href = 'https://cryptokaiju.io/plushclaim/'
-  }
-
   // Handle closing modal
   const handleCloseModal = () => {
     setShowSuccessModal(false)
@@ -260,7 +253,7 @@ export default function HeroSection({
         isOpen={showSuccessModal}
         onClose={handleCloseModal}
         mintedNFTs={mintedNFTs}
-        onEnterShipping={handleEnterShipping}
+        onEnterShipping={() => {}} // This prop is no longer used - modal handles navigation internally
       />
 
       <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
