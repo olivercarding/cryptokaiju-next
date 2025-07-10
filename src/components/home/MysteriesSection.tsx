@@ -8,7 +8,7 @@ import { ChevronRight, Sparkles } from 'lucide-react'
 interface Character {
   name: string
   type: string
-  power: string
+  essence: string  // UPDATED: Changed from 'power' to 'essence'
   description: string
   nftImage: string
   physicalImage: string
@@ -26,7 +26,7 @@ const defaultCharacters: Character[] = [
   {
     name: 'Uri',
     type: 'Plush',
-    power: 'Glows in the dark',
+    essence: 'Glows in the dark',  // UPDATED: Changed from 'power' to 'essence'
     description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
     nftImage: '/images/Ghost1.png',
     physicalImage: '/images/uri-physical.jpg',
@@ -35,7 +35,7 @@ const defaultCharacters: Character[] = [
   {
     name: 'Kappa',
     type: 'Vinyl',
-    power: 'Water manipulation',
+    essence: 'Water manipulation',  // UPDATED: Changed from 'power' to 'essence'
     description: 'Ancient water spirit with the ability to control rivers and rain.',
     nftImage: '/images/kappa.png',
     physicalImage: '/images/kappa-physical.jpg',
@@ -44,7 +44,7 @@ const defaultCharacters: Character[] = [
   {
     name: 'Ryuu',
     type: 'Plush',
-    power: 'Fire breathing',
+    essence: 'Fire breathing',  // UPDATED: Changed from 'power' to 'essence'
     description: 'A legendary dragon whose flames can forge the strongest metals.',
     nftImage: '/images/dragon.png',
     physicalImage: '/images/ryuu-physical.jpg',
@@ -53,7 +53,7 @@ const defaultCharacters: Character[] = [
   {
     name: 'Fenikkusu',
     type: 'Vinyl',
-    power: 'Eternal rebirth',
+    essence: 'Eternal rebirth',  // UPDATED: Changed from 'power' to 'essence'
     description: 'The immortal phoenix that rises from ashes stronger than before.',
     nftImage: '/images/phoenix.png',
     physicalImage: '/images/phoenix-physical.jpg',
@@ -187,7 +187,7 @@ const PhysicalProductCard = ({
             <div className="flex items-center justify-center gap-2">
               <Sparkles className="w-4 h-4 text-kaiju-pink" />
               <span className="text-sm font-semibold text-kaiju-pink">
-                {character.power}
+                {character.essence}
               </span>
               <Sparkles className="w-4 h-4 text-kaiju-pink" />
             </div>
@@ -287,7 +287,7 @@ export default function MysteriesSection({
             <span>Open Your Mystery Box</span>
             <ChevronRight className="w-6 h-6" />
           </motion.button>
-        </motion.div>
+        </div>
       </div>
     </section>
   )

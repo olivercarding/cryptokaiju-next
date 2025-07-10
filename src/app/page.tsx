@@ -9,12 +9,12 @@ import CTASection from '@/components/home/CTASection'
 
 export default function Home() {
   
-  // FIXED: Configuration data - updated to match HeroSection interface
+  // FIXED: Configuration data - updated to match HeroSection interface and new batch structure
   const mysteryDesigns = [
-    { type: 'Plush', power: 'Glows in the dark' },
-    { type: 'Vinyl', power: 'Water manipulation' },
-    { type: 'Plush', power: 'Fire breathing' },
-    { type: 'Vinyl', power: 'Eternal rebirth' },
+    { type: 'Plush', essence: 'Glows in the dark' },
+    { type: 'Vinyl', essence: 'Water manipulation' },
+    { type: 'Plush', essence: 'Fire breathing' },
+    { type: 'Vinyl', essence: 'Eternal rebirth' },
   ]
 
   const heroStats = {
@@ -47,12 +47,12 @@ export default function Home() {
     }
   ]
 
-  // 🎯 PHYSICAL COLLECTIBLES SHOWCASE - FIXED with proper background colors
+  // 🎯 PHYSICAL COLLECTIBLES SHOWCASE - UPDATED with essence instead of power
   const physicalCollectibles = [
     {
       name: 'Uri',
       type: 'Vinyl',
-      power: 'Glows in the dark',
+      essence: 'Glows in the dark',
       description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
       nftImage: '/images/Ghost1.png',
       physicalImage: '/images/Uri_product_shot.png',
@@ -61,7 +61,7 @@ export default function Home() {
     {
       name: 'Meme',
       type: 'Vinyl',
-      power: 'Cute, soft and cuddly',
+      essence: 'Cute, soft and cuddly',
       description: 'Ancient water spirit with the ability to control rivers and rain.',
       nftImage: '/images/Meme-NFT.png',
       physicalImage: '/images/Meme.png',
@@ -70,7 +70,7 @@ export default function Home() {
     {
       name: 'Diamond Hands',
       type: 'Vinyl',
-      power: 'For those with hands stronger than steel',
+      essence: 'For those with hands stronger than steel',
       description: 'Classic design in a cool, iconic colourway.',
       nftImage: '/images/Diamond-Hands-NFT.png',
       physicalImage: '/images/Diamond_hands_product_shot.png',
@@ -79,7 +79,7 @@ export default function Home() {
     {
       name: 'Genesis Plush (Green)',
       type: 'Plush',
-      power: 'Beautifully soft in the iconic design',
+      essence: 'Beautifully soft in the iconic design',
       description: 'The immortal phoenix that rises from ashes stronger than before.',
       nftImage: '/images/Genesis-NFT.png',
       physicalImage: '/images/Green_genesis_product_shot.png',

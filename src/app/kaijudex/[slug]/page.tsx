@@ -40,7 +40,24 @@ const elementIcons = {
   'Heritage': Database,
   'Voxel': Package,
   'Spectral Finance': Star,
-  'Ghost': Skull
+  'Ghost': Skull,
+  'Ancient Ember': Flame,
+  'Gathering Stone': Mountain,
+  'Luna\'s Blessing': Star,
+  'Creative Spark': Sparkles,
+  'Joy Wind': Wind,
+  'Tidal Comfort': Droplets,
+  'Living Zest': Leaf,
+  'Unity Field': Database,
+  'Tropical Breeze': Wind,
+  'Crystal Clarity': Star,
+  'Celebration Fire': Flame,
+  'Autumn\'s Mystery': Leaf,
+  'Soft Wonder': Star,
+  'Living Archive': Database,
+  'Building Blocks': Package,
+  'Ethereal Flow': Wind,
+  'Twilight Mist': Star
 }
 
 // FIXED: Polaroid Gallery Component - Handle optional NFT images
@@ -235,22 +252,18 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                 
                 <div className="flex items-center gap-2 mb-6">
                   <Sparkles className="w-5 h-5 text-white/80" />
-                  <span className="text-lg text-white/90 italic">"{batch.power}"</span>
+                  <span className="text-lg text-white/90 italic">"{batch.essence}"</span>
                 </div>
 
                 <p className="text-lg text-white/90 leading-relaxed mb-8">
                   {batch.description}
                 </p>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-8">
+                {/* Quick Stats - UPDATED: Removed origin field */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
                   <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
                     <div className="text-2xl font-bold text-white mb-1">~{batch.estimatedSupply}</div>
                     <div className="text-white/70 text-sm">Est. Supply</div>
-                  </div>
-                  <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
-                    <div className="text-2xl font-bold text-white mb-1">{batch.origin}</div>
-                    <div className="text-white/70 text-sm">Origin</div>
                   </div>
                   <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
                     <div className="text-2xl font-bold text-white mb-1">{batch.discoveredDate}</div>
@@ -352,7 +365,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
 
                   {/* Sidebar */}
                   <div className="space-y-6">
-                    {/* Classification Card */}
+                    {/* Classification Card - UPDATED: Removed origin field */}
                     <motion.div 
                       initial={{ opacity: 0, x: 20 }} 
                       animate={{ opacity: 1, x: 0 }} 
@@ -372,14 +385,14 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                           <span className="font-semibold">{batch.element}</span>
                         </div>
                         <div className="flex justify-between">
+                          <span className="text-kaiju-navy/60">Essence:</span>
+                          <span className="font-semibold">{batch.essence}</span>
+                        </div>
+                        <div className="flex justify-between">
                           <span className="text-kaiju-navy/60">Rarity:</span>
                           <span className={`font-semibold px-2 py-1 rounded text-xs ${rarityColors[batch.rarity]}`}>
                             {batch.rarity}
                           </span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-kaiju-navy/60">Origin:</span>
-                          <span className="font-semibold">{batch.origin}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-kaiju-navy/60">NFT Status:</span>

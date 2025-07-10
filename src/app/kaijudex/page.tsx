@@ -138,7 +138,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
             </motion.h3>
             
             <p className="text-sm text-kaiju-navy/70 italic">
-              "{batch.power}"
+              "{batch.essence}"
             </p>
 
             {/* Quick stats */}
