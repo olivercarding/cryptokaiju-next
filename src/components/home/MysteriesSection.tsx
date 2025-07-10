@@ -203,7 +203,7 @@ const PhysicalProductCard = ({
   )
 }
 
-export default function MysteriesSection({
+function MysteriesSection({
   title = "Physical Collectibles Available",
   subtitle = "Each mystery box contains one of these incredible physical collectibles, each paired with a unique NFT. Check out what you can collect!",
   characters = defaultCharacters,
@@ -277,3 +277,5 @@ export default function MysteriesSection({
     </section>
   )
 }
+
+export default MysteriesSection
