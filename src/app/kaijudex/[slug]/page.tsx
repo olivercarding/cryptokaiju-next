@@ -1,4 +1,4 @@
-// src/app/kaijudex/[slug]/page.tsx - COMPLETE UPDATED VERSION
+// src/app/kaijudex/[slug]/page.tsx - FIXED VERSION TO HANDLE OPTIONAL NFT IMAGES
 'use client'
 
 import { useState, useRef } from 'react'
@@ -43,12 +43,14 @@ const elementIcons = {
   'Ghost': Skull
 }
 
-// Polaroid Gallery Component
+// FIXED: Polaroid Gallery Component - Handle optional NFT images
 const PolaroidGallery = ({ batch }: { batch: KaijuBatch }) => {
   const [activeImage, setActiveImage] = useState(0)
+  
+  // FIXED: Only include NFT image if it exists
   const allImages = [
     { src: batch.physicalImage, label: 'Physical Collectible', type: 'physical' },
-    { src: batch.nftImage, label: 'Digital NFT', type: 'nft' },
+    ...(batch.nftImage ? [{ src: batch.nftImage, label: 'Digital NFT', type: 'nft' }] : []),
     ...(batch.conceptArt || []).map((src, i) => ({ src, label: `Concept Art ${i + 1}`, type: 'concept' }))
   ].filter(img => img.src)
 
@@ -66,7 +68,7 @@ const PolaroidGallery = ({ batch }: { batch: KaijuBatch }) => {
              style={{ transform: 'rotate(-1deg)' }}>
           <div className="relative h-80 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden">
             <Image
-              src={allImages[activeImage]?.src || batch.nftImage}
+              src={allImages[activeImage]?.src || batch.physicalImage}
               alt={allImages[activeImage]?.label || batch.name}
               fill
               className="object-contain p-4"
@@ -84,27 +86,37 @@ const PolaroidGallery = ({ batch }: { batch: KaijuBatch }) => {
         </div>
       </motion.div>
 
-      {/* Thumbnail Gallery */}
-      <div className="flex justify-center gap-4 flex-wrap">
-        {allImages.map((image, index) => (
-          <motion.button
-            key={index}
-            onClick={() => setActiveImage(index)}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.1 }}
-            whileHover={{ y: -4, rotate: '0deg' }}
-            className={`bg-white p-2 rounded-lg shadow-lg border-2 transition-all duration-300 ${
-              activeImage === index ? 'border-kaiju-pink' : 'border-gray-200'
-            }`}
-            style={{ transform: `rotate(${rotations[index % rotations.length]})` }}
-          >
-            <div className="relative w-16 h-16 bg-gray-50 rounded overflow-hidden">
-              <Image src={image.src} alt={image.label} fill className="object-contain p-1" />
-            </div>
-          </motion.button>
-        ))}
-      </div>
+      {/* Thumbnail Gallery - Only show if there are multiple images */}
+      {allImages.length > 1 && (
+        <div className="flex justify-center gap-4 flex-wrap">
+          {allImages.map((image, index) => (
+            <motion.button
+              key={index}
+              onClick={() => setActiveImage(index)}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ y: -4, rotate: '0deg' }}
+              className={`bg-white p-2 rounded-lg shadow-lg border-2 transition-all duration-300 ${
+                activeImage === index ? 'border-kaiju-pink' : 'border-gray-200'
+              }`}
+              style={{ transform: `rotate(${rotations[index % rotations.length]})` }}
+            >
+              <div className="relative w-16 h-16 bg-gray-50 rounded overflow-hidden">
+                <Image src={image.src} alt={image.label} fill className="object-contain p-1" />
+              </div>
+            </motion.button>
+          ))}
+        </div>
+      )}
+      
+      {/* Show info if no NFT image available */}
+      {!batch.nftImage && (
+        <div className="text-center text-gray-500 text-sm">
+          <p>This design was never minted as an NFT</p>
+          <p>Physical collectible only</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -214,6 +226,11 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                 <div className="flex items-center gap-3 mb-6">
                   <Package className="w-5 h-5 text-kaiju-pink" />
                   <span className="text-xl text-kaiju-pink font-bold">{batch.type} Collectible</span>
+                  {!batch.nftImage && (
+                    <span className="text-sm text-yellow-400 bg-yellow-400/20 px-2 py-1 rounded-full">
+                      Physical Only
+                    </span>
+                  )}
                 </div>
                 
                 <div className="flex items-center gap-2 mb-6">
@@ -263,7 +280,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
               >
                 <div className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20">
                   <Image
-                    src={batch.nftImage}
+                    src={batch.nftImage || batch.physicalImage}
                     alt={batch.name}
                     fill
                     className="object-contain p-8"
@@ -271,6 +288,13 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                   
                   {/* Glow effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/20 to-kaiju-purple-light/20 mix-blend-overlay"></div>
+                  
+                  {/* Show indicator if using physical image instead of NFT */}
+                  {!batch.nftImage && (
+                    <div className="absolute top-4 right-4 bg-yellow-400/90 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold">
+                      Physical Only
+                    </div>
+                  )}
                 </div>
               </motion.div>
             </div>
@@ -357,6 +381,12 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                           <span className="text-kaiju-navy/60">Origin:</span>
                           <span className="font-semibold">{batch.origin}</span>
                         </div>
+                        <div className="flex justify-between">
+                          <span className="text-kaiju-navy/60">NFT Status:</span>
+                          <span className={`font-semibold text-xs ${batch.nftImage ? 'text-green-600' : 'text-orange-600'}`}>
+                            {batch.nftImage ? 'Mintable' : 'Physical Only'}
+                          </span>
+                        </div>
                       </div>
                     </motion.div>
 
@@ -389,7 +419,12 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                   <PolaroidGallery batch={batch} />
                   <div className="mt-8 text-kaiju-navy/60">
                     <p>Complete visual archive of {batch.name}</p>
-                    <p className="text-sm mt-2">Physical collectible, digital NFT and concept artwork</p>
+                    <p className="text-sm mt-2">
+                      {batch.nftImage 
+                        ? "Physical collectible, digital NFT and concept artwork"
+                        : "Physical collectible and concept artwork"
+                      }
+                    </p>
                   </div>
                 </motion.div>
               )}
