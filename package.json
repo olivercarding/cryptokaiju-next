@@ -9,7 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@sanity/image-url": "^1.1.0",
+    "@sanity/icons": "^3.7.4",
+    "@types/react-is": "^19.0.0",
     "@vercel/speed-insights": "^1.2.0",
     "axios": "^1.10.0",
     "framer-motion": "^11.9.0",
@@ -20,7 +21,8 @@
     "nuka-carousel": "^8.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "sanity": "^3.99.0",
+    "react-is": "^19.1.0",
+    "styled-components": "^6.1.19",
     "thirdweb": "^5.67.0"
   },
   "devDependencies": {
