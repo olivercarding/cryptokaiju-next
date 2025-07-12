@@ -23,13 +23,13 @@ const socialLinks = [
   {
     name: 'Discord',
     icon: MessageCircle,
-    url: 'https://discord.gg/eNDmDr553R',
+    url: 'https://discord.gg/yMZtRgTps8',
     color: 'hover:text-indigo-400'
   },
   {
     name: 'Telegram',
     icon: Send,
-    url: 'https://t.me/Crypto_Kaiju',
+    url: 'https://t.me/cryptokaiju',
     color: 'hover:text-blue-500'
   }
 ]
@@ -60,10 +60,10 @@ const footerSections = [
   {
     title: 'Community',
     links: [
-      { label: 'Join Discord', href: 'https://discord.gg/eNDmDr553R', external: true },
+      { label: 'Join Discord', href: 'https://discord.gg/cryptokaiju', external: true },
       { label: 'Follow on X', href: 'https://twitter.com/cryptokaiju', external: true },
       { label: 'Instagram', href: 'https://instagram.com/cryptokaiju', external: true },
-      { label: 'Telegram Group', href: 'https://t.me/Crypto_Kaiju', external: true }
+      { label: 'Telegram Group', href: 'https://t.me/cryptokaiju', external: true }
     ]
   }
 ]
@@ -203,7 +203,7 @@ export default function Footer() {
                   href="https://etherscan.io/address/0x102c527714ab7e652630cac7a30abb482b041fd0"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-kaiju-pink hover:text-white transition-colors font-mono"
+                  className="text-white/70 hover:text-white transition-colors font-mono"
                 >
                   0x102c...1fd0
                 </a>
@@ -230,7 +230,15 @@ export default function Footer() {
               >
                 <Heart className="w-4 h-4 text-kaiju-pink fill-current" />
               </motion.div>
-              <span>for the community</span>
+              <span>by </span>
+              <a 
+                href="https://olivercarding.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-kaiju-pink transition-colors underline underline-offset-2"
+              >
+                Oliver Carding
+              </a>
             </motion.div>
 
             {/* Additional Links */}
