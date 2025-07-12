@@ -23,13 +23,13 @@ const socialLinks = [
   {
     name: 'Discord',
     icon: MessageCircle,
-    url: 'https://discord.gg/yMZtRgTps8',
+    url: 'https://discord.gg/eNDmDr553R',
     color: 'hover:text-indigo-400'
   },
   {
     name: 'Telegram',
     icon: Send,
-    url: 'https://t.me/cryptokaiju',
+    url: 'https://t.me/Crypto_Kaiju',
     color: 'hover:text-blue-500'
   }
 ]
@@ -52,16 +52,18 @@ const footerSections = [
     links: [
       { label: 'About CryptoKaiju', href: '/about' },
       { label: 'Frequently Asked Questions', href: '/faq' },
+      { label: 'Terms & Conditions', href: '/terms' },
+      { label: 'Privacy Policy', href: '/privacy' },
       { label: 'View on OpenSea', href: 'https://opensea.io/collection/cryptokaiju', external: true }
     ]
   },
   {
     title: 'Community',
     links: [
-      { label: 'Join Discord', href: 'https://discord.gg/cryptokaiju', external: true },
+      { label: 'Join Discord', href: 'https://discord.gg/eNDmDr553R', external: true },
       { label: 'Follow on X', href: 'https://twitter.com/cryptokaiju', external: true },
       { label: 'Instagram', href: 'https://instagram.com/cryptokaiju', external: true },
-      { label: 'Telegram Group', href: 'https://t.me/cryptokaiju', external: true }
+      { label: 'Telegram Group', href: 'https://t.me/Crypto_Kaiju', external: true }
     ]
   }
 ]

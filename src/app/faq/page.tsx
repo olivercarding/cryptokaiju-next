@@ -32,14 +32,23 @@ export default function FAQPage() {
       icon: <HelpCircle className="w-5 h-5" />,
       items: [
         {
-          question: "How do CryptoKaiju Work?",
+          question: "What is CryptoKaiju and how does it work?",
           answer: (
             <div className="space-y-3">
-              <p>CryptoKaiju are made up of 2 parts:</p>
-              <p>A Physical toy (vinyl or plush) which contains an NFC tag.</p>
-              <p>An NFT.</p>
-              <p>The serial number of the NFC tag is locked to the tag and then output within the metadata of the NFT, linking the 2 together.</p>
-              <p>The NFC data is written onchain, so you can lookup your Kaiju by querying our <a href="https://etherscan.io/address/0x102c527714ab7e652630cac7a30abb482b041fd0" className="text-kaiju-pink hover:text-kaiju-red underline">contract</a>.</p>
+              <p>CryptoKaiju is a pioneering NFT project launched in 2018 that bridges the physical and digital worlds by combining high-quality collectible toys with blockchain technology.</p>
+              
+              <p><strong>Each CryptoKaiju consists of two interconnected parts:</strong></p>
+              
+              <p><strong>Physical Collectible:</strong> High-quality vinyl or plush toys containing a tamper-resistant NFC (Near Field Communication) chip embedded in the foot. These aren't cheap 3D printed toys – they're properly molded collectibles made from premium materials with a 3-4 month development process.</p>
+              
+              <p><strong>Digital NFT:</strong> An ERC-721 token on Ethereum containing unique metadata like name, traits, batch, and description. The NFT stores all the characteristics that make each Kaiju special.</p>
+              
+              <p><strong>The Connection:</strong> The NFC chip's unique serial number is locked to the physical toy and referenced in the NFT's metadata, creating an unbreakable link between the two. You can scan the chip with your smartphone to verify authenticity and view the Kaiju's blockchain record.</p>
+              
+              <p><strong>Why It Matters:</strong> This solves major problems in collectibles – proving authenticity and preventing counterfeiting. The blockchain provides immutable proof of provenance and ownership.</p>
+              
+              <p>Released in limited batches of 100-300 pieces since 2018, there are approximately 1,400 Kaiju in existence. Each is unique with varying rarity levels. Beyond collecting, Kaiju holders get early access to new releases, Sandbox gaming assets, and exclusive community experiences.</p>
+              
             </div>
           )
         },
@@ -61,7 +70,6 @@ export default function FAQPage() {
               <ul className="list-disc list-inside space-y-1 ml-4">
                 <li>An NFC enabled device such as a smart phone, or tablet</li>
                 <li>An internet connection to access the Kaiju explorer/ an Ethereum block explorer</li>
-                <li>An Ethereum wallet that can store non fungible tokens. We recommend MetaMask for Chrome/ Firefox or Coinbase wallet</li>
               </ul>
             </div>
           )
@@ -77,16 +85,12 @@ export default function FAQPage() {
       icon: <Shield className="w-5 h-5" />,
       items: [
         {
-          question: "What's the Point?",
-          answer: "We began CryptoKaiju to showcase how provenance and authenticity could be proven using immutable blockchain technology, we've since developed new and exciting ways to deliver experiences that link the physical and digital including in game assets that are unlocked with toys and wearables that mimic and enhance their physical counterparts."
-        },
-        {
           question: "How many Kaiju will be minted?",
           answer: (
             <div className="space-y-3">
               <p>CryptoKaiju have been released in different batches since 2018, typically a batch contains 2 different designs or colour ways, there tends to be 100 - 300 Kaiju in each release.</p>
               <p>At the moment, there is no fixed supply, but these toys are scarce, we do not envisage suddenly creating 10,000 anytime soon!</p>
-              <p>Currently there are approximately <strong><em><a href="https://opensea.io/collection/cryptokaiju" className="text-kaiju-pink hover:text-kaiju-red underline">1,400 Kaiju in existence</a></em></strong></p>
+              <p>Currently there are approximately <strong><em><a href="https://opensea.io/collection/cryptokaiju" className="text-kaiju-pink hover:text-kaiju-red underline">1,700 Kaiju in existence</a></em></strong></p>
             </div>
           )
         },
@@ -97,6 +101,7 @@ export default function FAQPage() {
               <p>Yes!</p>
               <p>Some batch sizes are smaller than others, for example, Genesis was limited to 125 pcs. Within most batches there tends to be a more common colourway too.</p>
               <p>As all Kaiju NFTs have different traits, some are rarer than others.</p>
+              <p>There are several collaborations including CryptoKaiju produced with The Sacramento Kings as well as prototypes that are extremely rare and hard to find.</p>
             </div>
           )
         },
@@ -124,15 +129,7 @@ export default function FAQPage() {
                 <p><strong>A Description</strong> - Explains the Kaiju's interests and personality.</p>
                 <p><strong>NFC ID -</strong> Each NFC ID is unique (Scan the foot of your physical Kaiju to check this out.)</p>
               </div>
-              <div className="mt-4">
-                <h4 className="font-bold text-kaiju-navy">Newer Kaiju Post Meme</h4>
-                <p>Meme was the last Kaiju where the NFT was minted by us: We have now updated our contracts and built a Merkle Minter so people can mint their own Kaiju, this has added several improvements:</p>
-                <ul className="list-disc list-inside ml-4 mt-2">
-                  <li>Generative images</li>
-                  <li>New traits.</li>
-                </ul>
               </div>
-            </div>
           )
         },
         {
@@ -179,13 +176,6 @@ export default function FAQPage() {
           answer: (
             <div className="space-y-3">
               <p>Woah Nelly, hold your horses! We sell a few different batches every year. Follow us on social, join our Discord and Newsletter and you'll know when we are doing a drop. When we have Kaiju available.</p>
-              <ol className="list-decimal list-inside space-y-1 ml-4">
-                <li>Access the site via a Web3 enabled browser or plugin (Metamask or Coinbase wallet tend to play nicely with the site.)</li>
-                <li>Make sure you have enough Eth to cover the cost including gas fees.</li>
-                <li>Click mint and submit the transaction.</li>
-                <li>Voila! You're now the proud owner of a new Kaiju and the beautiful little bubbins should now be showing in your wallet and/or on Opensea.</li>
-                <li>Follow the instructions to submit your shipping address so we can mail you your lovely new toy!</li>
-              </ol>
             </div>
           )
         },
@@ -228,8 +218,7 @@ export default function FAQPage() {
           question: "What Payment Methods are Accepted on the Site?",
           answer: (
             <div className="space-y-3">
-              <p>To mint a Kaiju you will need Ethereum + enough gas to cover the cost of the transaction.</p>
-              <p>Merchandise can be paid for via Stripe/ Paypal as well as with crypto.</p>
+              <p>We allow cross chain transactions and also support purchasing with credit/debit cards.</p>
             </div>
           )
         },
@@ -246,15 +235,6 @@ export default function FAQPage() {
                 <li>Not received by the customer.</li>
                 <li>Are delivered faulty, or damaged during delivery.</li>
               </ul>
-            </div>
-          )
-        },
-        {
-          question: "When do These Actually Ship?",
-          answer: (
-            <div className="space-y-3">
-              <p>Shipping differs per batch but is always advised at the time of purchase. Typically this tends to be 1- 2 weeks after release.</p>
-              <p>As we are a small team, it can take a few weeks to process all items.</p>
             </div>
           )
         },

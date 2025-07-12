@@ -27,13 +27,13 @@ const socialLinks = [
   {
     name: 'Discord',
     icon: MessageCircle,
-    url: 'https://discord.gg/cryptokaiju',
+    url: 'https://discord.gg/eNDmDr553R',
     color: 'hover:text-indigo-400'
   },
   {
     name: 'Telegram',
     icon: Send,
-    url: 'https://t.me/cryptokaiju',
+    url: 'https://t.me/Crypto_Kaiju',
     color: 'hover:text-blue-500'
   }
 ]
