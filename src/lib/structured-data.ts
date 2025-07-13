@@ -32,9 +32,9 @@ export const organizationSchema: JsonLdSchema = {
     email: 'info@cryptokaiju.io'
   },
   sameAs: [
-    'https://twitter.com/cryptokaiju',
-    'https://instagram.com/cryptokaiju',
-    'https://discord.gg/cryptokaiju',
+    'https://x.com/CryptoKaijuIO',
+    'https://www.instagram.com/cryptokaiju/',
+    'https://discord.gg/yMZtRgTps8',
     'https://opensea.io/collection/cryptokaiju'
   ],
   keywords: [
