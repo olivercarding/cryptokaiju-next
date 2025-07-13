@@ -48,15 +48,15 @@ export const seoPages: Record<string, SEOConfig> = {
   },
   
   '/nft': {
-    title: 'NFT Lookup - Verify Physical NFTs & Connected Objects | Blockchain Search',
+    title: 'NFT Lookup - Verify your CryptoKaiju Physical NFTs',
     description: 'Search and verify CryptoKaiju physical NFTs by token ID or NFC chip. Instantly verify Kaiju authenticity and provenance and view blockchain ownership records.',
     keywords: ['Physical NFT Verification', 'Connected Objects Search', 'NFC Authentication', 'Blockchain Verification'],
     ogImage: '/images/og-nft-lookup.jpg'
   },
   
   '/faq': {
-    title: 'FAQ - Physical NFTs & Connected Collectibles Questions Answered',
-    description: 'Get answers about physical NFTs, connected objects, and NFC authentication. Learn how CryptoKaiju connected collectibles work and why they matter.',
+    title: 'CryptoKaiju FAQs - CryptoKaiju',
+    description: 'Learn how CryptoKaiju connected collectibles work and why they matter in our FAQs section.',
     keywords: ['Physical NFTs FAQ', 'Connected Objects Questions', 'NFC Collectibles Help'],
     ogImage: '/images/og-faq.jpg'
   }
