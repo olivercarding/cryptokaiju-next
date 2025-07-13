@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { ThirdwebProvider } from "thirdweb/react"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import Footer from '@/components/layout/Footer'
+import { GoogleTagManager, GoogleTagManagerNoScript } from '@/components/analytics/GoogleTagManager'
 import { organizationSchema, websiteSchema, createJsonLd } from '@/lib/structured-data'
 
 const openSans = Open_Sans({ 
@@ -12,6 +13,9 @@ const openSans = Open_Sans({
   display: 'swap',
   variable: '--font-primary',
 })
+
+// GTM Container ID
+const GTM_ID = 'GTM-PF4KKMF'
 
 // Default metadata (will be overridden by page-specific metadata)
 export const metadata: Metadata = {
@@ -80,6 +84,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={openSans.variable}>
       <head>
+        {/* Google Tag Manager */}
+        <GoogleTagManager gtmId={GTM_ID} />
+        
         {/* Organization Schema */}
         <script
           type="application/ld+json"
@@ -101,8 +108,13 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://cryptokaiju.mypinata.cloud" />
         <link rel="preconnect" href="https://api.opensea.io" />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://www.google-analytics.com" />
       </head>
       <body>
+        {/* Google Tag Manager (noscript) */}
+        <GoogleTagManagerNoScript gtmId={GTM_ID} />
+        
         <ThirdwebProvider>
           {children}
           <Footer />
