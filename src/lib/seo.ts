@@ -14,7 +14,7 @@ const baseConfig = {
   siteName: 'CryptoKaiju',
   siteUrl: 'https://cryptokaiju.io',
   defaultOgImage: '/images/og-default.jpg',
-  twitterHandle: '@cryptokaiju'
+  twitterHandle: '@cryptokaijuio'
 }
 
 // Page-specific configurations targeting our keywords
@@ -42,14 +42,14 @@ export const seoPages: Record<string, SEOConfig> = {
   
   '/my-kaiju': {
     title: 'My Kaiju Collection - Your Physical NFTs & Connected Objects Portfolio',
-    description: 'View your connected collectibles portfolio. Manage physical NFTs with blockchain verification, check NFC authentication status, and track your connected objects collection.',
+    description: 'View your CryptoKaiju. Manage physical NFTs with blockchain verification, check NFC authentication status, and track your collection.',
     keywords: ['Physical NFT Portfolio', 'Connected Objects Collection', 'NFC Authentication Dashboard'],
     ogImage: '/images/og-my-collection.jpg'
   },
   
   '/nft': {
     title: 'NFT Lookup - Verify Physical NFTs & Connected Objects | Blockchain Search',
-    description: 'Search and verify CryptoKaiju physical NFTs by token ID or NFC chip. Instantly verify connected objects authenticity and view blockchain ownership records.',
+    description: 'Search and verify CryptoKaiju physical NFTs by token ID or NFC chip. Instantly verify Kaiju authenticity and provenance and view blockchain ownership records.',
     keywords: ['Physical NFT Verification', 'Connected Objects Search', 'NFC Authentication', 'Blockchain Verification'],
     ogImage: '/images/og-nft-lookup.jpg'
   },
@@ -159,3 +159,6 @@ export function generateBatchMetadata(slug: string, batchName?: string): Metadat
     ogImage: `/api/og/batch/${slug}` // Dynamic OG image
   })
 }
+
+// Import and re-export createKaijuProductSchema for convenience
+export { createKaijuProductSchema } from './structured-data'
