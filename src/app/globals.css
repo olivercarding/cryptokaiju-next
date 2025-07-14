@@ -163,7 +163,7 @@ button[aria-label*="Connect"]:hover {
   transform: translateY(-1px) !important;
   box-shadow: 0 6px 20px 0 rgba(255, 0, 92, 0.4) !important;
 }
-* Safari-specific video container styles */
+
 @supports (-webkit-appearance: none) {
   .video-container {
     /* Force hardware acceleration for better video performance */
