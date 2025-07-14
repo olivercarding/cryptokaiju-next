@@ -19,7 +19,7 @@ export const contentfulClient = createClient({
   host: process.env.CONTENTFUL_PREVIEW === 'true' ? 'preview.contentful.com' : 'cdn.contentful.com',
 })
 
-// TypeScript interfaces for blog content
+// TypeScript interfaces for blog content - properly typed
 export interface BlogPostFields {
   title: EntryFieldTypes.Text
   slug: EntryFieldTypes.Text
@@ -34,7 +34,10 @@ export interface BlogPostFields {
   featured?: EntryFieldTypes.Boolean
 }
 
-export interface BlogPost extends Entry<BlogPostFields> {}
+// Properly extend Entry with our fields
+export interface BlogPost extends Entry<BlogPostFields, undefined, string> {
+  fields: BlogPostFields
+}
 
 export interface AuthorFields {
   name: EntryFieldTypes.Text
@@ -43,7 +46,24 @@ export interface AuthorFields {
   socialLinks?: EntryFieldTypes.Object
 }
 
-export interface Author extends Entry<AuthorFields> {}
+export interface Author extends Entry<AuthorFields, undefined, string> {
+  fields: AuthorFields
+}
+
+// Type guard to check if an entry is a valid blog post
+export function isValidBlogPost(entry: any): entry is BlogPost {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    entry.fields &&
+    typeof entry.fields === 'object' &&
+    typeof entry.fields.title === 'string' &&
+    typeof entry.fields.slug === 'string' &&
+    typeof entry.fields.content === 'object' &&
+    typeof entry.fields.author === 'string' &&
+    typeof entry.fields.publishDate === 'string'
+  )
+}
 
 // Helper function to safely handle Contentful API calls
 async function safeContentfulCall<T>(
@@ -80,12 +100,8 @@ export async function getBlogPosts(limit: number = 10, skip: number = 0): Promis
         include: 2, // Include linked entries
       })
       
-      return response.items.filter(item => 
-        item.fields && 
-        item.fields.title && 
-        item.fields.slug && 
-        item.fields.publishDate
-      )
+      // Filter and validate entries
+      return response.items.filter(isValidBlogPost)
     },
     [],
     'Error fetching blog posts'
@@ -108,15 +124,15 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
         include: 2,
       })
       
-      const post = response.items[0]
+      const entry = response.items[0]
       
-      // Validate required fields
-      if (post && (!post.fields || !post.fields.title || !post.fields.content)) {
-        console.warn(`Blog post with slug "${slug}" is missing required fields`)
+      // Validate the entry using our type guard
+      if (!isValidBlogPost(entry)) {
+        console.warn(`Blog post with slug "${slug}" is not valid or missing required fields`)
         return null
       }
       
-      return post || null
+      return entry
     },
     null,
     `Error fetching blog post with slug: ${slug}`
@@ -135,12 +151,7 @@ export async function getFeaturedBlogPosts(limit: number = 3): Promise<BlogPost[
         include: 2,
       })
       
-      return response.items.filter(item => 
-        item.fields && 
-        item.fields.title && 
-        item.fields.slug && 
-        item.fields.publishDate
-      )
+      return response.items.filter(isValidBlogPost)
     },
     [],
     'Error fetching featured blog posts'
@@ -164,12 +175,7 @@ export async function getBlogPostsByTag(tag: string, limit: number = 10): Promis
         include: 2,
       })
       
-      return response.items.filter(item => 
-        item.fields && 
-        item.fields.title && 
-        item.fields.slug && 
-        item.fields.publishDate
-      )
+      return response.items.filter(isValidBlogPost)
     },
     [],
     `Error fetching blog posts by tag: ${tag}`
@@ -192,12 +198,7 @@ export async function searchBlogPosts(query: string, limit: number = 10): Promis
         include: 2,
       })
       
-      return response.items.filter(item => 
-        item.fields && 
-        item.fields.title && 
-        item.fields.slug && 
-        item.fields.publishDate
-      )
+      return response.items.filter(isValidBlogPost)
     },
     [],
     `Error searching blog posts with query: ${query}`
@@ -215,7 +216,7 @@ export async function getAllTags(): Promise<string[]> {
       })
       
       const allTags = response.items
-        .filter(item => item.fields && item.fields.tags)
+        .filter(item => item.fields && Array.isArray(item.fields.tags))
         .flatMap(item => item.fields.tags || [])
         .filter((tag): tag is string => Boolean(tag && typeof tag === 'string'))
         .filter((tag, index, array) => array.indexOf(tag) === index) // Remove duplicates
@@ -255,11 +256,7 @@ export async function getRecentBlogPosts(limit: number = 50): Promise<BlogPost[]
         select: ['fields.title', 'fields.slug', 'fields.excerpt', 'fields.publishDate', 'fields.author'],
       })
       
-      return response.items.filter(item => 
-        item.fields.title && 
-        item.fields.slug && 
-        item.fields.publishDate
-      )
+      return response.items.filter(isValidBlogPost)
     },
     [],
     'Error fetching recent blog posts'

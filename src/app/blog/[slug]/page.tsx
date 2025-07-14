@@ -4,18 +4,13 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import Header from '@/components/layout/Header'
 import BlogPostPageClient from '@/components/pages/BlogPostPageClient'
-import { getBlogPostBySlug, getBlogPosts } from '@/lib/contentful'
+import { getBlogPostBySlug, getBlogPosts, isValidBlogPost } from '@/lib/contentful'
 import type { BlogPost } from '@/lib/contentful'
 
 interface BlogPostPageProps {
   params: {
     slug: string
   }
-}
-
-// Type guard to ensure we have a valid blog post
-function isValidBlogPost(post: BlogPost | null): post is BlogPost {
-  return !!(post && post.fields && post.fields.title && post.fields.content)
 }
 
 // Generate metadata for SEO

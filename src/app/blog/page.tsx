@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import { Suspense } from 'react'
 import Header from '@/components/layout/Header'
 import BlogPageClient from '@/components/pages/BlogPageClient'
-import { getBlogPosts, getAllTags } from '@/lib/contentful'
+import { getBlogPosts, getAllTags, isValidBlogPost } from '@/lib/contentful'
 
 // SEO metadata for the blog listing page
 export const metadata: Metadata = {
@@ -95,10 +95,13 @@ function BlogError({ error }: { error: Error }) {
 export default async function BlogPage() {
   try {
     // Fetch blog posts and tags in parallel for better performance
-    const [posts, tags] = await Promise.all([
+    const [allPosts, tags] = await Promise.all([
       getBlogPosts(50), // Get first 50 posts
       getAllTags(),
     ])
+
+    // Filter to only valid posts
+    const posts = allPosts.filter(isValidBlogPost)
 
     // Handle case where no posts are found
     if (!posts || posts.length === 0) {
