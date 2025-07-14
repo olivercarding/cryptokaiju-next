@@ -8,6 +8,7 @@ import Image from 'next/image'
 import RichTextRenderer from '@/components/blog/RichTextRenderer'
 import BlogCard from '@/components/blog/BlogCard'
 import type { BlogPost } from '@/lib/contentful'
+import { toStringValue, toStringArray } from '@/lib/contentful'
 
 interface BlogPostPageClientProps {
   post: BlogPost
@@ -16,6 +17,14 @@ interface BlogPostPageClientProps {
 
 export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageClientProps) {
   const { title, excerpt, content, featuredImage, author, publishDate, readingTime, tags } = post.fields
+
+  // Convert Contentful field types to strings
+  const titleStr = toStringValue(title)
+  const excerptStr = toStringValue(excerpt)
+  const authorStr = toStringValue(author)
+  const publishDateStr = toStringValue(publishDate)
+  const tagsArray = toStringArray(tags)
+  const readingTimeNum = readingTime ? Number(readingTime) : undefined
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -29,8 +38,8 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
     if (navigator.share) {
       try {
         await navigator.share({
-          title,
-          text: excerpt,
+          title: titleStr,
+          text: excerptStr,
           url: window.location.href,
         })
       } catch (err) {
@@ -87,34 +96,34 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
             <div className="flex flex-wrap items-center justify-center gap-4 text-white/80 mb-6">
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                {formatDate(publishDate)}
+                {formatDate(publishDateStr)}
               </div>
-              {readingTime && (
+              {readingTimeNum && (
                 <div className="flex items-center gap-1">
                   <Clock className="w-4 h-4" />
-                  {readingTime} min read
+                  {readingTimeNum} min read
                 </div>
               )}
               <div className="flex items-center gap-1">
                 <User className="w-4 h-4" />
-                {author}
+                {authorStr}
               </div>
             </div>
 
             {/* Title */}
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-6 leading-tight">
-              {title}
+              {titleStr}
             </h1>
 
             {/* Excerpt */}
             <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8">
-              {excerpt}
+              {excerptStr}
             </p>
 
             {/* Tags */}
-            {tags && tags.length > 0 && (
+            {tagsArray && tagsArray.length > 0 && (
               <div className="flex flex-wrap gap-2 justify-center mb-8">
-                {tags.map(tag => (
+                {tagsArray.map(tag => (
                   <Link
                     key={tag}
                     href={`/blog?tag=${encodeURIComponent(tag)}`}
@@ -153,7 +162,7 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
             >
               <Image
                 src={`https:${featuredImage.fields.file?.url}?w=1200&h=600&fit=fill`}
-                alt={featuredImage.fields.title || title}
+                alt={toStringValue(featuredImage.fields.title) || titleStr}
                 fill
                 className="object-cover"
               />
