@@ -1,6 +1,7 @@
 // src/lib/contentful.ts
 import { createClient } from 'contentful'
 import type { Entry, Asset, EntryFieldTypes } from 'contentful'
+import type { Document } from '@contentful/rich-text-types'
 
 // Environment variable validation
 if (!process.env.CONTENTFUL_SPACE_ID) {
@@ -24,7 +25,7 @@ export interface BlogPostFields {
   title: EntryFieldTypes.Text
   slug: EntryFieldTypes.Text
   excerpt: EntryFieldTypes.Text
-  content: EntryFieldTypes.RichText
+  content: Document // Change this to Document type directly
   featuredImage?: Asset
   author: EntryFieldTypes.Text
   publishDate: EntryFieldTypes.Date
@@ -75,7 +76,21 @@ export function isValidBlogPost(entry: any): entry is BlogPost {
     entry.fields.slug &&
     entry.fields.content &&
     entry.fields.author &&
-    entry.fields.publishDate
+    entry.fields.publishDate &&
+    // Validate that content is a proper rich text document
+    entry.fields.content.nodeType === 'document' &&
+    Array.isArray(entry.fields.content.content)
+  )
+}
+
+// Helper function to validate rich text content
+export function isValidDocument(content: any): content is Document {
+  return (
+    content &&
+    typeof content === 'object' &&
+    content.nodeType === 'document' &&
+    Array.isArray(content.content) &&
+    content.data !== undefined
   )
 }
 
@@ -106,7 +121,7 @@ async function safeContentfulCall<T>(
 export async function getBlogPosts(limit: number = 10, skip: number = 0): Promise<BlogPost[]> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries<BlogPostFields>({
+      const response = await contentfulClient.getEntries({
         content_type: 'blogPost',
         limit: Math.min(limit, 1000), // Contentful max limit
         skip,
@@ -115,7 +130,7 @@ export async function getBlogPosts(limit: number = 10, skip: number = 0): Promis
       })
       
       // Filter and validate entries
-      return response.items.filter(isValidBlogPost)
+      return response.items.filter(isValidBlogPost) as BlogPost[]
     },
     [],
     'Error fetching blog posts'
@@ -131,7 +146,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries<BlogPostFields>({
+      const response = await contentfulClient.getEntries({
         content_type: 'blogPost',
         'fields.slug': slug,
         limit: 1,
@@ -146,7 +161,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
         return null
       }
       
-      return entry
+      return entry as BlogPost
     },
     null,
     `Error fetching blog post with slug: ${slug}`
@@ -157,7 +172,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 export async function getFeaturedBlogPosts(limit: number = 3): Promise<BlogPost[]> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries<BlogPostFields>({
+      const response = await contentfulClient.getEntries({
         content_type: 'blogPost',
         'fields.featured': true,
         limit: Math.min(limit, 100),
@@ -165,7 +180,7 @@ export async function getFeaturedBlogPosts(limit: number = 3): Promise<BlogPost[
         include: 2,
       })
       
-      return response.items.filter(isValidBlogPost)
+      return response.items.filter(isValidBlogPost) as BlogPost[]
     },
     [],
     'Error fetching featured blog posts'
@@ -181,7 +196,7 @@ export async function getBlogPostsByTag(tag: string, limit: number = 10): Promis
 
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries<BlogPostFields>({
+      const response = await contentfulClient.getEntries({
         content_type: 'blogPost',
         'fields.tags[in]': tag,
         limit: Math.min(limit, 1000),
@@ -189,7 +204,7 @@ export async function getBlogPostsByTag(tag: string, limit: number = 10): Promis
         include: 2,
       })
       
-      return response.items.filter(isValidBlogPost)
+      return response.items.filter(isValidBlogPost) as BlogPost[]
     },
     [],
     `Error fetching blog posts by tag: ${tag}`
@@ -204,7 +219,7 @@ export async function searchBlogPosts(query: string, limit: number = 10): Promis
 
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries<BlogPostFields>({
+      const response = await contentfulClient.getEntries({
         content_type: 'blogPost',
         query: query.trim(),
         limit: Math.min(limit, 1000),
@@ -212,7 +227,7 @@ export async function searchBlogPosts(query: string, limit: number = 10): Promis
         include: 2,
       })
       
-      return response.items.filter(isValidBlogPost)
+      return response.items.filter(isValidBlogPost) as BlogPost[]
     },
     [],
     `Error searching blog posts with query: ${query}`
@@ -223,7 +238,7 @@ export async function searchBlogPosts(query: string, limit: number = 10): Promis
 export async function getAllTags(): Promise<string[]> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries<BlogPostFields>({
+      const response = await contentfulClient.getEntries({
         content_type: 'blogPost',
         limit: 1000, // Get all posts to extract tags
         select: ['fields.tags'],
@@ -247,7 +262,7 @@ export async function getAllTags(): Promise<string[]> {
 export async function getBlogPostsCount(): Promise<number> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries<BlogPostFields>({
+      const response = await contentfulClient.getEntries({
         content_type: 'blogPost',
         limit: 0, // Don't return items, just count
       })
@@ -263,14 +278,14 @@ export async function getBlogPostsCount(): Promise<number> {
 export async function getRecentBlogPosts(limit: number = 50): Promise<BlogPost[]> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries<BlogPostFields>({
+      const response = await contentfulClient.getEntries({
         content_type: 'blogPost',
         limit: Math.min(limit, 1000),
         order: ['-fields.publishDate'],
         select: ['fields.title', 'fields.slug', 'fields.excerpt', 'fields.publishDate', 'fields.author'],
       })
       
-      return response.items.filter(isValidBlogPost)
+      return response.items.filter(isValidBlogPost) as BlogPost[]
     },
     [],
     'Error fetching recent blog posts'
