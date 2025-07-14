@@ -43,7 +43,6 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       description,
       keywords: tagsArray.length > 0 ? tagsArray.join(', ') : undefined,
       authors: [{ name: authorStr }],
-      publishedTime: publishDateStr,
       openGraph: {
         title: titleStr,
         description,
