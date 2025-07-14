@@ -4,6 +4,7 @@
 import { useState, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import { ChevronRight, Sparkles } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 interface Character {
   name: string
@@ -13,6 +14,7 @@ interface Character {
   nftImage: string
   physicalImage: string
   backgroundColor: string
+  url: string // Custom URL for each character
 }
 
 interface MysteriesSectionProps {
@@ -30,7 +32,8 @@ const defaultCharacters: Character[] = [
     description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
     nftImage: '/images/Ghost1.png',
     physicalImage: '/images/uri-physical.jpg',
-    backgroundColor: 'bg-purple-100'
+    backgroundColor: 'bg-purple-100',
+    url: '/kaijudx/uri'
   },
   {
     name: 'Kappa',
@@ -39,7 +42,8 @@ const defaultCharacters: Character[] = [
     description: 'Ancient water spirit with the ability to control rivers and rain.',
     nftImage: '/images/kappa.png',
     physicalImage: '/images/kappa-physical.jpg',
-    backgroundColor: 'bg-blue-100'
+    backgroundColor: 'bg-blue-100',
+    url: '/kaijudx/kappa'
   },
   {
     name: 'Ryuu',
@@ -48,7 +52,8 @@ const defaultCharacters: Character[] = [
     description: 'A legendary dragon whose flames can forge the strongest metals.',
     nftImage: '/images/dragon.png',
     physicalImage: '/images/ryuu-physical.jpg',
-    backgroundColor: 'bg-red-100'
+    backgroundColor: 'bg-red-100',
+    url: '/kaijudx/ryuu'
   },
   {
     name: 'Fenikkusu',
@@ -57,20 +62,32 @@ const defaultCharacters: Character[] = [
     description: 'The immortal phoenix that rises from ashes stronger than before.',
     nftImage: '/images/phoenix.png',
     physicalImage: '/images/phoenix-physical.jpg',
-    backgroundColor: 'bg-pink-100'
+    backgroundColor: 'bg-pink-100',
+    url: '/kaijudx/fenikkusu'
   }
 ]
 
 function PhysicalProductCard({ 
   character, 
-  index, 
-  onLearnMore 
+  index
 }: { 
   character: Character
   index: number
-  onLearnMore?: (name: string) => void
 }) {
   const [isHovered, setIsHovered] = useState(false)
+  const router = useRouter()
+  
+  // Convert character name to URL slug
+  const getCharacterSlug = (name: string) => {
+    return name.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '')
+  }
+
+  const handleDiscoverClick = () => {
+    const slug = getCharacterSlug(character.name)
+    router.push(`/kaijudex/${slug}`)
+  }
   
   return (
     <motion.div
@@ -85,14 +102,17 @@ function PhysicalProductCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl border-4 border-gray-100 hover:shadow-3xl transition-all duration-500">
+      <div className="bg-white rounded-2xl p-6 md:p-8 shadow-2xl border-4 border-gray-100 hover:shadow-3xl transition-all duration-500 min-h-[600px] flex flex-col">
         
+        {/* Step number badge */}
         <div className="absolute -top-3 -left-3 w-12 h-12 bg-kaiju-pink rounded-full border-4 border-white shadow-lg flex items-center justify-center z-10">
           <span className="text-white font-black text-lg">{index + 1}</span>
         </div>
 
-        <div className={`relative h-96 md:h-[420px] mb-6 rounded-xl overflow-hidden ${character.backgroundColor}`}>
+        {/* Media container with fixed height */}
+        <div className={`relative h-80 md:h-96 mb-6 rounded-xl overflow-hidden ${character.backgroundColor} flex-shrink-0`}>
           
+          {/* Front side - Physical product */}
           <motion.div
             className="absolute inset-0 backface-hidden p-4"
             style={{
@@ -116,6 +136,7 @@ function PhysicalProductCard({
             </div>
           </motion.div>
 
+          {/* Back side - NFT */}
           <motion.div
             className="absolute inset-0 backface-hidden"
             style={{
@@ -147,6 +168,7 @@ function PhysicalProductCard({
             </div>
           </motion.div>
 
+          {/* Hover instruction */}
           <motion.div
             className="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full"
             initial={{ opacity: 0 }}
@@ -156,12 +178,14 @@ function PhysicalProductCard({
             Hover to see NFT
           </motion.div>
 
+          {/* Type badge */}
           <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm text-kaiju-navy text-xs font-bold px-2 py-1 rounded-full border border-gray-200">
             {character.type}
           </div>
         </div>
 
-        <div className="text-center space-y-4">
+        {/* Content section - grows to fill available space */}
+        <div className="text-center space-y-4 flex-grow flex flex-col">
           <motion.h3 
             className="text-2xl font-black text-kaiju-navy tracking-tight"
             animate={{ 
@@ -172,7 +196,7 @@ function PhysicalProductCard({
             {character.name}
           </motion.h3>
           
-          <div className="space-y-2">
+          <div className="space-y-3 flex-grow">
             <div className="flex items-center justify-center gap-2">
               <Sparkles className="w-4 h-4 text-kaiju-pink" />
               <span className="text-sm font-semibold text-kaiju-pink">
@@ -181,22 +205,25 @@ function PhysicalProductCard({
               <Sparkles className="w-4 h-4 text-kaiju-pink" />
             </div>
             
-            <p className="text-sm text-kaiju-navy/70 leading-relaxed line-clamp-3">
+            <p className="text-sm text-kaiju-navy/70 leading-relaxed">
               {character.description}
             </p>
           </div>
 
-          <motion.button
-            onClick={() => onLearnMore?.(character.name)}
-            className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 mt-4"
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <span className="flex items-center justify-center gap-2">
-              Discover {character.name}
-              <ChevronRight className="w-4 h-4" />
-            </span>
-          </motion.button>
+          {/* Button at bottom - fixed positioning */}
+          <div className="pt-4">
+            <motion.button
+              onClick={handleDiscoverClick}
+              className="w-full bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <span className="flex items-center justify-center gap-2">
+                Discover {character.name}
+                <ChevronRight className="w-4 h-4" />
+              </span>
+            </motion.button>
+          </div>
         </div>
       </div>
     </motion.div>
@@ -211,15 +238,12 @@ function MysteriesSection({
 }: MysteriesSectionProps) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
+  const router = useRouter()
 
-  const handleLearnMore = (characterName: string) => {
-    if (onLearnMore) {
-      onLearnMore(characterName)
-    } else {
-      const heroElement = document.querySelector('#hero')
-      if (heroElement) {
-        heroElement.scrollIntoView({ behavior: 'smooth' })
-      }
+  const handleMainCTAClick = () => {
+    const heroElement = document.querySelector('#hero')
+    if (heroElement) {
+      heroElement.scrollIntoView({ behavior: 'smooth' })
     }
   }
 
@@ -240,17 +264,19 @@ function MysteriesSection({
           </p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 md:gap-12 mb-16 max-w-4xl mx-auto">
+        {/* Grid with better spacing and responsive layout - fixed heights to prevent overlap */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12 mb-16 max-w-6xl mx-auto">
           {characters.map((character, index) => (
-            <PhysicalProductCard
-              key={character.name}
-              character={character}
-              index={index}
-              onLearnMore={handleLearnMore}
-            />
+            <div key={character.name} className="flex justify-center h-full">
+              <PhysicalProductCard
+                character={character}
+                index={index}
+              />
+            </div>
           ))}
         </div>
 
+        {/* Main CTA */}
         <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 30 }}
@@ -258,12 +284,7 @@ function MysteriesSection({
           transition={{ duration: 0.8, delay: 0.8 }}
         >
           <motion.button
-            onClick={() => {
-              const heroElement = document.querySelector('#hero')
-              if (heroElement) {
-                heroElement.scrollIntoView({ behavior: 'smooth' })
-              }
-            }}
+            onClick={handleMainCTAClick}
             className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-black text-xl px-12 py-4 rounded-full shadow-2xl hover:shadow-kaiju-pink/25 transition-all duration-300 flex items-center justify-center gap-3 mx-auto border-4 border-white/20"
             whileHover={{ scale: 1.05, y: -3 }}
             whileTap={{ scale: 0.95 }}

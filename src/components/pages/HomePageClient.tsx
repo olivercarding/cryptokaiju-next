@@ -1,4 +1,4 @@
-// src/components/pages/HomePageClient.tsx (NEW FILE - your existing code)
+// src/components/pages/HomePageClient.tsx
 'use client'
 
 import Header from '@/components/layout/Header'
@@ -47,7 +47,7 @@ export default function HomePageClient() {
     }
   ]
 
-  // 🎯 PHYSICAL COLLECTIBLES SHOWCASE - UPDATED with essence instead of power
+  // 🎯 PHYSICAL COLLECTIBLES SHOWCASE - UPDATED with essence and custom URLs
   const physicalCollectibles = [
     {
       name: 'Uri',
@@ -56,7 +56,8 @@ export default function HomePageClient() {
       description: 'A mysterious ghost-like entity that illuminates the darkness with an ethereal glow.',
       nftImage: '/images/Ghost1.png',
       physicalImage: '/images/Uri_product_shot.png',
-      backgroundColor: 'bg-purple-100' // FIXED: Proper Tailwind class
+      backgroundColor: 'bg-purple-100',
+      url: '/kaijudx/uri' // Custom URL
     },
     {
       name: 'Meme',
@@ -65,7 +66,8 @@ export default function HomePageClient() {
       description: 'Ancient water spirit with the ability to control rivers and rain.',
       nftImage: '/images/Meme-NFT.png',
       physicalImage: '/images/Meme.png',
-      backgroundColor: 'bg-blue-100' // FIXED: Proper Tailwind class
+      backgroundColor: 'bg-blue-100',
+      url: '/kaijudx/meme' // Custom URL
     },
     {
       name: 'Diamond Hands',
@@ -74,16 +76,18 @@ export default function HomePageClient() {
       description: 'Classic design in a cool, iconic colourway.',
       nftImage: '/images/Diamond-Hands-NFT.png',
       physicalImage: '/images/Diamond_hands_product_shot.png',
-      backgroundColor: 'bg-gray-100' // FIXED: Proper Tailwind class
+      backgroundColor: 'bg-gray-100',
+      url: '/kaijudx/diamond-hands' // Custom URL
     },
     {
       name: 'Genesis Plush (Green)',
       type: 'Plush',
       essence: 'Beautifully soft in the iconic design',
-      description: 'The immortal phoenix that rises from ashes stronger than before.',
+      description: 'The iconic Genesis design, in a cute and cuddly plush form.',
       nftImage: '/images/Genesis-NFT.png',
       physicalImage: '/images/Green_genesis_product_shot.png',
-      backgroundColor: 'bg-green-100' // FIXED: Proper Tailwind class
+      backgroundColor: 'bg-green-100',
+      url: '/kaijudex/pretty-fine-plushies' // Custom URL
     }
   ]
 
@@ -118,15 +122,6 @@ export default function HomePageClient() {
     }
   }
 
-  const handleLearnMore = (characterName: string) => {
-    console.log(`Learn more about ${characterName}`)
-    // Navigate to hero section for minting
-    const element = document.querySelector('#hero')
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' })
-    }
-  }
-
   return (
     <>
       <Header />
@@ -151,7 +146,7 @@ export default function HomePageClient() {
           title="Physical Collectibles Available"
           subtitle="Each mystery box contains one of these incredible physical collectibles, each paired with a unique NFT. Check out what you can mint!"
           characters={physicalCollectibles}
-          onLearnMore={handleLearnMore}
+          // Removed onLearnMore prop - navigation is now handled directly in the component
         />
         
         <section id="community">
