@@ -6,8 +6,7 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ConnectButton } from "thirdweb/react"
-import { thirdwebClient } from '@/lib/thirdweb'
+import SharedConnectButton from '@/components/shared/SharedConnectButton'
 import { Twitter, Instagram, MessageCircle, Send, ChevronDown, User } from 'lucide-react'
 
 // Social media links configuration
@@ -318,25 +317,7 @@ export default function Header() {
                 transition={{ delay: 0.4 }}
                 className="connect-button-container mr-4"
               >
-                <ConnectButton
-                  client={thirdwebClient}
-                  theme="dark"
-                  connectModal={{
-                    size: "compact",
-                    title: "Connect to CryptoKaiju",
-                    showThirdwebBranding: false,
-                    welcomeScreen: {
-                      title: "Welcome to CryptoKaiju",
-                      subtitle: "Connect your wallet to mint mystery boxes"
-                    }
-                  }}
-                  appMetadata={{
-                    name: "CryptoKaiju",
-                    description: "Collectible NFTs Linked to Toys",
-                    url: "https://cryptokaiju.com",
-                    logoUrl: "/images/cryptokaiju-logo.png",
-                  }}
-                />
+                <SharedConnectButton variant="header" />
               </motion.div>
 
               {/* Mobile Menu Button */}
