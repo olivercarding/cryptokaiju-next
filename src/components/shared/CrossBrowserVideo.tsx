@@ -31,7 +31,6 @@ export default function CrossBrowserVideo({
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isSafari, setIsSafari] = useState(false)
   const [hasError, setHasError] = useState(false)
-  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     // Detect Safari
