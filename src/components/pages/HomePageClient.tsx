@@ -22,26 +22,26 @@ export default function HomePageClient() {
     ultraRareChance: '5%'
   }
 
-  // Updated to use videos without extensions (CrossBrowserVideo will add them)
+  // Updated to use videos instead of images
   const howItWorksSteps = [
     {
       title: "Connect Wallet",
       description: "Link your wallet to participate in the mystery box mint.",
-      mediaSrc: "/videos/Comp 1_8", // Remove .webm extension
+      mediaSrc: "/videos/Comp 1_8.webm",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-light-pink"
     },
     {
       title: "Open Mystery Box",
       description: "Mint your box to reveal which of the 4 Kaiju you've found.",
-      mediaSrc: "/videos/comp2", // Remove .webm extension
+      mediaSrc: "/videos/comp2.webm",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-purple-light/20"
     },
     {
       title: "Enter Shipping Info",
       description: "Complete your order with shipping details and receive your NFC-chipped collectible!", 
-      mediaSrc: "/videos/Comp 1_9", // Remove .mp4 extension
+      mediaSrc: "/videos/Comp 1_9.mp4",
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-navy/10"
     }
