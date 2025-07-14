@@ -1,16 +1,16 @@
-// src/app/my-kaiju/page.tsx - COMPLETE REWRITE WITH ENHANCED DEBUGGING
+// src/app/my-kaiju/page.tsx - FIXED VERSION WITH PROPER WALLET HANDLING
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Wallet, Package, ExternalLink, Heart, Sparkles, Filter, Zap, Database, ArrowLeft, AlertTriangle, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
-import { ConnectButton } from "thirdweb/react"
+import { ConnectButton, useActiveAccount } from "thirdweb/react"
 import { thirdwebClient } from '@/lib/thirdweb'
-import { useBlockchainMyKaiju, useBlockchainKaijuSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
-import type { KaijuNFT } from '@/lib/services/BlockchainCryptoKaijuService'
+import { useBlockchainKaijuSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
+import BlockchainCryptoKaijuService, { type KaijuNFT } from '@/lib/services/BlockchainCryptoKaijuService'
 
 // FIXED: Safe attribute value renderer
 const renderAttributeValue = (value: any): string => {
@@ -227,7 +227,7 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
   )
 }
 
-const SearchSection = () => {
+const SearchSection = ({ isConnected }: { isConnected: boolean }) => {
   const { results, isLoading, search, clear, hasQuery } = useBlockchainKaijuSearch()
   const [searchTerm, setSearchTerm] = useState('')
 
@@ -239,6 +239,8 @@ const SearchSection = () => {
       clear()
     }
   }
+
+  if (!isConnected) return null
 
   return (
     <div className="mb-8">
@@ -394,8 +396,64 @@ const DebugPanel = ({ kaijus, isLoading, error, isConnected }: {
   )
 }
 
+// FIXED: Manual Kaiju fetching hook to prevent auto-connection
+function useManualKaijuFetch() {
+  const [kaijus, setKaijus] = useState<KaijuNFT[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchKaijus = async (address: string) => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      console.log('🔍 Manually fetching Kaiju for address:', address)
+      const fetchedKaijus = await BlockchainCryptoKaijuService.getTokensForAddress(address)
+      setKaijus(fetchedKaijus)
+      console.log('✅ Successfully fetched', fetchedKaijus.length, 'Kaiju')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      console.error('❌ Error fetching Kaiju:', errorMessage)
+      setError(errorMessage)
+      setKaijus([])
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const clear = () => {
+    setKaijus([])
+    setError(null)
+    setIsLoading(false)
+  }
+
+  return {
+    kaijus,
+    isLoading,
+    error,
+    fetchKaijus,
+    clear
+  }
+}
+
 export default function MyKaijuPage() {
-  const { kaijus, isLoading, error, isConnected } = useBlockchainMyKaiju()
+  // FIXED: Use non-auto-connecting wallet hook
+  const account = useActiveAccount()
+  const isConnected = !!account?.address
+  
+  // FIXED: Use manual fetching to prevent auto-connection
+  const { kaijus, isLoading, error, fetchKaijus, clear } = useManualKaijuFetch()
+  
+  // FIXED: Only fetch when user explicitly connects
+  useEffect(() => {
+    if (isConnected && account?.address) {
+      console.log('🔗 Wallet connected, fetching Kaiju...')
+      fetchKaijus(account.address)
+    } else {
+      console.log('💾 Wallet disconnected, clearing data...')
+      clear()
+    }
+  }, [isConnected, account?.address])
 
   // ENHANCED DEBUG LOGGING
   console.log('🐛 MY-KAIJU PAGE DEBUG:')
@@ -491,7 +549,7 @@ export default function MyKaijuPage() {
               </div>
             </motion.div>
 
-            {/* Wallet Connection Check */}
+            {/* FIXED: Wallet Connection Check - No auto-trigger */}
             {!isConnected && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -510,9 +568,27 @@ export default function MyKaijuPage() {
                     client={thirdwebClient}
                     theme="light"
                     connectModal={{
-                      size: "compact",
+                      size: "wide",
                       title: "Connect to view your Kaiju",
                       showThirdwebBranding: false,
+                      titleIcon: "",
+                    }}
+                    connectButton={{
+                      label: "Connect Wallet",
+                      style: {
+                        background: "linear-gradient(135deg, #ff6b9d 0%, #ff8cc8 100%)",
+                        color: "white",
+                        border: "none",
+                        borderRadius: "12px",
+                        padding: "12px 24px",
+                        fontSize: "16px",
+                        fontWeight: "bold",
+                        cursor: "pointer",
+                        minWidth: "160px"
+                      }
+                    }}
+                    autoConnect={{
+                      timeout: 15000
                     }}
                   />
                 </div>
@@ -552,7 +628,7 @@ export default function MyKaijuPage() {
             {isConnected && (
               <>
                 {/* Search Section */}
-                <SearchSection />
+                <SearchSection isConnected={isConnected} />
 
                 {/* Main Content */}
                 {isLoading ? (
