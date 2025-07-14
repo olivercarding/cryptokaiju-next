@@ -163,3 +163,83 @@ button[aria-label*="Connect"]:hover {
   transform: translateY(-1px) !important;
   box-shadow: 0 6px 20px 0 rgba(255, 0, 92, 0.4) !important;
 }
+* Safari-specific video container styles */
+@supports (-webkit-appearance: none) {
+  .video-container {
+    /* Force hardware acceleration for better video performance */
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    
+    /* Ensure background colors are respected */
+    background-clip: padding-box;
+    -webkit-background-clip: padding-box;
+  }
+  
+  .video-container video {
+    /* Better video rendering in Safari */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    
+    /* Ensure video doesn't override background */
+    mix-blend-mode: normal;
+    isolation: isolate;
+  }
+}
+
+/* Fallback background colors for Safari */
+.safari-bg-pink {
+  background-color: #fff0f2 !important;
+  background: linear-gradient(135deg, #fff0f2 0%, #ffe8ed 100%) !important;
+}
+
+.safari-bg-purple {
+  background-color: #f3e8ff !important;
+  background: linear-gradient(135deg, #f3e8ff 0%, #e8d5ff 100%) !important;
+}
+
+.safari-bg-navy {
+  background-color: #f0f4f8 !important;
+  background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%) !important;
+}
+
+/* Video overlay technique for Safari */
+.video-background-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.video-content-layer {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+}
+
+/* Enhanced border radius support */
+.video-container {
+  border-radius: 12px;
+  -webkit-border-radius: 12px;
+  overflow: hidden;
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+}
+
+/* Ensure proper video object-fit in Safari */
+video {
+  object-fit: cover;
+  -o-object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+/* Force GPU acceleration for smooth video playback */
+.video-container,
+.video-container video {
+  will-change: transform;
+  -webkit-transform: translate3d(0, 0, 0);
+  transform: translate3d(0, 0, 0);
+}

@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Image from 'next/image'
+import CrossBrowserVideo from './CrossBrowserVideo'
 
 interface VideoPolaroidCardProps {
   step: number
@@ -25,9 +26,10 @@ export default function VideoPolaroidCard({
   rotation = '0deg',
   size = 'medium'
 }: VideoPolaroidCardProps) {
-  const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef(null)
   const isInView = useInView(containerRef, { once: true })
+  const [shouldPlay, setShouldPlay] = useState(false)
+  const [isSafari, setIsSafari] = useState(false)
 
   const sizeConfig = {
     small: {
@@ -55,6 +57,14 @@ export default function VideoPolaroidCard({
 
   const config = sizeConfig[size]
 
+  // Detect Safari
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase()
+    const safariDetected = userAgent.includes('safari') && !userAgent.includes('chrome')
+    setIsSafari(safariDetected)
+  }, [])
+
+  // Handle play timing
   useEffect(() => {
     if (isInView && mediaType === 'video') {
       const delayMap: { [key: number]: number } = {
@@ -66,12 +76,21 @@ export default function VideoPolaroidCard({
       const delay = delayMap[step] ?? 0
 
       const timeout = setTimeout(() => {
-        videoRef.current?.play()
+        setShouldPlay(true)
       }, delay)
 
       return () => clearTimeout(timeout)
     }
   }, [isInView, step, mediaType])
+
+  // Convert WebM to MP4 for Safari compatibility
+  const getVideoSources = (src: string) => {
+    const basePath = src.replace(/\.[^/.]+$/, "") // Remove extension
+    return {
+      webm: src.endsWith('.webm') ? src : `${basePath}.webm`,
+      mp4: src.endsWith('.mp4') ? src : `${basePath}.mp4`
+    }
+  }
 
   return (
     <motion.div
@@ -86,33 +105,52 @@ export default function VideoPolaroidCard({
       </span>
 
       <div
-        className={`${config.videoHeight} w-full mb-4 rounded-[12px] overflow-hidden ${backgroundColor} relative`}
+        className={`${config.videoHeight} w-full mb-4 rounded-[12px] overflow-hidden relative`}
+        style={{
+          // Force background color for Safari
+          background: isSafari ? 
+            `linear-gradient(135deg, var(--color-kaiju-light-pink), var(--color-kaiju-purple-light))` : 
+            undefined
+        }}
       >
-        {mediaType === 'video' ? (
-          <video
-            ref={videoRef}
-            src={mediaSrc}
-            loop
-            muted
-            playsInline
-            preload="auto"
-            className="w-full h-full object-cover"
-          >
-            Your browser does not support the video tag.
-          </video>
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Image
-              src={mediaSrc}
-              alt={title}
-              width={280}
-              height={280}
-              className="object-contain max-w-full max-h-full"
-            />
-          </div>
-        )}
+        {/* Background color layer - always visible */}
+        <div 
+          className={`absolute inset-0 ${backgroundColor} ${isSafari ? 'opacity-100' : ''}`}
+          style={{
+            // Fallback colors for Safari
+            backgroundColor: isSafari ? 
+              (backgroundColor.includes('pink') ? '#fff0f2' : 
+               backgroundColor.includes('purple') ? '#e8d5ff' : 
+               backgroundColor.includes('navy') ? '#f0f4f8' : '#fff0f2') : 
+              undefined
+          }}
+        />
 
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/20 to-transparent h-16 rounded-b-[12px]" />
+        {/* Video/Image content */}
+        <div className="relative z-10 w-full h-full">
+          {mediaType === 'video' ? (
+            <CrossBrowserVideo
+              webmSrc={getVideoSources(mediaSrc).webm}
+              mp4Src={getVideoSources(mediaSrc).mp4}
+              className="w-full h-full object-cover"
+              autoPlay={shouldPlay}
+              onCanPlay={() => console.log(`Video ${step} can play`)}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Image
+                src={mediaSrc}
+                alt={title}
+                width={280}
+                height={280}
+                className="object-contain max-w-full max-h-full"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/20 to-transparent h-16 rounded-b-[12px] z-20" />
       </div>
 
       <div className={`text-center ${config.textPadding}`}>
