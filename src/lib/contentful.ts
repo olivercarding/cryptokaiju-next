@@ -2,23 +2,24 @@
 import { createClient } from 'contentful'
 import type { Entry, Asset, EntryFieldTypes } from 'contentful'
 
+// Environment variable validation
 if (!process.env.CONTENTFUL_SPACE_ID) {
-  throw new Error('CONTENTFUL_SPACE_ID is required')
+  throw new Error('CONTENTFUL_SPACE_ID environment variable is required')
 }
 
 if (!process.env.CONTENTFUL_ACCESS_TOKEN) {
-  throw new Error('CONTENTFUL_ACCESS_TOKEN is required')
+  throw new Error('CONTENTFUL_ACCESS_TOKEN environment variable is required')
 }
 
 // Create the Contentful client
 export const contentfulClient = createClient({
   space: process.env.CONTENTFUL_SPACE_ID,
   accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
-  // Use preview API for draft content
+  // Use preview API for draft content in development
   host: process.env.CONTENTFUL_PREVIEW === 'true' ? 'preview.contentful.com' : 'cdn.contentful.com',
 })
 
-// TypeScript interfaces for your blog content using Contentful's type system
+// TypeScript interfaces for blog content
 export interface BlogPostFields {
   title: EntryFieldTypes.Text
   slug: EntryFieldTypes.Text
@@ -44,112 +45,218 @@ export interface AuthorFields {
 
 export interface Author extends Entry<AuthorFields> {}
 
-// Helper function to get blog posts
-export async function getBlogPosts(limit: number = 10, skip: number = 0): Promise<BlogPost[]> {
+// Helper function to safely handle Contentful API calls
+async function safeContentfulCall<T>(
+  operation: () => Promise<T>,
+  fallback: T,
+  errorMessage: string
+): Promise<T> {
   try {
-    const response = await contentfulClient.getEntries<BlogPostFields>({
-      content_type: 'blogPost',
-      limit,
-      skip,
-      order: ['-fields.publishDate'],
-      include: 2, // Include linked entries
-    })
-    
-    return response.items
+    return await operation()
   } catch (error) {
-    console.error('Error fetching blog posts:', error)
-    return []
+    console.error(`${errorMessage}:`, error)
+    
+    // In development, you might want to throw the error to see what's wrong
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Contentful Error Details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+    }
+    
+    return fallback
   }
 }
 
-// Helper function to get a single blog post by slug
+// Get blog posts with pagination and sorting
+export async function getBlogPosts(limit: number = 10, skip: number = 0): Promise<BlogPost[]> {
+  return safeContentfulCall(
+    async () => {
+      const response = await contentfulClient.getEntries<BlogPostFields>({
+        content_type: 'blogPost',
+        limit: Math.min(limit, 1000), // Contentful max limit
+        skip,
+        order: ['-fields.publishDate'],
+        include: 2, // Include linked entries
+      })
+      
+      return response.items.filter(item => 
+        item.fields.title && 
+        item.fields.slug && 
+        item.fields.publishDate
+      )
+    },
+    [],
+    'Error fetching blog posts'
+  )
+}
+
+// Get a single blog post by slug
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
-  try {
-    const response = await contentfulClient.getEntries<BlogPostFields>({
-      content_type: 'blogPost',
-      'fields.slug': slug,
-      limit: 1,
-      include: 2,
-    })
-    
-    return response.items[0] || null
-  } catch (error) {
-    console.error('Error fetching blog post:', error)
+  if (!slug || typeof slug !== 'string') {
+    console.error('Invalid slug provided to getBlogPostBySlug:', slug)
     return null
   }
+
+  return safeContentfulCall(
+    async () => {
+      const response = await contentfulClient.getEntries<BlogPostFields>({
+        content_type: 'blogPost',
+        'fields.slug': slug,
+        limit: 1,
+        include: 2,
+      })
+      
+      const post = response.items[0]
+      
+      // Validate required fields
+      if (post && (!post.fields.title || !post.fields.content)) {
+        console.warn(`Blog post with slug "${slug}" is missing required fields`)
+        return null
+      }
+      
+      return post || null
+    },
+    null,
+    `Error fetching blog post with slug: ${slug}`
+  )
 }
 
-// Helper function to get featured blog posts
+// Get featured blog posts
 export async function getFeaturedBlogPosts(limit: number = 3): Promise<BlogPost[]> {
-  try {
-    const response = await contentfulClient.getEntries<BlogPostFields>({
-      content_type: 'blogPost',
-      'fields.featured': true,
-      limit,
-      order: ['-fields.publishDate'],
-      include: 2,
-    })
-    
-    return response.items
-  } catch (error) {
-    console.error('Error fetching featured blog posts:', error)
-    return []
-  }
+  return safeContentfulCall(
+    async () => {
+      const response = await contentfulClient.getEntries<BlogPostFields>({
+        content_type: 'blogPost',
+        'fields.featured': true,
+        limit: Math.min(limit, 100),
+        order: ['-fields.publishDate'],
+        include: 2,
+      })
+      
+      return response.items.filter(item => 
+        item.fields.title && 
+        item.fields.slug && 
+        item.fields.publishDate
+      )
+    },
+    [],
+    'Error fetching featured blog posts'
+  )
 }
 
-// Helper function to get blog posts by tag
+// Get blog posts by tag
 export async function getBlogPostsByTag(tag: string, limit: number = 10): Promise<BlogPost[]> {
-  try {
-    const response = await contentfulClient.getEntries<BlogPostFields>({
-      content_type: 'blogPost',
-      'fields.tags[in]': tag,
-      limit,
-      order: ['-fields.publishDate'],
-      include: 2,
-    })
-    
-    return response.items
-  } catch (error) {
-    console.error('Error fetching blog posts by tag:', error)
+  if (!tag || typeof tag !== 'string') {
+    console.error('Invalid tag provided to getBlogPostsByTag:', tag)
     return []
   }
+
+  return safeContentfulCall(
+    async () => {
+      const response = await contentfulClient.getEntries<BlogPostFields>({
+        content_type: 'blogPost',
+        'fields.tags[in]': tag,
+        limit: Math.min(limit, 1000),
+        order: ['-fields.publishDate'],
+        include: 2,
+      })
+      
+      return response.items.filter(item => 
+        item.fields.title && 
+        item.fields.slug && 
+        item.fields.publishDate
+      )
+    },
+    [],
+    `Error fetching blog posts by tag: ${tag}`
+  )
 }
 
-// Helper function to search blog posts
+// Search blog posts
 export async function searchBlogPosts(query: string, limit: number = 10): Promise<BlogPost[]> {
-  try {
-    const response = await contentfulClient.getEntries<BlogPostFields>({
-      content_type: 'blogPost',
-      query,
-      limit,
-      order: ['-fields.publishDate'],
-      include: 2,
-    })
-    
-    return response.items
-  } catch (error) {
-    console.error('Error searching blog posts:', error)
+  if (!query || typeof query !== 'string' || query.trim().length === 0) {
     return []
   }
+
+  return safeContentfulCall(
+    async () => {
+      const response = await contentfulClient.getEntries<BlogPostFields>({
+        content_type: 'blogPost',
+        query: query.trim(),
+        limit: Math.min(limit, 1000),
+        order: ['-fields.publishDate'],
+        include: 2,
+      })
+      
+      return response.items.filter(item => 
+        item.fields.title && 
+        item.fields.slug && 
+        item.fields.publishDate
+      )
+    },
+    [],
+    `Error searching blog posts with query: ${query}`
+  )
 }
 
-// Helper function to get all unique tags
+// Get all unique tags
 export async function getAllTags(): Promise<string[]> {
-  try {
-    const response = await contentfulClient.getEntries<BlogPostFields>({
-      content_type: 'blogPost',
-      limit: 1000, // Get all posts to extract tags
-      select: ['fields.tags'],
-    })
-    
-    const allTags = response.items
-      .flatMap(item => item.fields.tags || [])
-      .filter((tag, index, array) => array.indexOf(tag) === index) // Remove duplicates
-      .sort()
-    
-    return allTags
-  } catch (error) {
-    console.error('Error fetching tags:', error)
-    return []
-  }
+  return safeContentfulCall(
+    async () => {
+      const response = await contentfulClient.getEntries<BlogPostFields>({
+        content_type: 'blogPost',
+        limit: 1000, // Get all posts to extract tags
+        select: ['fields.tags'],
+      })
+      
+      const allTags = response.items
+        .flatMap(item => item.fields.tags || [])
+        .filter((tag): tag is string => Boolean(tag && typeof tag === 'string'))
+        .filter((tag, index, array) => array.indexOf(tag) === index) // Remove duplicates
+        .sort()
+      
+      return allTags
+    },
+    [],
+    'Error fetching tags'
+  )
+}
+
+// Get total count of blog posts (useful for pagination)
+export async function getBlogPostsCount(): Promise<number> {
+  return safeContentfulCall(
+    async () => {
+      const response = await contentfulClient.getEntries<BlogPostFields>({
+        content_type: 'blogPost',
+        limit: 0, // Don't return items, just count
+      })
+      
+      return response.total
+    },
+    0,
+    'Error fetching blog posts count'
+  )
+}
+
+// Get recent blog posts for RSS/sitemap
+export async function getRecentBlogPosts(limit: number = 50): Promise<BlogPost[]> {
+  return safeContentfulCall(
+    async () => {
+      const response = await contentfulClient.getEntries<BlogPostFields>({
+        content_type: 'blogPost',
+        limit: Math.min(limit, 1000),
+        order: ['-fields.publishDate'],
+        select: ['fields.title', 'fields.slug', 'fields.excerpt', 'fields.publishDate', 'fields.author'],
+      })
+      
+      return response.items.filter(item => 
+        item.fields.title && 
+        item.fields.slug && 
+        item.fields.publishDate
+      )
+    },
+    [],
+    'Error fetching recent blog posts'
+  )
 }

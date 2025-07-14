@@ -61,8 +61,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@cryptokaiju',
-    creator: '@cryptokaiju',
+    site: '@cryptokaijuio',
+    creator: '@cryptokaijuio',
   },
   robots: {
     index: true,
@@ -78,6 +78,22 @@ export const metadata: Metadata = {
   verification: {
     google: 'your-google-verification-code',
   },
+  // Add icon metadata for better favicon support
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+      { url: '/favicon-96x96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/favicon.ico', sizes: 'any' }
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
+    ],
+    other: [
+      { rel: 'mask-icon', url: '/safari-pinned-tab.svg', color: '#ff005c' },
+    ],
+  },
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({
@@ -101,9 +117,17 @@ export default function RootLayout({
           dangerouslySetInnerHTML={createJsonLd(websiteSchema)}
         />
 
-        {/* Icons and manifest */}
-        <link rel="icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {/* Enhanced favicon configuration for better browser support */}
+        <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#ff005c" />
+        <meta name="msapplication-TileColor" content="#ff005c" />
+        <meta name="theme-color" content="#ff005c" />
+
+        {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
 
         {/* Preconnects */}
