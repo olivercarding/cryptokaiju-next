@@ -23,13 +23,13 @@ export const contentfulClient = createClient({
 // TypeScript interfaces for blog content - properly typed
 export interface BlogPostFields {
   title: EntryFieldTypes.Text
-  slug: EntryFieldTypes.Text
+  slug: EntryFieldTypes.Symbol
   excerpt: EntryFieldTypes.Text
   content: Document // Change this to Document type directly
   featuredImage?: Asset
-  author: EntryFieldTypes.Text
+  author: EntryFieldTypes.Symbol
   publishDate: EntryFieldTypes.Date
-  tags?: EntryFieldTypes.Array<EntryFieldTypes.Text>
+  tags?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
   metaDescription?: EntryFieldTypes.Text
   readingTime?: EntryFieldTypes.Number
   featured?: EntryFieldTypes.Boolean
@@ -41,7 +41,7 @@ export interface BlogPost extends Entry<BlogPostFields, undefined, string> {
 }
 
 export interface AuthorFields {
-  name: EntryFieldTypes.Text
+  name: EntryFieldTypes.Symbol
   bio?: EntryFieldTypes.Text
   avatar?: Asset
   socialLinks?: EntryFieldTypes.Object
