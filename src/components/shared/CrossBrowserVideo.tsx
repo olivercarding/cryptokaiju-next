@@ -30,6 +30,8 @@ export default function CrossBrowserVideo({
 }: CrossBrowserVideoProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isSafari, setIsSafari] = useState(false)
+  const [hasError, setHasError] = useState(false)
+  const [hasError, setHasError] = useState(false)
 
   useEffect(() => {
     // Detect Safari
@@ -45,6 +47,23 @@ export default function CrossBrowserVideo({
     onCanPlay?.()
   }
 
+  const handleError = () => {
+    console.warn(`Video failed to load: ${isSafari ? mp4Src : webmSrc}`)
+    setHasError(true)
+  }
+
+  // If there's an error and we have a poster, show that instead
+  if (hasError && posterSrc) {
+    return (
+      <img 
+        src={posterSrc} 
+        alt="Video fallback" 
+        className={className}
+        style={{ objectFit: 'cover' }}
+      />
+    )
+  }
+
   return (
     <video
       ref={videoRef}
@@ -55,6 +74,7 @@ export default function CrossBrowserVideo({
       preload={preload}
       poster={posterSrc}
       onCanPlay={handleCanPlay}
+      onError={handleError}
       style={{
         // Ensure video fills container and background shows through
         backgroundColor: 'transparent',

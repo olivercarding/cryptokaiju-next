@@ -85,10 +85,25 @@ export default function VideoPolaroidCard({
 
   // Convert WebM to MP4 for Safari compatibility
   const getVideoSources = (src: string) => {
-    const basePath = src.replace(/\.[^/.]+$/, "") // Remove extension
-    return {
-      webm: src.endsWith('.webm') ? src : `${basePath}.webm`,
-      mp4: src.endsWith('.mp4') ? src : `${basePath}.mp4`
+    // If the source already has an extension, use it as-is for that format
+    if (src.endsWith('.webm')) {
+      const basePath = src.replace('.webm', '')
+      return {
+        webm: src,
+        mp4: `${basePath}.mp4`
+      }
+    } else if (src.endsWith('.mp4')) {
+      const basePath = src.replace('.mp4', '')
+      return {
+        webm: `${basePath}.webm`,
+        mp4: src
+      }
+    } else {
+      // No extension provided, append both
+      return {
+        webm: `${src}.webm`,
+        mp4: `${src}.mp4`
+      }
     }
   }
 
@@ -135,6 +150,7 @@ export default function VideoPolaroidCard({
               className="w-full h-full object-cover"
               autoPlay={shouldPlay}
               onCanPlay={() => console.log(`Video ${step} can play`)}
+              posterSrc={`/images/video-poster-${step}.jpg`} // Optional: add poster images
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
