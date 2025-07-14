@@ -16,17 +16,18 @@ export default function SharedConnectButton({
   variant = 'inline',
 }: SharedConnectButtonProps) {
   /* ------------------------------------------------------------------ */
-  /* Literal-typed helpers so TS does not widen to generic "string"      */
+  /* literal helpers so TS keeps union types rather than widening        */
   /* ------------------------------------------------------------------ */
   const theme: 'dark' | 'light' = variant === 'header' ? 'dark' : 'light'
   const size: 'compact' | 'wide' = variant === 'header' ? 'compact' : 'wide'
 
   /* ------------------------------------------------------------------ */
-  /* Shared config passed to <ConnectButton>                             */
+  /* config handed to <ConnectButton>                                    */
   /* ------------------------------------------------------------------ */
   const sharedConfig: ConnectButtonProps = {
     client: thirdwebClient,
     theme,
+    autoConnect: false, // <-- correctly placed at top level
 
     connectModal: {
       size,
@@ -37,7 +38,6 @@ export default function SharedConnectButton({
         subtitle:
           'Connect your wallet to mint mystery boxes and view your collection',
       },
-      autoConnect: false,
     },
 
     appMetadata: {
@@ -47,7 +47,7 @@ export default function SharedConnectButton({
       logoUrl: '/images/cryptokaiju-logo.png',
     },
 
-    // Extra button styling only for in-page (“inline”) usage
+    // Extra styling only for the inline button
     connectButton:
       variant === 'inline'
         ? {
