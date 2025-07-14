@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 import Header from '@/components/layout/Header'
 import BlogPostPageClient from '@/components/pages/BlogPostPageClient'
 import { getBlogPostBySlug, getBlogPosts } from '@/lib/contentful'
+import type { BlogPost } from '@/lib/contentful'
 
 interface BlogPostPageProps {
   params: {
@@ -12,12 +13,17 @@ interface BlogPostPageProps {
   }
 }
 
+// Type guard to ensure we have a valid blog post
+function isValidBlogPost(post: BlogPost | null): post is BlogPost {
+  return !!(post && post.fields && post.fields.title && post.fields.content)
+}
+
 // Generate metadata for SEO
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   try {
     const post = await getBlogPostBySlug(params.slug)
     
-    if (!post) {
+    if (!isValidBlogPost(post)) {
       return {
         title: 'Post Not Found | CryptoKaiju',
         description: 'The requested blog post could not be found.',
@@ -25,7 +31,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     }
 
     const { title, excerpt, featuredImage, metaDescription, author, publishDate, tags } = post.fields
-    const description = metaDescription || excerpt
+    const description = metaDescription || excerpt || 'Read the latest from CryptoKaiju blog'
     const imageUrl = featuredImage 
       ? `https:${featuredImage.fields.file?.url}?w=1200&h=630&fit=fill`
       : '/images/blog-og-image.jpg'
@@ -70,9 +76,11 @@ export async function generateStaticParams() {
   try {
     const posts = await getBlogPosts(100) // Get first 100 posts for static generation
     
-    return posts.map((post) => ({
-      slug: post.fields.slug,
-    }))
+    return posts
+      .filter(isValidBlogPost)
+      .map((post) => ({
+        slug: post.fields.slug,
+      }))
   } catch (error) {
     console.error('Error generating static params:', error)
     return []
@@ -113,27 +121,18 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
     const post = await getBlogPostBySlug(params.slug)
 
-    if (!post) {
-      console.log(`Blog post not found for slug: ${params.slug}`)
-      notFound()
-    }
-
-    // Validate required post fields
-    if (!post.fields.title || !post.fields.content) {
-      console.error('Blog post missing required fields:', {
-        slug: params.slug,
-        hasTitle: !!post.fields.title,
-        hasContent: !!post.fields.content,
-      })
+    if (!isValidBlogPost(post)) {
+      console.log(`Blog post not found or invalid for slug: ${params.slug}`)
       notFound()
     }
 
     // Get related posts (excluding current post)
-    let relatedPosts = []
+    let relatedPosts: BlogPost[] = []
     try {
       const allPosts = await getBlogPosts(10)
       relatedPosts = allPosts
         .filter(relatedPost => relatedPost.sys.id !== post.sys.id)
+        .filter(isValidBlogPost)
         .slice(0, 3)
     } catch (error) {
       console.warn('Error fetching related posts:', error)

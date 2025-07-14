@@ -81,6 +81,7 @@ export async function getBlogPosts(limit: number = 10, skip: number = 0): Promis
       })
       
       return response.items.filter(item => 
+        item.fields && 
         item.fields.title && 
         item.fields.slug && 
         item.fields.publishDate
@@ -110,7 +111,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
       const post = response.items[0]
       
       // Validate required fields
-      if (post && (!post.fields.title || !post.fields.content)) {
+      if (post && (!post.fields || !post.fields.title || !post.fields.content)) {
         console.warn(`Blog post with slug "${slug}" is missing required fields`)
         return null
       }
@@ -135,6 +136,7 @@ export async function getFeaturedBlogPosts(limit: number = 3): Promise<BlogPost[
       })
       
       return response.items.filter(item => 
+        item.fields && 
         item.fields.title && 
         item.fields.slug && 
         item.fields.publishDate
@@ -163,6 +165,7 @@ export async function getBlogPostsByTag(tag: string, limit: number = 10): Promis
       })
       
       return response.items.filter(item => 
+        item.fields && 
         item.fields.title && 
         item.fields.slug && 
         item.fields.publishDate
@@ -190,6 +193,7 @@ export async function searchBlogPosts(query: string, limit: number = 10): Promis
       })
       
       return response.items.filter(item => 
+        item.fields && 
         item.fields.title && 
         item.fields.slug && 
         item.fields.publishDate
@@ -211,6 +215,7 @@ export async function getAllTags(): Promise<string[]> {
       })
       
       const allTags = response.items
+        .filter(item => item.fields && item.fields.tags)
         .flatMap(item => item.fields.tags || [])
         .filter((tag): tag is string => Boolean(tag && typeof tag === 'string'))
         .filter((tag, index, array) => array.indexOf(tag) === index) // Remove duplicates
