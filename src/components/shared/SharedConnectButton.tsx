@@ -27,7 +27,7 @@ export default function SharedConnectButton({
   const sharedConfig: ConnectButtonProps = {
     client: thirdwebClient,
     theme,
-    autoConnect: false, // <-- correctly placed at top level
+    autoConnect: true, // <-- correctly placed at top level
 
     connectModal: {
       size,
