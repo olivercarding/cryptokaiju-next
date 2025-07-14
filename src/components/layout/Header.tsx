@@ -14,7 +14,7 @@ const socialLinks = [
   {
     name: 'X (Twitter)',
     icon: Twitter,
-    url: 'https://twitter.com/cryptokaiju',
+    url: 'https://x.com/CryptoKaijuIO',
     color: 'hover:text-blue-400'
   },
   {
@@ -26,7 +26,7 @@ const socialLinks = [
   {
     name: 'Discord',
     icon: MessageCircle,
-    url: 'https://discord.gg/eNDmDr553R',
+    url: 'https://discord.gg/yMZtRgTps8',
     color: 'hover:text-indigo-400'
   },
   {
@@ -74,8 +74,8 @@ export default function Header() {
   const navItems = [
     { label: 'Mint', href: '/#hero' },
     { label: 'How It Works', href: '/#how' },
-    { label: 'Designs', href: '/#mysteries' },
     { label: 'Kaijudex', href: '/kaijudex' },
+    { label: 'Blog', href: '/blog' },
   ]
 
   const accountItems = [

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Filter, X, ChevronDown } from 'lucide-react'
 import BlogCard from './BlogCard'
 import type { BlogPost } from '@/lib/contentful'
+import { toStringValue, toStringArray } from '@/lib/contentful'
 
 interface BlogListProps {
   posts: BlogPost[]
@@ -24,38 +25,43 @@ export default function BlogList({ posts, tags }: BlogListProps) {
 
     // Filter by search query
     if (searchQuery) {
-      filtered = filtered.filter(post => 
-        post.fields.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.fields.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.fields.tags?.some(tag => 
-          tag.toLowerCase().includes(searchQuery.toLowerCase())
-        )
-      )
+      filtered = filtered.filter(post => {
+        const title = toStringValue(post.fields.title).toLowerCase()
+        const excerpt = toStringValue(post.fields.excerpt).toLowerCase()
+        const postTags = toStringArray(post.fields.tags)
+        
+        return title.includes(searchQuery.toLowerCase()) ||
+               excerpt.includes(searchQuery.toLowerCase()) ||
+               postTags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      })
     }
 
     // Filter by tag
     if (selectedTag) {
-      filtered = filtered.filter(post => 
-        post.fields.tags?.includes(selectedTag)
-      )
+      filtered = filtered.filter(post => {
+        const postTags = toStringArray(post.fields.tags)
+        return postTags.includes(selectedTag)
+      })
     }
 
     // Sort posts
     switch (sortBy) {
       case 'oldest':
         filtered = [...filtered].sort((a, b) => 
-          new Date(a.fields.publishDate).getTime() - new Date(b.fields.publishDate).getTime()
+          new Date(toStringValue(a.fields.publishDate)).getTime() - 
+          new Date(toStringValue(b.fields.publishDate)).getTime()
         )
         break
       case 'reading-time':
         filtered = [...filtered].sort((a, b) => 
-          (a.fields.readingTime || 0) - (b.fields.readingTime || 0)
+          (Number(a.fields.readingTime) || 0) - (Number(b.fields.readingTime) || 0)
         )
         break
       case 'newest':
       default:
         filtered = [...filtered].sort((a, b) => 
-          new Date(b.fields.publishDate).getTime() - new Date(a.fields.publishDate).getTime()
+          new Date(toStringValue(b.fields.publishDate)).getTime() - 
+          new Date(toStringValue(a.fields.publishDate)).getTime()
         )
         break
     }

@@ -50,6 +50,20 @@ export interface Author extends Entry<AuthorFields, undefined, string> {
   fields: AuthorFields
 }
 
+// Utility function to safely convert Contentful field types to strings
+export function toStringValue(value: any): string {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'object' && value.toString) return value.toString()
+  return String(value)
+}
+
+// Utility function to safely convert Contentful arrays to string arrays
+export function toStringArray(value: any): string[] {
+  if (!Array.isArray(value)) return []
+  return value.map(toStringValue).filter(Boolean)
+}
+
 // Type guard to check if an entry is a valid blog post
 export function isValidBlogPost(entry: any): entry is BlogPost {
   return (
@@ -57,11 +71,11 @@ export function isValidBlogPost(entry: any): entry is BlogPost {
     typeof entry === 'object' &&
     entry.fields &&
     typeof entry.fields === 'object' &&
-    typeof entry.fields.title === 'string' &&
-    typeof entry.fields.slug === 'string' &&
-    typeof entry.fields.content === 'object' &&
-    typeof entry.fields.author === 'string' &&
-    typeof entry.fields.publishDate === 'string'
+    entry.fields.title &&
+    entry.fields.slug &&
+    entry.fields.content &&
+    entry.fields.author &&
+    entry.fields.publishDate
   )
 }
 
@@ -217,8 +231,8 @@ export async function getAllTags(): Promise<string[]> {
       
       const allTags = response.items
         .filter(item => item.fields && Array.isArray(item.fields.tags))
-        .flatMap(item => item.fields.tags || [])
-        .filter((tag): tag is string => Boolean(tag && typeof tag === 'string'))
+        .flatMap(item => toStringArray(item.fields.tags))
+        .filter(Boolean)
         .filter((tag, index, array) => array.indexOf(tag) === index) // Remove duplicates
         .sort()
       

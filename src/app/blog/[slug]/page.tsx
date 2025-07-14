@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import Header from '@/components/layout/Header'
 import BlogPostPageClient from '@/components/pages/BlogPostPageClient'
-import { getBlogPostBySlug, getBlogPosts, isValidBlogPost } from '@/lib/contentful'
+import { getBlogPostBySlug, getBlogPosts, isValidBlogPost, toStringValue, toStringArray } from '@/lib/contentful'
 import type { BlogPost } from '@/lib/contentful'
 
 interface BlogPostPageProps {
@@ -26,32 +26,39 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
     }
 
     const { title, excerpt, featuredImage, metaDescription, author, publishDate, tags } = post.fields
-    const description = metaDescription || excerpt || 'Read the latest from CryptoKaiju blog'
+    const titleStr = toStringValue(title)
+    const excerptStr = toStringValue(excerpt)
+    const metaDescStr = toStringValue(metaDescription)
+    const authorStr = toStringValue(author)
+    const publishDateStr = toStringValue(publishDate)
+    const tagsArray = toStringArray(tags)
+    
+    const description = metaDescStr || excerptStr || 'Read the latest from CryptoKaiju blog'
     const imageUrl = featuredImage 
       ? `https:${featuredImage.fields.file?.url}?w=1200&h=630&fit=fill`
       : '/images/blog-og-image.jpg'
 
     return {
-      title: `${title} | CryptoKaiju Blog`,
+      title: `${titleStr} | CryptoKaiju Blog`,
       description,
-      keywords: tags ? tags.join(', ') : undefined,
-      authors: [{ name: author }],
-      publishedTime: publishDate,
+      keywords: tagsArray.length > 0 ? tagsArray.join(', ') : undefined,
+      authors: [{ name: authorStr }],
+      publishedTime: publishDateStr,
       openGraph: {
-        title,
+        title: titleStr,
         description,
         images: [imageUrl],
         type: 'article',
-        publishedTime: publishDate,
-        authors: [author],
-        tags: tags,
+        publishedTime: publishDateStr,
+        authors: [authorStr],
+        tags: tagsArray.length > 0 ? tagsArray : undefined,
       },
       twitter: {
         card: 'summary_large_image',
-        title,
+        title: titleStr,
         description,
         images: [imageUrl],
-        creator: `@${author.toLowerCase().replace(/\s+/g, '')}`,
+        creator: `@${authorStr.toLowerCase().replace(/\s+/g, '')}`,
       },
       alternates: {
         canonical: `/blog/${params.slug}`,
@@ -74,7 +81,7 @@ export async function generateStaticParams() {
     return posts
       .filter(isValidBlogPost)
       .map((post) => ({
-        slug: post.fields.slug,
+        slug: toStringValue(post.fields.slug),
       }))
   } catch (error) {
     console.error('Error generating static params:', error)

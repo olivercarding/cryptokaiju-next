@@ -1,5 +1,5 @@
 // app/blog/rss/route.ts
-import { getRecentBlogPosts } from '@/lib/contentful'
+import { getRecentBlogPosts, toStringValue } from '@/lib/contentful'
 import { NextResponse } from 'next/server'
 
 // Site configuration - update these with your actual site details
@@ -24,12 +24,12 @@ export async function GET() {
       .map(
         (post) => `
     <item>
-      <title><![CDATA[${post.fields.title}]]></title>
-      <description><![CDATA[${post.fields.excerpt || ''}]]></description>
-      <link>${SITE_URL}/blog/${post.fields.slug}</link>
-      <guid>${SITE_URL}/blog/${post.fields.slug}</guid>
-      <pubDate>${new Date(post.fields.publishDate).toUTCString()}</pubDate>
-      <author>${post.fields.author || 'CryptoKaiju Team'}</author>
+      <title><![CDATA[${toStringValue(post.fields.title)}]]></title>
+      <description><![CDATA[${toStringValue(post.fields.excerpt)}]]></description>
+      <link>${SITE_URL}/blog/${toStringValue(post.fields.slug)}</link>
+      <guid>${SITE_URL}/blog/${toStringValue(post.fields.slug)}</guid>
+      <pubDate>${new Date(toStringValue(post.fields.publishDate)).toUTCString()}</pubDate>
+      <author>${toStringValue(post.fields.author) || 'CryptoKaiju Team'}</author>
     </item>`
       )
       .join('')}

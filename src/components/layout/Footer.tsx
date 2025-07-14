@@ -29,7 +29,7 @@ const socialLinks = [
   {
     name: 'Telegram',
     icon: Send,
-    url: 'https://t.me/cryptokaiju',
+    url: 'https://t.me/Crypto_Kaiju',
     color: 'hover:text-blue-500'
   }
 ]
