@@ -20,36 +20,38 @@ export const contentfulClient = createClient({
   host: process.env.CONTENTFUL_PREVIEW === 'true' ? 'preview.contentful.com' : 'cdn.contentful.com',
 })
 
-// TypeScript interfaces for blog content - properly typed
-export interface BlogPostFields {
-  title: EntryFieldTypes.Text
-  slug: EntryFieldTypes.Symbol
-  excerpt: EntryFieldTypes.Text
-  content: Document // Change this to Document type directly
-  featuredImage?: Asset
-  author: EntryFieldTypes.Symbol
-  publishDate: EntryFieldTypes.Date
-  tags?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-  metaDescription?: EntryFieldTypes.Text
-  readingTime?: EntryFieldTypes.Number
-  featured?: EntryFieldTypes.Boolean
+// TypeScript interfaces for blog content - properly typed for newer Contentful SDK
+export interface BlogPostSkeleton {
+  contentTypeId: 'blogPost'
+  fields: {
+    title: EntryFieldTypes.Text
+    slug: EntryFieldTypes.Symbol
+    excerpt: EntryFieldTypes.Text
+    content: Document
+    featuredImage?: Asset
+    author: EntryFieldTypes.Symbol
+    publishDate: EntryFieldTypes.Date
+    tags?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
+    metaDescription?: EntryFieldTypes.Text
+    readingTime?: EntryFieldTypes.Number
+    featured?: EntryFieldTypes.Boolean
+  }
 }
 
-// Properly extend Entry with our fields
-export interface BlogPost extends Entry<BlogPostFields, undefined, string> {
-  fields: BlogPostFields
+// Type alias for BlogPost
+export type BlogPost = Entry<BlogPostSkeleton, undefined, string>
+
+export interface AuthorSkeleton {
+  contentTypeId: 'author'
+  fields: {
+    name: EntryFieldTypes.Symbol
+    bio?: EntryFieldTypes.Text
+    avatar?: Asset
+    socialLinks?: EntryFieldTypes.Object
+  }
 }
 
-export interface AuthorFields {
-  name: EntryFieldTypes.Symbol
-  bio?: EntryFieldTypes.Text
-  avatar?: Asset
-  socialLinks?: EntryFieldTypes.Object
-}
-
-export interface Author extends Entry<AuthorFields, undefined, string> {
-  fields: AuthorFields
-}
+export type Author = Entry<AuthorSkeleton, undefined, string>
 
 // Utility function to safely convert Contentful field types to strings
 export function toStringValue(value: any): string {
@@ -121,7 +123,7 @@ async function safeContentfulCall<T>(
 export async function getBlogPosts(limit: number = 10, skip: number = 0): Promise<BlogPost[]> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries({
+      const response = await contentfulClient.getEntries<BlogPostSkeleton>({
         content_type: 'blogPost',
         limit: Math.min(limit, 1000), // Contentful max limit
         skip,
@@ -130,7 +132,7 @@ export async function getBlogPosts(limit: number = 10, skip: number = 0): Promis
       })
       
       // Filter and validate entries
-      return response.items.filter(isValidBlogPost) as BlogPost[]
+      return response.items.filter(isValidBlogPost)
     },
     [],
     'Error fetching blog posts'
@@ -146,7 +148,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries({
+      const response = await contentfulClient.getEntries<BlogPostSkeleton>({
         content_type: 'blogPost',
         'fields.slug': slug,
         limit: 1,
@@ -161,7 +163,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
         return null
       }
       
-      return entry as BlogPost
+      return entry
     },
     null,
     `Error fetching blog post with slug: ${slug}`
@@ -172,7 +174,7 @@ export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> 
 export async function getFeaturedBlogPosts(limit: number = 3): Promise<BlogPost[]> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries({
+      const response = await contentfulClient.getEntries<BlogPostSkeleton>({
         content_type: 'blogPost',
         'fields.featured': true,
         limit: Math.min(limit, 100),
@@ -180,7 +182,7 @@ export async function getFeaturedBlogPosts(limit: number = 3): Promise<BlogPost[
         include: 2,
       })
       
-      return response.items.filter(isValidBlogPost) as BlogPost[]
+      return response.items.filter(isValidBlogPost)
     },
     [],
     'Error fetching featured blog posts'
@@ -196,7 +198,7 @@ export async function getBlogPostsByTag(tag: string, limit: number = 10): Promis
 
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries({
+      const response = await contentfulClient.getEntries<BlogPostSkeleton>({
         content_type: 'blogPost',
         'fields.tags[in]': tag,
         limit: Math.min(limit, 1000),
@@ -204,7 +206,7 @@ export async function getBlogPostsByTag(tag: string, limit: number = 10): Promis
         include: 2,
       })
       
-      return response.items.filter(isValidBlogPost) as BlogPost[]
+      return response.items.filter(isValidBlogPost)
     },
     [],
     `Error fetching blog posts by tag: ${tag}`
@@ -219,7 +221,7 @@ export async function searchBlogPosts(query: string, limit: number = 10): Promis
 
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries({
+      const response = await contentfulClient.getEntries<BlogPostSkeleton>({
         content_type: 'blogPost',
         query: query.trim(),
         limit: Math.min(limit, 1000),
@@ -227,7 +229,7 @@ export async function searchBlogPosts(query: string, limit: number = 10): Promis
         include: 2,
       })
       
-      return response.items.filter(isValidBlogPost) as BlogPost[]
+      return response.items.filter(isValidBlogPost)
     },
     [],
     `Error searching blog posts with query: ${query}`
@@ -238,7 +240,7 @@ export async function searchBlogPosts(query: string, limit: number = 10): Promis
 export async function getAllTags(): Promise<string[]> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries({
+      const response = await contentfulClient.getEntries<BlogPostSkeleton>({
         content_type: 'blogPost',
         limit: 1000, // Get all posts to extract tags
         select: ['fields.tags'],
@@ -262,7 +264,7 @@ export async function getAllTags(): Promise<string[]> {
 export async function getBlogPostsCount(): Promise<number> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries({
+      const response = await contentfulClient.getEntries<BlogPostSkeleton>({
         content_type: 'blogPost',
         limit: 0, // Don't return items, just count
       })
@@ -278,14 +280,14 @@ export async function getBlogPostsCount(): Promise<number> {
 export async function getRecentBlogPosts(limit: number = 50): Promise<BlogPost[]> {
   return safeContentfulCall(
     async () => {
-      const response = await contentfulClient.getEntries({
+      const response = await contentfulClient.getEntries<BlogPostSkeleton>({
         content_type: 'blogPost',
         limit: Math.min(limit, 1000),
         order: ['-fields.publishDate'],
         select: ['fields.title', 'fields.slug', 'fields.excerpt', 'fields.publishDate', 'fields.author'],
       })
       
-      return response.items.filter(isValidBlogPost) as BlogPost[]
+      return response.items.filter(isValidBlogPost)
     },
     [],
     'Error fetching recent blog posts'
