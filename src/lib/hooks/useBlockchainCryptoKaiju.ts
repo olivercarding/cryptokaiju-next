@@ -1,10 +1,11 @@
-// src/lib/hooks/useBlockchainCryptoKaiju.ts
+// src/lib/hooks/useBlockchainCryptoKaiju.ts - FIXED WITH OPENSEA DATA IN SEARCH RESULTS
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
 import { useActiveAccount } from 'thirdweb/react'
 import BlockchainCryptoKaijuService, {
   type KaijuNFT,
+  type SearchResult,
 } from '@/lib/services/BlockchainCryptoKaijuService'
 
 /* ======================================================================= */
@@ -68,10 +69,10 @@ export function useBlockchainMyKaiju() {
 }
 
 /* ======================================================================= */
-/*  SEARCH HOOK — UNCHANGED                                                */
+/*  SEARCH HOOK — FIXED TO INCLUDE OPENSEA DATA                           */
 /* ======================================================================= */
 export function useBlockchainKaijuSearch() {
-  const [results, setResults] = useState<KaijuNFT[]>([])
+  const [results, setResults] = useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState<string>('')

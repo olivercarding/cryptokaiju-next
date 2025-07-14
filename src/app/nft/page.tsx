@@ -1,4 +1,4 @@
-// src/app/nft/page.tsx - FIXED VERSION WITH NAVIGATION LINKS
+// src/app/nft/page.tsx - FIXED VERSION WITH OPENSEA IMAGE FALLBACKS
 'use client'
 
 import { useState } from 'react'
@@ -8,50 +8,65 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
 import { useBlockchainNFTSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
-import type { KaijuNFT } from '@/lib/services/BlockchainCryptoKaijuService'
+import type { KaijuNFT, OpenSeaAsset } from '@/lib/services/BlockchainCryptoKaijuService'
 
-// Enhanced Image Component with fallbacks
+// Enhanced Image Component with OpenSea fallbacks - FIXED VERSION
 const KaijuImage = ({ 
   nft, 
+  openSeaData,
   onError 
 }: { 
   nft: KaijuNFT
+  openSeaData?: OpenSeaAsset | null
   onError?: () => void
 }) => {
   const [imageError, setImageError] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  // Build image source priority list
+  // Build image source priority list - FIXED to match KaijuDetailsPageClient
   const getImageSources = (): string[] => {
     const sources: string[] = []
     
-    // IPFS sources (via our proxy to avoid CORS)
+    // 1. FIRST: Try OpenSea images (most reliable)
+    if (openSeaData?.display_image_url) {
+      sources.push(openSeaData.display_image_url)
+    }
+    if (openSeaData?.image_url && openSeaData.image_url !== openSeaData.display_image_url) {
+      sources.push(openSeaData.image_url)
+    }
+    
+    // 2. SECOND: IPFS sources (via our proxy to avoid CORS)
     if (nft?.ipfsData?.image) {
       let ipfsUrl = nft.ipfsData.image
       if (ipfsUrl.startsWith('ipfs://')) {
         const hash = ipfsUrl.replace('ipfs://', '')
         sources.push(`/api/ipfs/${hash}`)
+        // Also try the direct pinata URL like in KaijuDetailsPageClient
+        sources.push(`https://cryptokaiju.mypinata.cloud/ipfs/${hash}`)
       } else if (ipfsUrl.includes('/ipfs/')) {
         const hash = ipfsUrl.split('/ipfs/')[1]
         sources.push(`/api/ipfs/${hash}`)
+        sources.push(`https://cryptokaiju.mypinata.cloud/ipfs/${hash}`)
       } else {
         sources.push(`/api/ipfs/${ipfsUrl}`)
       }
     }
     
-    // Token URI as IPFS source
+    // 3. THIRD: Token URI as IPFS source
     if (nft?.tokenURI) {
       let tokenUri = nft.tokenURI
       if (tokenUri.startsWith('ipfs://')) {
         const hash = tokenUri.replace('ipfs://', '')
         sources.push(`/api/ipfs/${hash}`)
+        sources.push(`https://cryptokaiju.mypinata.cloud/ipfs/${hash}`)
       } else if (tokenUri.includes('/ipfs/')) {
         const hash = tokenUri.split('/ipfs/')[1]
         sources.push(`/api/ipfs/${hash}`)
+        sources.push(`https://cryptokaiju.mypinata.cloud/ipfs/${hash}`)
       }
     }
     
-    // Fallback placeholder
+    // 4. LAST: Fallback placeholder
     sources.push('/images/placeholder-kaiju.png')
     
     return sources
@@ -83,9 +98,11 @@ const KaijuImage = ({
 
 const NFTDisplayCard = ({ 
   nft, 
+  openSeaData,
   onShare 
 }: { 
   nft: KaijuNFT
+  openSeaData?: OpenSeaAsset | null
   onShare: () => void
 }) => {
   const formatDate = (timestamp: number): string => {
@@ -119,7 +136,11 @@ const NFTDisplayCard = ({
         {/* NFT Image */}
         <div className="relative">
           <div className="relative h-80 lg:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
-            <KaijuImage nft={nft} />
+            {/* FIXED: Pass openSeaData to KaijuImage */}
+            <KaijuImage 
+              nft={nft} 
+              openSeaData={openSeaData}
+            />
             
             {/* Blockchain badge */}
             <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
@@ -339,8 +360,10 @@ export default function NFTLookupPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [hasSearched, setHasSearched] = useState(false)
 
-  // Get the first result (since search typically returns one result)
-  const nft = results.length > 0 ? results[0] : null
+  // Get the first result with both nft and openSeaData - FIXED
+  const searchResult = results.length > 0 ? results[0] : null
+  const nft = searchResult?.nft || null
+  const openSeaData = searchResult?.openSeaData || null
 
   const handleSearch = (query: string) => {
     setSearchQuery(query)
@@ -541,6 +564,7 @@ export default function NFTLookupPage() {
                     >
                       <NFTDisplayCard
                         nft={nft}
+                        openSeaData={openSeaData}
                         onShare={handleShare}
                       />
                     </motion.div>

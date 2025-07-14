@@ -1,4 +1,4 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - OPTIMIZED VERSION
+// src/lib/services/BlockchainCryptoKaijuService.ts - OPTIMIZED VERSION WITH SEARCH RESULT FIX
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
@@ -109,6 +109,12 @@ export interface OpenSeaAsset {
     rank: number
     score: number
   }
+}
+
+// FIXED: Add SearchResult interface for returning both NFT and OpenSea data
+export interface SearchResult {
+  nft: KaijuNFT
+  openSeaData: OpenSeaAsset | null
 }
 
 export interface CollectionStats {
@@ -913,18 +919,18 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Search tokens
+   * FIXED: Search tokens - now returns SearchResult with both nft and openSeaData
    */
-  async searchTokens(query: string): Promise<KaijuNFT[]> {
+  async searchTokens(query: string): Promise<SearchResult[]> {
     const isTokenId = /^\d+$/.test(query.trim())
     
     if (isTokenId) {
       const result = await this.getByTokenId(query.trim())
-      return result.nft ? [result.nft] : []
+      return result.nft ? [{ nft: result.nft, openSeaData: result.openSeaData }] : []
     }
     
     const result = await this.getByNFCId(query.trim())
-    return result.nft ? [result.nft] : []
+    return result.nft ? [{ nft: result.nft, openSeaData: result.openSeaData }] : []
   }
 
   /**

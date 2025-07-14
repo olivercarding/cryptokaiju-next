@@ -335,7 +335,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                   </div>
                   
                   <h1 className="text-5xl font-black text-white mb-2">
-                    {kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
+                  {kaiju.ipfsData?.name || openSeaData?.name || `Kaiju #${kaiju.tokenId}`}
                   </h1>
                   <p className="text-xl text-kaiju-pink font-mono">
                     Ethereum NFT • Blockchain Collectible
