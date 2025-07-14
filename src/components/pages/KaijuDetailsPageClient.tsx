@@ -1,9 +1,9 @@
-// src/components/pages/KaijuDetailsPageClient.tsx
+// src/components/pages/KaijuDetailsPageClient.tsx - RESTYLED TO MATCH SITE DESIGN
 'use client'
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Heart, Shield, Zap, Star } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Heart, Shield, Zap, Star, Database, Package } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
@@ -39,12 +39,12 @@ const TraitCard = ({ traitType, value, rarity }: {
     initial={{ opacity: 0, scale: 0.9 }}
     animate={{ opacity: 1, scale: 1 }}
     whileHover={{ scale: 1.05 }}
-    className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:border-kaiju-pink/50 transition-all duration-300"
+    className="bg-white rounded-xl p-4 border-2 border-gray-100 hover:border-kaiju-pink/50 transition-all duration-300 shadow-lg"
   >
-    <div className="text-white/60 text-sm font-mono uppercase tracking-wide mb-1">
+    <div className="text-kaiju-navy/60 text-sm font-mono uppercase tracking-wide mb-1">
       {traitType}
     </div>
-    <div className="text-white font-bold text-lg capitalize mb-1">
+    <div className="text-kaiju-navy font-bold text-lg capitalize mb-1">
       {value}
     </div>
     {rarity && (
@@ -73,13 +73,13 @@ const StatBar = ({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-white/80 text-sm font-mono">
+        <div className="flex items-center gap-2 text-kaiju-navy/80 text-sm font-mono">
           {icon}
           <span>{label}</span>
         </div>
         <span className="text-kaiju-pink font-mono text-sm">{value}/{max}</span>
       </div>
-      <div className="h-3 bg-white/10 rounded-full overflow-hidden">
+      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
         <motion.div
           className={`h-full bg-gradient-to-r ${color} rounded-full`}
           initial={{ width: 0 }}
@@ -219,14 +219,14 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
     return (
       <>
         <Header />
-        <div className="min-h-screen bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-black flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy flex items-center justify-center">
           <div className="text-center">
             <motion.div
               animate={{ rotate: 360 }}
               transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full mx-auto mb-4"
             />
-            <div className="text-kaiju-pink font-mono text-lg">LOADING ENTITY DATA...</div>
+            <div className="text-kaiju-pink font-mono text-lg">LOADING KAIJU DATA...</div>
             <div className="text-white/60 font-mono text-sm mt-2">Accessing blockchain records...</div>
           </div>
         </div>
@@ -238,9 +238,9 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
     return (
       <>
         <Header />
-        <div className="min-h-screen bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-black flex items-center justify-center">
+        <div className="min-h-screen bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy flex items-center justify-center">
           <div className="text-center">
-            <div className="text-red-400 text-xl font-bold mb-4">Entity Not Found</div>
+            <div className="text-red-400 text-xl font-bold mb-4">Kaiju Not Found</div>
             <div className="text-white/60 mb-8">The requested Kaiju does not exist in our database.</div>
             <Link 
               href="/kaijudex"
@@ -261,10 +261,52 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-black">
-        {/* Header */}
-        <div className="relative pt-32 pb-8 px-6">
-          <div className="max-w-7xl mx-auto">
+      <main className="text-kaiju-navy overflow-x-hidden">
+        {/* HERO SECTION - DARK WITH KAIJU INFO */}
+        <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
+          {/* Animated background elements */}
+          <div className="absolute inset-0">
+            <motion.div 
+              className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3]
+              }}
+              transition={{ duration: 8, repeat: Infinity }}
+            />
+            <motion.div 
+              className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_30%,theme(colors.kaiju-purple-light/30)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                opacity: [0.4, 0.2, 0.4]
+              }}
+              transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+            />
+          </div>
+
+          {/* Floating particles */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-kaiju-pink rounded-full opacity-60"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0]
+              }}
+              transition={{
+                duration: Math.random() * 3 + 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+          
+          <div className="relative z-10 max-w-7xl mx-auto px-6">
             {/* Back Navigation */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -273,10 +315,10 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
             >
               <Link 
                 href="/kaijudex"
-                className="inline-flex items-center gap-2 text-kaiju-pink hover:text-white transition-colors font-mono"
+                className="inline-flex items-center gap-2 text-white hover:text-kaiju-pink transition-colors font-mono"
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to Kaijudex Database
+                Back to Kaijudex
               </Link>
             </motion.div>
 
@@ -288,7 +330,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
             >
               {/* Left: Kaiju Image */}
               <div className="lg:col-span-1">
-                <div className="relative h-96 bg-gradient-to-br from-kaiju-purple-dark/20 to-kaiju-pink/20 rounded-xl overflow-hidden border border-kaiju-pink/30">
+                <div className="relative h-96 bg-gradient-to-br from-white/10 to-white/5 rounded-xl overflow-hidden border border-white/20 backdrop-blur-sm">
                   <Image
                     src={getImageSrc()}
                     alt={kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
@@ -320,6 +362,12 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                       </motion.a>
                     )}
                   </div>
+
+                  {/* Blockchain verification badge */}
+                  <div className="absolute top-4 left-4 bg-green-500/90 backdrop-blur-sm text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                    <Database className="w-3 h-3" />
+                    ON-CHAIN
+                  </div>
                 </div>
               </div>
 
@@ -329,7 +377,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                   <div className="flex items-center gap-4 mb-4">
                     <span className="text-kaiju-pink font-mono text-lg">#{kaiju.tokenId}</span>
                     {kaiju.nfcId && (
-                      <span className="text-white/60 font-mono text-sm">NFC: {kaiju.nfcId}</span>
+                      <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">NFC: {kaiju.nfcId}</span>
                     )}
                     {kaiju.batch && (
                       <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">
@@ -342,13 +390,13 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                     {kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
                   </h1>
                   <p className="text-xl text-kaiju-pink font-mono">
-                    Ethereum Entity • ERC-721 Token
+                    Ethereum NFT • Blockchain Collectible
                   </p>
                 </div>
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10 backdrop-blur-sm">
                     <div className="flex items-center gap-2 text-white/60 text-sm font-mono mb-1">
                       <User className="w-4 h-4" />
                       OWNER
@@ -359,7 +407,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                   </div>
                   
                   {kaiju.birthDate && (
-                    <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                    <div className="bg-white/5 rounded-lg p-4 border border-white/10 backdrop-blur-sm">
                       <div className="flex items-center gap-2 text-white/60 text-sm font-mono mb-1">
                         <Calendar className="w-4 h-4" />
                         MINTED
@@ -370,7 +418,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                     </div>
                   )}
                   
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10 backdrop-blur-sm">
                     <div className="flex items-center gap-2 text-white/60 text-sm font-mono mb-1">
                       <Hash className="w-4 h-4" />
                       TOKEN ID
@@ -380,7 +428,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                     </div>
                   </div>
                   
-                  <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10 backdrop-blur-sm">
                     <div className="flex items-center gap-2 text-white/60 text-sm font-mono mb-1">
                       <Star className="w-4 h-4" />
                       RARITY
@@ -418,29 +466,32 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
               </div>
             </motion.div>
           </div>
-        </div>
+        </section>
 
-        {/* Content Tabs */}
-        <div className="px-6 pb-20">
+        {/* CONTENT SECTION - LIGHT BACKGROUND LIKE OTHER PAGES */}
+        <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
           <div className="max-w-7xl mx-auto">
             {/* Tab Navigation */}
-            <div className="flex gap-4 mb-8 border-b border-white/20">
+            <div className="flex justify-center gap-4 mb-12">
               {[
-                { id: 'overview', label: 'Overview' },
-                { id: 'traits', label: 'Traits' },
-                { id: 'history', label: 'Battle Stats' }
+                { id: 'overview', label: 'Overview', icon: Database },
+                { id: 'traits', label: 'Traits', icon: Star },
+                { id: 'history', label: 'Battle Stats', icon: Zap }
               ].map((tab) => (
-                <button
+                <motion.button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`px-6 py-3 font-mono transition-colors ${
+                  whileHover={{ y: -2 }}
+                  whileTap={{ scale: 0.95 }}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all ${
                     activeTab === tab.id
-                      ? 'text-kaiju-pink border-b-2 border-kaiju-pink'
-                      : 'text-white/70 hover:text-white'
+                      ? 'bg-kaiju-pink text-white shadow-lg'
+                      : 'bg-white text-kaiju-navy hover:bg-gray-50 shadow'
                   }`}
                 >
+                  <tab.icon className="w-4 h-4" />
                   {tab.label}
-                </button>
+                </motion.button>
               ))}
             </div>
 
@@ -455,43 +506,53 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                   className="space-y-8"
                 >
                   {/* Description */}
-                  <div className="bg-kaiju-navy/50 rounded-xl p-6 border border-kaiju-pink/30">
-                    <h3 className="text-xl font-bold text-white mb-4">Description</h3>
-                    <p className="text-white/80 leading-relaxed">
+                  <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100">
+                    <h3 className="text-2xl font-bold text-kaiju-navy mb-6 flex items-center gap-2">
+                      <Package className="w-6 h-6 text-kaiju-pink" />
+                      Description
+                    </h3>
+                    <p className="text-kaiju-navy/80 leading-relaxed text-lg">
                       {kaiju.ipfsData?.description || openSeaData?.description || 
                        `A unique CryptoKaiju entity minted on the Ethereum blockchain. This digital collectible represents ownership of both a virtual and physical Kaiju character with unique traits and characteristics.`}
                     </p>
                   </div>
 
                   {/* Metadata */}
-                  <div className="bg-kaiju-navy/50 rounded-xl p-6 border border-kaiju-pink/30">
-                    <h3 className="text-xl font-bold text-white mb-4">Blockchain Data</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-white/60 font-mono">Contract:</span>
-                        <span className="text-white">0x102c...1fd0</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-white/60 font-mono">Token Standard:</span>
-                        <span className="text-white">ERC-721</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-white/60 font-mono">Blockchain:</span>
-                        <span className="text-white">Ethereum</span>
-                      </div>
-                      {kaiju.tokenURI && (
-                        <div className="flex justify-between">
-                          <span className="text-white/60 font-mono">Metadata:</span>
-                          <a 
-                            href={kaiju.tokenURI}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-kaiju-pink hover:text-white transition-colors"
-                          >
-                            IPFS
-                          </a>
+                  <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100">
+                    <h3 className="text-2xl font-bold text-kaiju-navy mb-6 flex items-center gap-2">
+                      <Database className="w-6 h-6 text-kaiju-pink" />
+                      Blockchain Data
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                          <span className="text-kaiju-navy/60 font-medium">Contract:</span>
+                          <span className="text-kaiju-navy font-mono">0x102c...1fd0</span>
                         </div>
-                      )}
+                        <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                          <span className="text-kaiju-navy/60 font-medium">Token Standard:</span>
+                          <span className="text-kaiju-navy font-mono">ERC-721</span>
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                          <span className="text-kaiju-navy/60 font-medium">Blockchain:</span>
+                          <span className="text-kaiju-navy">Ethereum</span>
+                        </div>
+                        {kaiju.tokenURI && (
+                          <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                            <span className="text-kaiju-navy/60 font-medium">Metadata:</span>
+                            <a 
+                              href={kaiju.tokenURI}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-kaiju-pink hover:text-kaiju-red transition-colors font-mono"
+                            >
+                              IPFS
+                            </a>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -521,8 +582,9 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                   ))}
                   
                   {traits.length === 0 && (
-                    <div className="col-span-full text-center py-8 text-white/60">
-                      No traits data available for this Kaiju.
+                    <div className="col-span-full text-center py-8 text-gray-500">
+                      <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                      <p>No traits data available for this Kaiju.</p>
                     </div>
                   )}
                 </motion.div>
@@ -537,9 +599,12 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                   className="grid grid-cols-1 lg:grid-cols-2 gap-8"
                 >
                   {/* Battle Stats */}
-                  <div className="bg-kaiju-navy/50 rounded-xl p-6 border border-kaiju-pink/30">
-                    <h3 className="text-lg font-bold text-white mb-6">Combat Analysis</h3>
-                    <div className="space-y-4">
+                  <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100">
+                    <h3 className="text-2xl font-bold text-kaiju-navy mb-6 flex items-center gap-2">
+                      <Zap className="w-6 h-6 text-kaiju-pink" />
+                      Combat Analysis
+                    </h3>
+                    <div className="space-y-6">
                       <StatBar label="Attack" value={battleStats.attack} icon={<Zap className="w-4 h-4" />} />
                       <StatBar label="Defense" value={battleStats.defense} icon={<Shield className="w-4 h-4" />} />
                       <StatBar label="Speed" value={battleStats.speed} icon={<Zap className="w-4 h-4" />} />
@@ -548,29 +613,32 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                   </div>
 
                   {/* Additional Info */}
-                  <div className="bg-kaiju-navy/50 rounded-xl p-6 border border-kaiju-pink/30">
-                    <h3 className="text-lg font-bold text-white mb-4">Entity Classification</h3>
-                    <div className="space-y-3 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-white/60 font-mono">Type:</span>
-                        <span className="text-white">Digital Collectible</span>
+                  <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100">
+                    <h3 className="text-2xl font-bold text-kaiju-navy mb-6 flex items-center gap-2">
+                      <Database className="w-6 h-6 text-kaiju-pink" />
+                      Collection Info
+                    </h3>
+                    <div className="space-y-4">
+                      <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-kaiju-navy/60 font-medium">Type:</span>
+                        <span className="text-kaiju-navy">Digital Collectible</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-white/60 font-mono">Format:</span>
-                        <span className="text-kaiju-pink">NFT + Physical</span>
+                      <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-kaiju-navy/60 font-medium">Format:</span>
+                        <span className="text-kaiju-pink font-semibold">NFT + Physical</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-white/60 font-mono">Collection:</span>
-                        <span className="text-white">CryptoKaiju</span>
+                      <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-kaiju-navy/60 font-medium">Collection:</span>
+                        <span className="text-kaiju-navy">CryptoKaiju</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-white/60 font-mono">Status:</span>
-                        <span className="text-green-400">Active</span>
+                      <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-kaiju-navy/60 font-medium">Status:</span>
+                        <span className="text-green-600 font-semibold">Active</span>
                       </div>
                       {kaiju.batch && (
-                        <div className="flex justify-between">
-                          <span className="text-white/60 font-mono">Batch:</span>
-                          <span className="text-kaiju-pink">{kaiju.batch}</span>
+                        <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                          <span className="text-kaiju-navy/60 font-medium">Batch:</span>
+                          <span className="text-kaiju-pink font-semibold">{kaiju.batch}</span>
                         </div>
                       )}
                     </div>
@@ -578,9 +646,40 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Bottom CTA */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+              className="text-center mt-16"
+            >
+              <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100 max-w-2xl mx-auto">
+                <h3 className="text-2xl font-bold text-kaiju-navy mb-4">Discover More Kaiju</h3>
+                <p className="text-kaiju-navy/70 mb-6">
+                  Explore the complete CryptoKaiju collection and find your next collectible.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Link
+                    href="/kaijudex"
+                    className="inline-flex items-center gap-3 bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                  >
+                    <Database className="w-5 h-5" />
+                    Browse Collection
+                  </Link>
+                  <Link
+                    href="/#hero"
+                    className="inline-flex items-center gap-3 bg-white border-2 border-kaiju-pink text-kaiju-pink font-bold text-lg px-8 py-4 rounded-xl hover:bg-kaiju-pink hover:text-white transition-all duration-300"
+                  >
+                    <Package className="w-5 h-5" />
+                    Mint Mystery Box
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </>
   )
 }

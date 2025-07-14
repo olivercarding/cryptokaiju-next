@@ -1,4 +1,4 @@
-// src/app/my-kaiju/page.tsx – FIXED VERSION, OLD-STYLE UI, NEW WALLET LOGIC
+// src/app/my-kaiju/page.tsx – RESTYLED VERSION MATCHING SITE DESIGN
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -377,28 +377,110 @@ export default function MyKaijuPage() {
       <Header />
 
       <main className="text-kaiju-navy overflow-x-hidden">
-        {/* ------------ HERO SECTION (visuals unchanged) ------------ */}
-        {/* ... hero code unchanged for brevity ... */}
+        {/* HERO SECTION - CONSISTENT WITH SITE DESIGN */}
+        <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
+          {/* Animated background elements */}
+          <div className="absolute inset-0">
+            <motion.div 
+              className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3]
+              }}
+              transition={{ duration: 8, repeat: Infinity }}
+            />
+            <motion.div 
+              className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_30%,theme(colors.kaiju-purple-light/30)_0%,transparent_50%)]"
+              animate={{ 
+                scale: [1.2, 1, 1.2],
+                opacity: [0.4, 0.2, 0.4]
+              }}
+              transition={{ duration: 10, repeat: Infinity, delay: 2 }}
+            />
+          </div>
 
-        {/* wallet prompt – old dark modal + button style restored */}
-        {!connected && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20 max-w-md mx-auto"
-          >
-            <Database className="w-16 h-16 text-kaiju-pink mx-auto mb-4" />
-            <h3 className="text-xl font-bold text-white mb-4 text-center">Connect Your Wallet</h3>
-            <p className="text-white/80 mb-6 text-center">
-              Connect your Ethereum wallet to view and manage your CryptoKaiju collection with instant blockchain verification.
-            </p>
-            <div className="flex justify-center">
-              <SharedConnectButton variant="header" label="Connect Wallet" />
-            </div>
-          </motion.div>
-        )}
+          {/* Floating particles */}
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-kaiju-pink rounded-full opacity-60"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                y: [0, -100, 0],
+                opacity: [0, 1, 0],
+                scale: [0, 1, 0]
+              }}
+              transition={{
+                duration: Math.random() * 3 + 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+            />
+          ))}
+          
+          <div className="relative z-10 max-w-7xl mx-auto px-6">
+            {/* Back Navigation */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="mb-8"
+            >
+              <Link 
+                href="/kaijudex"
+                className="inline-flex items-center gap-2 text-white hover:text-kaiju-pink transition-colors font-mono"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Kaijudex
+              </Link>
+            </motion.div>
 
-        {/* ------------ MAIN CONTENT SECTION ------------ */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center"
+            >
+              <div className="flex items-center justify-center gap-3 mb-6">
+                <Wallet className="w-8 h-8 text-kaiju-pink" />
+                <h1 className="text-4xl md:text-5xl font-black text-white">
+                  My Kaiju Collection
+                </h1>
+              </div>
+              <p className="text-xl text-white/90 max-w-3xl mx-auto">
+                {connected 
+                  ? "Your verified CryptoKaiju NFTs directly from the blockchain"
+                  : "Connect your wallet to view and manage your CryptoKaiju collection"
+                }
+              </p>
+            </motion.div>
+
+            {/* wallet prompt for non-connected users */}
+            {!connected && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 }}
+                className="mt-12 max-w-md mx-auto"
+              >
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
+                  <Database className="w-16 h-16 text-kaiju-pink mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-white mb-4 text-center">Connect Your Wallet</h3>
+                  <p className="text-white/80 mb-6 text-center">
+                    Connect your Ethereum wallet to view and manage your CryptoKaiju collection with instant blockchain verification.
+                  </p>
+                  <div className="flex justify-center">
+                    <SharedConnectButton variant="header" label="Connect Wallet" />
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </section>
+
+        {/* MAIN CONTENT SECTION - LIGHT BACKGROUND LIKE OTHER PAGES */}
         <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
           <div className="max-w-7xl mx-auto">
             <SearchSection connected={connected} />
