@@ -6,7 +6,7 @@ import { Calendar, Clock, User, ArrowRight, Tag } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import type { BlogPost } from '@/lib/contentful'
-import { toStringValue, toStringArray } from '@/lib/contentful'
+import { toStringValue, toStringArray, getAssetUrl, getAssetTitle } from '@/lib/contentful'
 
 interface BlogCardProps {
   post: BlogPost
@@ -14,16 +14,16 @@ interface BlogCardProps {
 }
 
 export default function BlogCard({ post, index }: BlogCardProps) {
-  const { title, excerpt, featuredImage, author, publishDate, readingTime, tags, slug } = post.fields
+  const fields = post.fields
 
   // Convert Contentful field types to strings
-  const titleStr = toStringValue(title)
-  const excerptStr = toStringValue(excerpt)
-  const authorStr = toStringValue(author)
-  const publishDateStr = toStringValue(publishDate)
-  const slugStr = toStringValue(slug)
-  const tagsArray = toStringArray(tags)
-  const readingTimeNum = readingTime ? Number(readingTime) : undefined
+  const titleStr = toStringValue(fields.title)
+  const excerptStr = toStringValue(fields.excerpt)
+  const authorStr = toStringValue(fields.author)
+  const publishDateStr = toStringValue(fields.publishDate)
+  const slugStr = toStringValue(fields.slug)
+  const tagsArray = toStringArray(fields.tags)
+  const readingTimeNum = fields.readingTime ? Number(fields.readingTime) : undefined
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -41,11 +41,11 @@ export default function BlogCard({ post, index }: BlogCardProps) {
       className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-gray-100 hover:border-kaiju-pink/30"
     >
       {/* Featured Image */}
-      {featuredImage && (
+      {fields.featuredImage && (
         <div className="relative h-48 overflow-hidden">
           <Image
-            src={`https:${featuredImage.fields.file?.url}?w=600&h=300&fit=fill`}
-            alt={toStringValue(featuredImage.fields.title) || titleStr}
+            src={getAssetUrl(fields.featuredImage, { w: 600, h: 300, fit: 'fill' }) || ''}
+            alt={getAssetTitle(fields.featuredImage) || titleStr}
             fill
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />

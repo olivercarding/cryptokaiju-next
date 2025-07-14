@@ -1,6 +1,6 @@
 // src/lib/contentful.ts
 import { createClient } from 'contentful'
-import type { Entry, Asset, EntryFieldTypes } from 'contentful'
+import type { Entry, Asset, EntryFieldTypes, EntrySkeletonType } from 'contentful'
 import type { Document } from '@contentful/rich-text-types'
 
 // Environment variable validation
@@ -21,7 +21,7 @@ export const contentfulClient = createClient({
 })
 
 // TypeScript interfaces for blog content - properly typed for newer Contentful SDK
-export interface BlogPostSkeleton {
+export interface BlogPostSkeleton extends EntrySkeletonType {
   contentTypeId: 'blogPost'
   fields: {
     title: EntryFieldTypes.Text
@@ -41,7 +41,7 @@ export interface BlogPostSkeleton {
 // Type alias for BlogPost
 export type BlogPost = Entry<BlogPostSkeleton, undefined, string>
 
-export interface AuthorSkeleton {
+export interface AuthorSkeleton extends EntrySkeletonType {
   contentTypeId: 'author'
   fields: {
     name: EntryFieldTypes.Symbol
@@ -52,6 +52,39 @@ export interface AuthorSkeleton {
 }
 
 export type Author = Entry<AuthorSkeleton, undefined, string>
+
+// Helper type to extract field types for easier usage
+export type BlogPostFields = BlogPostSkeleton['fields']
+export type AuthorFields = AuthorSkeleton['fields']
+
+// Helper function to safely access blog post fields
+export function getBlogPostFields(post: BlogPost): BlogPostFields {
+  return post.fields
+}
+
+// Helper function to safely access asset URL
+export function getAssetUrl(asset: Asset | undefined, options?: { w?: number; h?: number; fit?: string }): string | null {
+  if (!asset?.fields?.file?.url) return null
+  
+  const baseUrl = `https:${asset.fields.file.url}`
+  
+  if (options) {
+    const params = new URLSearchParams()
+    if (options.w) params.set('w', options.w.toString())
+    if (options.h) params.set('h', options.h.toString())
+    if (options.fit) params.set('fit', options.fit)
+    
+    const queryString = params.toString()
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl
+  }
+  
+  return baseUrl
+}
+
+// Helper function to safely get asset title/description
+export function getAssetTitle(asset: Asset | undefined): string {
+  return asset?.fields?.title || asset?.fields?.description || ''
+}
 
 // Utility function to safely convert Contentful field types to strings
 export function toStringValue(value: any): string {

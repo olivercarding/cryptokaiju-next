@@ -4,7 +4,15 @@ import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 import Header from '@/components/layout/Header'
 import BlogPostPageClient from '@/components/pages/BlogPostPageClient'
-import { getBlogPostBySlug, getBlogPosts, isValidBlogPost, toStringValue, toStringArray } from '@/lib/contentful'
+import { 
+  getBlogPostBySlug, 
+  getBlogPosts, 
+  isValidBlogPost, 
+  toStringValue, 
+  toStringArray,
+  getAssetUrl,
+  getAssetTitle
+} from '@/lib/contentful'
 import type { BlogPost } from '@/lib/contentful'
 
 interface BlogPostPageProps {
@@ -25,18 +33,16 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
       }
     }
 
-    const { title, excerpt, featuredImage, metaDescription, author, publishDate, tags } = post.fields
-    const titleStr = toStringValue(title)
-    const excerptStr = toStringValue(excerpt)
-    const metaDescStr = toStringValue(metaDescription)
-    const authorStr = toStringValue(author)
-    const publishDateStr = toStringValue(publishDate)
-    const tagsArray = toStringArray(tags)
+    const fields = post.fields
+    const titleStr = toStringValue(fields.title)
+    const excerptStr = toStringValue(fields.excerpt)
+    const metaDescStr = toStringValue(fields.metaDescription)
+    const authorStr = toStringValue(fields.author)
+    const publishDateStr = toStringValue(fields.publishDate)
+    const tagsArray = toStringArray(fields.tags)
     
     const description = metaDescStr || excerptStr || 'Read the latest from CryptoKaiju blog'
-    const imageUrl = featuredImage 
-      ? `https:${featuredImage.fields.file?.url}?w=1200&h=630&fit=fill`
-      : '/images/blog-og-image.jpg'
+    const imageUrl = getAssetUrl(fields.featuredImage, { w: 1200, h: 630, fit: 'fill' }) || '/images/blog-og-image.jpg'
 
     return {
       title: `${titleStr} | CryptoKaiju Blog`,
