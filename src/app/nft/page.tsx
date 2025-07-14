@@ -1,9 +1,9 @@
-// src/app/nft/page.tsx - FIXED VERSION WITHOUT TEST PANELS
+// src/app/nft/page.tsx - FIXED VERSION WITH NAVIGATION LINKS
 'use client'
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database, Zap, AlertCircle, Package } from 'lucide-react'
+import { Search, ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Sparkles, Database, Zap, AlertCircle, Package, Eye } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
@@ -61,19 +61,12 @@ const KaijuImage = ({
   const currentSrc = imageSources[currentImageIndex] || '/images/placeholder-kaiju.png'
 
   const handleImageError = () => {
-    console.log(`❌ Image failed to load: ${currentSrc}`)
     if (currentImageIndex < imageSources.length - 1) {
-      console.log(`🔄 Trying next image source...`)
       setCurrentImageIndex(prev => prev + 1)
     } else {
-      console.log(`⚠️ All image sources exhausted`)
       setImageError(true)
       onError?.()
     }
-  }
-
-  const handleImageLoad = () => {
-    console.log(`✅ Image loaded successfully: ${currentSrc}`)
   }
 
   return (
@@ -83,7 +76,6 @@ const KaijuImage = ({
       fill
       className="object-contain p-6"
       onError={handleImageError}
-      onLoad={handleImageLoad}
       priority
     />
   )
@@ -96,8 +88,6 @@ const NFTDisplayCard = ({
   nft: KaijuNFT
   onShare: () => void
 }) => {
-  const [showDebugInfo, setShowDebugInfo] = useState(false)
-
   const formatDate = (timestamp: number): string => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -146,14 +136,6 @@ const NFTDisplayCard = ({
               )}
             </div>
             
-            {/* Debug toggle */}
-            <button
-              onClick={() => setShowDebugInfo(!showDebugInfo)}
-              className="absolute bottom-4 left-4 bg-gray-500/90 backdrop-blur-sm text-white px-2 py-1 rounded text-xs hover:bg-gray-600/90"
-            >
-              Debug {showDebugInfo ? '🔼' : '🔽'}
-            </button>
-            
             {/* Floating action buttons */}
             <div className="absolute bottom-4 right-4 flex gap-2">
               <motion.button
@@ -201,29 +183,6 @@ const NFTDisplayCard = ({
             </p>
           </div>
 
-          {/* Debug Information */}
-          <AnimatePresence>
-            {showDebugInfo && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="bg-gray-900 text-white rounded-lg p-4 text-xs"
-              >
-                <h4 className="font-bold mb-2 text-yellow-400">🔧 Debug Information</h4>
-                <div className="space-y-1 font-mono">
-                  <div>Token ID: {nft?.tokenId || 'None'}</div>
-                  <div>Owner: {nft?.owner ? `${nft.owner.slice(0, 8)}...` : 'None'}</div>
-                  <div>NFC ID: {nft?.nfcId || 'None'}</div>
-                  <div>Has IPFS Data: {nft?.ipfsData ? '✅' : '❌'}</div>
-                  <div>Token URI: {nft?.tokenURI || 'None'}</div>
-                  <div>IPFS Image: {nft?.ipfsData?.image || 'None'}</div>
-                  <div>Batch: {nft?.batch || 'None'}</div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           {/* Quick Stats */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="bg-gray-50 rounded-lg p-4">
@@ -270,8 +229,17 @@ const NFTDisplayCard = ({
             </p>
           </div>
 
-          {/* External Links */}
+          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
+            {/* View Details Button - Main CTA */}
+            <Link
+              href={`/kaiju/${nft?.tokenId}`}
+              className="flex-1 bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold py-3 px-4 rounded-xl transition-colors text-center flex items-center justify-center gap-2 hover:shadow-lg"
+            >
+              <Eye className="w-4 h-4" />
+              View Full Details
+            </Link>
+            
             <a
               href={`https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${nft?.tokenId}`}
               target="_blank"
@@ -279,16 +247,6 @@ const NFTDisplayCard = ({
               className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-center flex items-center justify-center gap-2"
             >
               View on OpenSea
-              <ExternalLink className="w-4 h-4" />
-            </a>
-            
-            <a
-              href={`https://etherscan.io/token/0x102c527714ab7e652630cac7a30abb482b041fd0?a=${nft?.tokenId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-xl transition-colors text-center flex items-center justify-center gap-2"
-            >
-              Etherscan
               <ExternalLink className="w-4 h-4" />
             </a>
           </div>
@@ -385,7 +343,6 @@ export default function NFTLookupPage() {
   const nft = results.length > 0 ? results[0] : null
 
   const handleSearch = (query: string) => {
-    console.log(`🔍 Starting search for: "${query}"`)
     setSearchQuery(query)
     setHasSearched(true)
     search(query)

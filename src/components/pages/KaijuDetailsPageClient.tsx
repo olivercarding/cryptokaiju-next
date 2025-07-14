@@ -1,9 +1,9 @@
-// src/components/pages/KaijuDetailsPageClient.tsx - RESTYLED TO MATCH SITE DESIGN
+// src/components/pages/KaijuDetailsPageClient.tsx - REMOVED BATTLE STATS
 'use client'
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Heart, Shield, Zap, Star, Database, Package } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Calendar, User, Hash, Share2, Star, Database, Package } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
@@ -55,45 +55,9 @@ const TraitCard = ({ traitType, value, rarity }: {
   </motion.div>
 )
 
-const StatBar = ({ 
-  label, 
-  value, 
-  max = 100, 
-  icon, 
-  color = "from-kaiju-pink to-kaiju-purple-light" 
-}: { 
-  label: string
-  value: number
-  max?: number
-  icon: React.ReactNode
-  color?: string
-}) => {
-  const percentage = Math.min((value / max) * 100, 100)
-  
-  return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-kaiju-navy/80 text-sm font-mono">
-          {icon}
-          <span>{label}</span>
-        </div>
-        <span className="text-kaiju-pink font-mono text-sm">{value}/{max}</span>
-      </div>
-      <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
-        <motion.div
-          className={`h-full bg-gradient-to-r ${color} rounded-full`}
-          initial={{ width: 0 }}
-          animate={{ width: `${percentage}%` }}
-          transition={{ duration: 1, delay: 0.5 }}
-        />
-      </div>
-    </div>
-  )
-}
-
 export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClientProps) {
   const { kaiju, openSeaData, isLoading, error } = useBlockchainKaiju(tokenId)
-  const [activeTab, setActiveTab] = useState<'overview' | 'traits' | 'history'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'traits'>('overview')
   const [imageError, setImageError] = useState(false)
 
   // Update page title when kaiju data loads
@@ -165,21 +129,6 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
     }
     
     return traits
-  }
-
-  const generateBattleStats = () => {
-    // Generate pseudo-random stats based on token ID for consistency
-    const seed = parseInt(tokenId) || 1
-    const random = (min: number, max: number, offset: number = 0): number => {
-      return Math.floor(((seed + offset) * 9301 + 49297) % 233280 / 233280 * (max - min) + min)
-    }
-    
-    return {
-      attack: random(30, 100, 1),
-      defense: random(30, 100, 2),
-      speed: random(30, 100, 3),
-      special: random(30, 100, 4)
-    }
   }
 
   const formatDate = (timestamp: number): string => {
@@ -256,7 +205,6 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
   }
 
   const traits = getTraits()
-  const battleStats = generateBattleStats()
 
   return (
     <>
@@ -475,8 +423,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
             <div className="flex justify-center gap-4 mb-12">
               {[
                 { id: 'overview', label: 'Overview', icon: Database },
-                { id: 'traits', label: 'Traits', icon: Star },
-                { id: 'history', label: 'Battle Stats', icon: Zap }
+                { id: 'traits', label: 'Traits', icon: Star }
               ].map((tab) => (
                 <motion.button
                   key={tab.id}
@@ -587,62 +534,6 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                       <p>No traits data available for this Kaiju.</p>
                     </div>
                   )}
-                </motion.div>
-              )}
-
-              {activeTab === 'history' && (
-                <motion.div
-                  key="history"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-                >
-                  {/* Battle Stats */}
-                  <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100">
-                    <h3 className="text-2xl font-bold text-kaiju-navy mb-6 flex items-center gap-2">
-                      <Zap className="w-6 h-6 text-kaiju-pink" />
-                      Combat Analysis
-                    </h3>
-                    <div className="space-y-6">
-                      <StatBar label="Attack" value={battleStats.attack} icon={<Zap className="w-4 h-4" />} />
-                      <StatBar label="Defense" value={battleStats.defense} icon={<Shield className="w-4 h-4" />} />
-                      <StatBar label="Speed" value={battleStats.speed} icon={<Zap className="w-4 h-4" />} />
-                      <StatBar label="Special" value={battleStats.special} icon={<Star className="w-4 h-4" />} />
-                    </div>
-                  </div>
-
-                  {/* Additional Info */}
-                  <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100">
-                    <h3 className="text-2xl font-bold text-kaiju-navy mb-6 flex items-center gap-2">
-                      <Database className="w-6 h-6 text-kaiju-pink" />
-                      Collection Info
-                    </h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-kaiju-navy/60 font-medium">Type:</span>
-                        <span className="text-kaiju-navy">Digital Collectible</span>
-                      </div>
-                      <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-kaiju-navy/60 font-medium">Format:</span>
-                        <span className="text-kaiju-pink font-semibold">NFT + Physical</span>
-                      </div>
-                      <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-kaiju-navy/60 font-medium">Collection:</span>
-                        <span className="text-kaiju-navy">CryptoKaiju</span>
-                      </div>
-                      <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
-                        <span className="text-kaiju-navy/60 font-medium">Status:</span>
-                        <span className="text-green-600 font-semibold">Active</span>
-                      </div>
-                      {kaiju.batch && (
-                        <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
-                          <span className="text-kaiju-navy/60 font-medium">Batch:</span>
-                          <span className="text-kaiju-pink font-semibold">{kaiju.batch}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
