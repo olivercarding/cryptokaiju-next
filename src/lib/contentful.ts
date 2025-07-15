@@ -31,11 +31,11 @@ export const contentfulClient = createClient({
 })
 
 /* ------------------------------------------------------------------ */
-/*  Content models                                                    */
+/*  Content models - FIXED: Updated content type ID                  */
 /* ------------------------------------------------------------------ */
 
 export interface BlogPostSkeleton extends EntrySkeletonType {
-  contentTypeId: 'blogPost'
+  contentTypeId: 'blogpost' // Changed from 'blogPost' to 'blogpost'
   fields: {
     title: EntryFieldTypes.Text
     slug: EntryFieldTypes.Symbol
@@ -185,11 +185,12 @@ export function isValidBlogPost(entry: any): entry is BlogPost {
     entry.fields &&
     entry.fields.title &&
     entry.fields.slug &&
-    entry.fields.content &&
-    entry.fields.author &&
-    entry.fields.publishDate &&
-    entry.fields.content.nodeType === 'document' &&
-    Array.isArray(entry.fields.content.content)
+    entry.fields.excerpt &&
+    // Only validate content structure if content exists (it's optional)
+    (!entry.fields.content || (
+      entry.fields.content.nodeType === 'document' &&
+      Array.isArray(entry.fields.content.content)
+    ))
   )
 }
 
@@ -237,7 +238,7 @@ async function safeContentfulCall<T>(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API                                                        */
+/*  Public API - FIXED: Updated all content_type references          */
 /* ------------------------------------------------------------------ */
 
 export async function getBlogPosts(
@@ -247,7 +248,7 @@ export async function getBlogPosts(
   return safeContentfulCall(
     async () => {
       const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogPost',
+        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
         limit: Math.min(limit, 1000),
         skip,
         include: 2,
@@ -270,7 +271,7 @@ export async function getBlogPostBySlug(
   return safeContentfulCall(
     async () => {
       const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogPost',
+        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
         'fields.slug': slug,
         limit: 1,
         include: 2,
@@ -289,7 +290,7 @@ export async function getFeaturedBlogPosts(
   return safeContentfulCall(
     async () => {
       const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogPost',
+        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
         'fields.featured': true,
         limit: Math.min(limit, 100),
         include: 2,
@@ -313,8 +314,8 @@ export async function getBlogPostsByTag(
   return safeContentfulCall(
     async () => {
       const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogPost',
-        'fields.tags[in]': [tag], // filter expects an array
+        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
+        'fields.tags[in]': [tag],
         limit: Math.min(limit, 1000),
         include: 2,
       })
@@ -334,7 +335,7 @@ export async function searchBlogPosts(
   return safeContentfulCall(
     async () => {
       const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogPost',
+        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
         query: query.trim(),
         limit: Math.min(limit, 1000),
         include: 2,
@@ -350,11 +351,12 @@ export async function getAllTags(): Promise<string[]> {
   return safeContentfulCall(
     async () => {
       const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogPost',
+        content_type: 'blogpost',
         limit: 1000,
         select: ['fields.tags'],
       })
       const tags = res.items
+        .filter(item => item && item.fields && item.fields.tags) // Add null checking
         .flatMap(item => toStringArray(item.fields.tags))
         .filter(Boolean)
         .filter((t, idx, arr) => arr.indexOf(t) === idx)
@@ -370,7 +372,7 @@ export async function getBlogPostsCount(): Promise<number> {
   return safeContentfulCall(
     async () => {
       const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogPost',
+        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
         limit: 0,
       })
       return res.total
@@ -386,7 +388,7 @@ export async function getRecentBlogPosts(
   return safeContentfulCall(
     async () => {
       const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogPost',
+        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
         limit: Math.min(limit, 1000),
         select: [
           'fields.title',
