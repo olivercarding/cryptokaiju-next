@@ -22,14 +22,14 @@ export function useVideoFormat() {
   }, [])
 
   const shouldUseWebm = (webmSrc: string, mp4Src?: string): boolean => {
-    // If we're still detecting, default to false (use mp4)
-    if (supportsWebm === null || isSafari === null) return false
+    // If Safari, never use webm
+    if (isSafari === true) return false
     
-    // If Safari, always use mp4 if available
-    if (isSafari && mp4Src) return false
+    // If we know it's not Safari and webm is supported, use webm
+    if (isSafari === false && supportsWebm === true) return true
     
-    // If webm is supported and not Safari, use webm
-    return supportsWebm && !isSafari
+    // If still detecting or webm not supported, default to mp4
+    return false
   }
 
   const getVideoSources = (webmSrc: string, mp4Src?: string) => {
