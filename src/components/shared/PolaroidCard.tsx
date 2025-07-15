@@ -1,8 +1,10 @@
+// src/components/shared/PolaroidCard.tsx
 'use client'
 
 import { useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Image from 'next/image'
+import { useVideoFormat } from '@/lib/hooks/useVideoFormat'
 
 interface VideoPolaroidCardProps {
   step: number
@@ -13,6 +15,7 @@ interface VideoPolaroidCardProps {
   backgroundColor: string
   rotation?: string
   size?: 'small' | 'medium' | 'large'
+  mp4Fallback?: string // Optional mp4 fallback path
 }
 
 export default function VideoPolaroidCard({
@@ -23,11 +26,13 @@ export default function VideoPolaroidCard({
   mediaType = 'video',
   backgroundColor,
   rotation = '0deg',
-  size = 'medium'
+  size = 'medium',
+  mp4Fallback
 }: VideoPolaroidCardProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef(null)
   const isInView = useInView(containerRef, { once: true })
+  const { getVideoSrc } = useVideoFormat()
 
   const sizeConfig = {
     small: {
@@ -54,6 +59,9 @@ export default function VideoPolaroidCard({
   }
 
   const config = sizeConfig[size]
+
+  // Get the appropriate video source based on browser support
+  const videoSrc = mediaType === 'video' ? getVideoSrc(mediaSrc, mp4Fallback) : mediaSrc
 
   useEffect(() => {
     if (isInView && mediaType === 'video') {
@@ -91,13 +99,26 @@ export default function VideoPolaroidCard({
         {mediaType === 'video' ? (
           <video
             ref={videoRef}
-            src={mediaSrc}
+            src={videoSrc}
             loop
             muted
             playsInline
             preload="auto"
             className="w-full h-full object-cover"
+            onError={(e) => {
+              console.warn('Video failed to load:', videoSrc)
+              // Optionally handle error by trying mp4 fallback
+              if (videoSrc.includes('.webm') && !mp4Fallback) {
+                const mp4Src = videoSrc.replace(/\.webm$/, '.mp4')
+                if (videoRef.current) {
+                  videoRef.current.src = mp4Src
+                }
+              }
+            }}
           >
+            {/* Add multiple source elements for better browser support */}
+            <source src={videoSrc} type={videoSrc.includes('.webm') ? 'video/webm' : 'video/mp4'} />
+            {mp4Fallback && <source src={mp4Fallback} type="video/mp4" />}
             Your browser does not support the video tag.
           </video>
         ) : (

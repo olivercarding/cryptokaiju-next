@@ -9,6 +9,7 @@ interface Step {
   mediaSrc: string
   mediaType?: 'image' | 'video'
   backgroundColor: string
+  mp4Fallback?: string // Add support for mp4 fallback
   // Legacy support
   imageSrc?: string
 }
@@ -27,14 +28,16 @@ export default function HowItWorksSection({
       description: "Link your ETH wallet to participate in the blind mint.",
       mediaSrc: "/videos/Comp 1_8.webm",
       mediaType: "video",
-      backgroundColor: "bg-kaiju-purple-light/20"
+      backgroundColor: "bg-kaiju-purple-light/20",
+      mp4Fallback: "/videos/Comp 1_8.mp4"
     },
     {
       title: "Open Mystery Box",
       description: "Mint your box to reveal which of the 4 exclusive designs you received.",
-      mediaSrc: "/videos/open-box.mp4",
+      mediaSrc: "/videos/open-box.webm",
       mediaType: "video",
-      backgroundColor: "bg-kaiju-purple-light/20"
+      backgroundColor: "bg-kaiju-purple-light/20",
+      mp4Fallback: "/videos/open-box.mp4"
     },
     {
       title: "Claim Physical",
@@ -64,6 +67,7 @@ export default function HowItWorksSection({
               backgroundColor={step.backgroundColor}
               rotation={rotations[i] || '0deg'}
               size="medium"
+              mp4Fallback={step.mp4Fallback}
             />
           ))}
         </div>

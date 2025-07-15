@@ -22,26 +22,28 @@ export default function HomePageClient() {
     ultraRareChance: '5%'
   }
 
-  // Updated to use videos instead of images
+  // Updated with MP4 fallbacks for Safari compatibility
   const howItWorksSteps = [
     {
       title: "Connect Wallet",
       description: "Link your wallet to participate in the mystery box mint.",
       mediaSrc: "/videos/Comp 1_8.webm",
       mediaType: "video" as const,
-      backgroundColor: "bg-kaiju-light-pink"
+      backgroundColor: "bg-kaiju-light-pink",
+      mp4Fallback: "/videos/Comp1Safari2.mp4" // Add mp4 version for Safari
     },
     {
       title: "Open Mystery Box",
       description: "Mint your box to reveal which of the 4 Kaiju you've found.",
       mediaSrc: "/videos/comp2.webm",
       mediaType: "video" as const,
-      backgroundColor: "bg-kaiju-purple-light/20"
+      backgroundColor: "bg-kaiju-purple-light/20",
+      mp4Fallback: "/videos/boxmovie2safari.mp4" // Add mp4 version for Safari
     },
     {
       title: "Enter Shipping Info",
       description: "Complete your order with shipping details and receive your NFC-chipped collectible!", 
-      mediaSrc: "/videos/Comp 1_9.mp4",
+      mediaSrc: "/videos/Comp 1_9.mp4", // This is already mp4
       mediaType: "video" as const,
       backgroundColor: "bg-kaiju-navy/10"
     }
