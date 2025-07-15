@@ -1,6 +1,8 @@
 // src/components/shared/PolaroidCard.tsx
 'use client'
 
+// This component is used to display a polaroid-style card with an image or video
+
 import { useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
 import Image from 'next/image'
