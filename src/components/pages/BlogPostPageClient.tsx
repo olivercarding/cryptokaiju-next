@@ -2,16 +2,15 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Calendar, Clock, User, ArrowLeft, Share2, Tag } from 'lucide-react'
+import { Calendar, Clock, User, ArrowLeft, Share2, Tag, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Header from '@/components/layout/Header'
 import RichTextRenderer from '@/components/blog/RichTextRenderer'
 import BlogCard from '@/components/blog/BlogCard'
 import type { BlogPost } from '@/lib/contentful'
 import { toStringValue, toStringArray, isValidDocument, getAssetUrl, getAssetTitle } from '@/lib/contentful'
-import { createBlogPostSchema } from '@/lib/structured-data'
 
 interface BlogPostPageClientProps {
   post: BlogPost
@@ -30,35 +29,13 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
   const slugStr = toStringValue(fields.slug)
   const tagsArray = toStringArray(fields.tags)
   const readingTimeNum = fields.readingTime ? Number(fields.readingTime) : undefined
-  const featuredImageUrl = getAssetUrl(fields.featuredImage, { w: 1400, h: 600, fit: 'fill' })
 
-  // Set share URL and structured data on client side
-  useEffect(() => {
+  // Set share URL on client side
+  useState(() => {
     if (typeof window !== 'undefined') {
       setShareUrl(window.location.href)
-      
-      // Add structured data to head
-      const schema = createBlogPostSchema(
-        titleStr,
-        excerptStr,
-        authorStr,
-        publishDateStr,
-        slugStr,
-        tagsArray,
-        featuredImageUrl,
-        readingTimeNum
-      )
-      
-      const script = document.createElement('script')
-      script.type = 'application/ld+json'
-      script.textContent = JSON.stringify(schema, null, 2)
-      document.head.appendChild(script)
-      
-      return () => {
-        document.head.removeChild(script)
-      }
     }
-  }, [titleStr, excerptStr, authorStr, publishDateStr, slugStr, tagsArray, featuredImageUrl, readingTimeNum])
+  })
 
   const formatDate = (dateString: string) => {
     if (!dateString) return 'Recently'
@@ -81,9 +58,14 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
         console.log('Error sharing:', error)
       }
     } else {
+      // Fallback: copy to clipboard
       navigator.clipboard.writeText(shareUrl)
+      // You could show a toast notification here
     }
   }
+
+  // Replace with your actual Substack URL
+  const substackUrl = "https://cryptokaiju.substack.com/subscribe"
 
   // Validate content before rendering
   if (!isValidDocument(fields.content)) {
@@ -92,7 +74,7 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
         <Header />
         <main className="text-kaiju-navy overflow-x-hidden">
           <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy pt-32 lg:pt-40 pb-16 lg:pb-20">
-            <div className="relative z-10 max-w-6xl mx-auto px-6 text-center">
+            <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -132,7 +114,7 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
       
       <main className="text-kaiju-navy overflow-x-hidden">
         {/* Dark Hero Section */}
-        <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-32 lg:pb-40">
+        <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
           {/* Animated background elements */}
           <div className="absolute inset-0">
             <motion.div 
@@ -145,7 +127,7 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
             />
           </div>
           
-          <div className="relative z-10 max-w-6xl mx-auto px-6">
+          <div className="relative z-10 max-w-4xl mx-auto px-6">
             {/* Back Navigation */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
@@ -184,7 +166,7 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
               )}
 
               {/* Title */}
-              <h1 className="text-4xl md:text-6xl font-black text-white mb-6 leading-tight max-w-4xl mx-auto">
+              <h1 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
                 {titleStr}
               </h1>
 
@@ -225,42 +207,39 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
           </div>
         </section>
 
-        {/* Featured Image - Overlapping Hero */}
-        {fields.featuredImage && (
-          <section className="relative -mt-24 z-20 px-6">
-            <div className="max-w-6xl mx-auto">
+        {/* Light Content Section */}
+        <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
+          <div className="max-w-4xl mx-auto">
+            
+            {/* Featured Image */}
+            {fields.featuredImage && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="relative rounded-3xl overflow-hidden shadow-2xl"
+                className="mb-12"
               >
-                <Image
-                  src={featuredImageUrl || ''}
-                  alt={getAssetTitle(fields.featuredImage) || titleStr}
-                  width={1400}
-                  height={600}
-                  className="w-full h-auto object-cover max-h-[600px]"
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 90vw, 1400px"
-                />
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                  <Image
+                    src={getAssetUrl(fields.featuredImage, { w: 1200, h: 600, fit: 'fill' }) || ''}
+                    alt={getAssetTitle(fields.featuredImage) || titleStr}
+                    width={1200}
+                    height={600}
+                    className="w-full h-auto object-cover"
+                    priority
+                  />
+                </div>
               </motion.div>
-            </div>
-          </section>
-        )}
+            )}
 
-        {/* Light Content Section */}
-        <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
-          <div className="max-w-6xl mx-auto">
-            
             {/* Article Content */}
             <motion.article
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white rounded-3xl p-8 md:p-16 shadow-xl border-2 border-gray-100 mb-16"
+              className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-2 border-gray-100 mb-16"
             >
-              <div className="prose prose-xl prose-kaiju max-w-none">
+              <div className="prose prose-lg prose-kaiju max-w-none">
                 <RichTextRenderer content={fields.content} />
               </div>
             </motion.article>
@@ -288,7 +267,7 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
               </motion.section>
             )}
 
-            {/* Newsletter CTA */}
+            {/* Substack Newsletter CTA */}
             <motion.section
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -299,18 +278,25 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
                 Stay Updated with CryptoKaiju
               </h3>
               <p className="text-xl mb-8 opacity-90">
-                Get the latest news, insights, and stories delivered to your inbox.
+                Get the latest news, insights, and stories delivered to your inbox via our Substack newsletter.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-xl text-kaiju-navy focus:outline-none focus:ring-2 focus:ring-kaiju-pink"
-                />
-                <button className="bg-kaiju-pink hover:bg-kaiju-red px-6 py-3 rounded-xl font-semibold transition-colors">
-                  Subscribe
-                </button>
+              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto items-center">
+                <p className="text-white/80 text-sm">
+                  Join our community of crypto collectors and enthusiasts
+                </p>
+                <a
+                  href={substackUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-kaiju-pink hover:bg-kaiju-red px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap"
+                >
+                  Subscribe on Substack
+                  <ExternalLink className="w-4 h-4" />
+                </a>
               </div>
+              <p className="text-white/60 text-sm mt-4">
+                Free • No spam • Unsubscribe anytime
+              </p>
             </motion.section>
           </div>
         </section>
