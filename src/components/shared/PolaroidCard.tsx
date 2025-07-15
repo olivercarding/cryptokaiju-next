@@ -1,7 +1,7 @@
 // src/components/shared/PolaroidCard.tsx
 'use client'
 
-// This component is used to display a polaroid-style card with an image or video
+// This component is used to display a polaroid‑style card with an image or video
 
 import { useEffect, useRef } from 'react'
 import { motion, useInView } from 'framer-motion'
@@ -112,9 +112,9 @@ export default function VideoPolaroidCard({
               console.warn('Video failed to load, sources:', videoSources)
             }}
           >
-            {/* Always put MP4 first for Safari compatibility */}
-            <source src={videoSources.mp4} type="video/mp4" />
+            {/* Put WebM first so Chrome and other modern browsers select it, Safari will skip to MP4 */}
             {!isSafari && <source src={videoSources.webm} type="video/webm" />}
+            <source src={videoSources.mp4} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         ) : (
