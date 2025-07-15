@@ -13,17 +13,20 @@ import type { Document } from '@contentful/rich-text-types'
 /*  Environment setup                                                 */
 /* ------------------------------------------------------------------ */
 
-if (!process.env.CONTENTFUL_SPACE_ID) {
-  throw new Error('CONTENTFUL_SPACE_ID environment variable is required')
-}
+// Only validate environment variables on the server side
+if (typeof window === 'undefined') {
+  if (!process.env.CONTENTFUL_SPACE_ID) {
+    throw new Error('CONTENTFUL_SPACE_ID environment variable is required')
+  }
 
-if (!process.env.CONTENTFUL_ACCESS_TOKEN) {
-  throw new Error('CONTENTFUL_ACCESS_TOKEN environment variable is required')
+  if (!process.env.CONTENTFUL_ACCESS_TOKEN) {
+    throw new Error('CONTENTFUL_ACCESS_TOKEN environment variable is required')
+  }
 }
 
 export const contentfulClient = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID,
-  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+  space: process.env.CONTENTFUL_SPACE_ID || '',
+  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN || '',
   host:
     process.env.CONTENTFUL_PREVIEW === 'true'
       ? 'preview.contentful.com'
