@@ -1,52 +1,66 @@
 // src/lib/hooks/useVideoFormat.ts
 'use client'
 
-import { useState, useEffect } from 'react'
+/**
+ * Detects Safari and WebM support immediately on the first render, avoiding
+ * a brief initial state where `isSafari` is `null`. This prevents Safari from
+ * momentarily receiving WebM sources before the detection effect runs.
+ */
+import { useMemo } from 'react'
+
+export interface VideoSources {
+  mp4: string
+  webm: string
+  /** The format the current browser should load first. */
+  primary: string
+}
+
+function detectSafari(userAgent: string): boolean {
+  // Real Safari UA strings contain "Safari" but *not* any of the other brand names below.
+  // Chromium‑based browsers on iOS/macOS contain "CriOS", "EdgiOS", or "Chrome" as well.
+  const isSafariLike = /Safari/i.test(userAgent) && !/Chrome|CriOS|FxiOS|Edg|OPR|Opera/i.test(userAgent)
+  return isSafariLike
+}
+
+function detectWebmSupport(): boolean {
+  if (typeof document === 'undefined') return false
+  const video = document.createElement('video')
+  return video.canPlayType('video/webm') !== ''
+}
 
 export function useVideoFormat() {
-  const [isSafari, setIsSafari] = useState<boolean | null>(null)
-  const [supportsWebm, setSupportsWebm] = useState<boolean | null>(null)
+  const { isSafari, supportsWebm } = useMemo(() => {
+    if (typeof navigator === 'undefined') {
+      return { isSafari: false, supportsWebm: false }
+    }
+    const ua = navigator.userAgent
+    const safari = detectSafari(ua)
+    const canPlayWebm = safari ? false : detectWebmSupport()
 
-  useEffect(() => {
-    // Detect Safari
-    const safari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
-    setIsSafari(safari)
-
-    // Test webm support - canPlayType returns "" | "maybe" | "probably"
-    const video = document.createElement('video')
-    const webmSupport = video.canPlayType('video/webm')
-    const canPlayWebm = webmSupport !== ''
-    setSupportsWebm(canPlayWebm)
-    
-    console.log('Browser detection:', { safari, canPlayWebm, webmSupport, userAgent: navigator.userAgent })
+    return { isSafari: safari, supportsWebm: canPlayWebm }
   }, [])
 
-  const shouldUseWebm = (webmSrc: string, mp4Src?: string): boolean => {
-    // If Safari, never use webm
-    if (isSafari === true) return false
-    
-    // If we know it's not Safari and webm is supported, use webm
-    if (isSafari === false && supportsWebm === true) return true
-    
-    // If still detecting or webm not supported, default to mp4
-    return false
+  /**
+   * Decide which source should appear first in the `<video>` tag for the
+   * current browser.
+   */
+  const shouldUseWebm = (webmSrc: string): boolean => {
+    return !isSafari && supportsWebm
   }
 
-  const getVideoSources = (webmSrc: string, mp4Src?: string) => {
+  const getVideoSources = (webmSrc: string, mp4Src?: string): VideoSources => {
     const mp4Source = mp4Src || webmSrc.replace(/\.webm$/, '.mp4')
-    
-    // Always return mp4 first for better Safari compatibility
     return {
       mp4: mp4Source,
       webm: webmSrc,
-      primary: shouldUseWebm(webmSrc, mp4Src) ? webmSrc : mp4Source
+      primary: shouldUseWebm(webmSrc) ? webmSrc : mp4Source
     }
   }
 
-  return { 
-    isSafari, 
-    supportsWebm, 
-    shouldUseWebm, 
-    getVideoSources 
+  return {
+    isSafari,
+    supportsWebm,
+    shouldUseWebm,
+    getVideoSources
   }
 }
