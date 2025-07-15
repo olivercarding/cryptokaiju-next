@@ -3,6 +3,13 @@ const nextConfig = {
   // Image optimization
   images: {
     remotePatterns: [
+      // Contentful images - ADD THIS
+      {
+        protocol: 'https',
+        hostname: 'images.ctfassets.net',
+        port: '',
+        pathname: '/**',
+      },
       // OpenSea domains
       {
         protocol: 'https',

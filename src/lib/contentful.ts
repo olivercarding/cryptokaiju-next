@@ -270,7 +270,7 @@ export async function getBlogPosts(
 ): Promise<BlogPost[]> {
   return safeContentfulCall(
     async (client) => {
-      const res = await client.getEntries<BlogPostSkeleton>({
+      const res = await client.getEntries({
         content_type: 'blogpost',
         limit: Math.min(limit, 1000),
         skip,
@@ -293,7 +293,7 @@ export async function getBlogPostBySlug(
 
   return safeContentfulCall(
     async (client) => {
-      const res = await client.getEntries<BlogPostSkeleton>({
+      const res = await client.getEntries({
         content_type: 'blogpost',
         'fields.slug': slug,
         limit: 1,
@@ -312,7 +312,7 @@ export async function getFeaturedBlogPosts(
 ): Promise<BlogPost[]> {
   return safeContentfulCall(
     async (client) => {
-      const res = await client.getEntries<BlogPostSkeleton>({
+      const res = await client.getEntries({
         content_type: 'blogpost',
         'fields.featured': true,
         limit: Math.min(limit, 100),
@@ -336,7 +336,7 @@ export async function getBlogPostsByTag(
 
   return safeContentfulCall(
     async (client) => {
-      const res = await client.getEntries<BlogPostSkeleton>({
+      const res = await client.getEntries({
         content_type: 'blogpost',
         'fields.tags[in]': [tag],
         limit: Math.min(limit, 1000),
@@ -357,7 +357,7 @@ export async function searchBlogPosts(
 
   return safeContentfulCall(
     async (client) => {
-      const res = await client.getEntries<BlogPostSkeleton>({
+      const res = await client.getEntries({
         content_type: 'blogpost',
         query: query.trim(),
         limit: Math.min(limit, 1000),
@@ -373,7 +373,7 @@ export async function searchBlogPosts(
 export async function getAllTags(): Promise<string[]> {
   return safeContentfulCall(
     async (client) => {
-      const res = await client.getEntries<BlogPostSkeleton>({
+      const res = await client.getEntries({
         content_type: 'blogpost',
         limit: 1000,
         select: ['fields.tags'],
@@ -394,7 +394,7 @@ export async function getAllTags(): Promise<string[]> {
 export async function getBlogPostsCount(): Promise<number> {
   return safeContentfulCall(
     async (client) => {
-      const res = await client.getEntries<BlogPostSkeleton>({
+      const res = await client.getEntries({
         content_type: 'blogpost',
         limit: 0,
       })
@@ -410,7 +410,7 @@ export async function getRecentBlogPosts(
 ): Promise<BlogPost[]> {
   return safeContentfulCall(
     async (client) => {
-      const res = await client.getEntries<BlogPostSkeleton>({
+      const res = await client.getEntries({
         content_type: 'blogpost',
         limit: Math.min(limit, 1000),
         select: [
