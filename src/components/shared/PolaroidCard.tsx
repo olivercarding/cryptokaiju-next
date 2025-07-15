@@ -32,7 +32,7 @@ export default function VideoPolaroidCard({
   const videoRef = useRef<HTMLVideoElement>(null)
   const containerRef = useRef(null)
   const isInView = useInView(containerRef, { once: true })
-  const { getVideoSrc } = useVideoFormat()
+  const { getVideoSources, isSafari } = useVideoFormat()
 
   const sizeConfig = {
     small: {
@@ -60,8 +60,8 @@ export default function VideoPolaroidCard({
 
   const config = sizeConfig[size]
 
-  // Get the appropriate video source based on browser support
-  const videoSrc = mediaType === 'video' ? getVideoSrc(mediaSrc, mp4Fallback) : mediaSrc
+  // Get video sources based on browser compatibility
+  const videoSources = mediaType === 'video' ? getVideoSources(mediaSrc, mp4Fallback) : null
 
   useEffect(() => {
     if (isInView && mediaType === 'video') {
@@ -74,7 +74,9 @@ export default function VideoPolaroidCard({
       const delay = delayMap[step] ?? 0
 
       const timeout = setTimeout(() => {
-        videoRef.current?.play()
+        videoRef.current?.play().catch(e => {
+          console.warn('Video autoplay failed:', e)
+        })
       }, delay)
 
       return () => clearTimeout(timeout)
@@ -96,29 +98,21 @@ export default function VideoPolaroidCard({
       <div
         className={`${config.videoHeight} w-full mb-4 rounded-[12px] overflow-hidden ${backgroundColor} relative`}
       >
-        {mediaType === 'video' ? (
+        {mediaType === 'video' && videoSources ? (
           <video
             ref={videoRef}
-            src={videoSrc}
             loop
             muted
             playsInline
             preload="auto"
             className="w-full h-full object-cover"
             onError={(e) => {
-              console.warn('Video failed to load:', videoSrc)
-              // Optionally handle error by trying mp4 fallback
-              if (videoSrc.includes('.webm') && !mp4Fallback) {
-                const mp4Src = videoSrc.replace(/\.webm$/, '.mp4')
-                if (videoRef.current) {
-                  videoRef.current.src = mp4Src
-                }
-              }
+              console.warn('Video failed to load, sources:', videoSources)
             }}
           >
-            {/* Add multiple source elements for better browser support */}
-            <source src={videoSrc} type={videoSrc.includes('.webm') ? 'video/webm' : 'video/mp4'} />
-            {mp4Fallback && <source src={mp4Fallback} type="video/mp4" />}
+            {/* Always put MP4 first for Safari compatibility */}
+            <source src={videoSources.mp4} type="video/mp4" />
+            {!isSafari && <source src={videoSources.webm} type="video/webm" />}
             Your browser does not support the video tag.
           </video>
         ) : (
