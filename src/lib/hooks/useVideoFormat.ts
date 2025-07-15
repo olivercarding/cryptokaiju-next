@@ -12,10 +12,10 @@ export function useVideoFormat() {
     const safari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
     setIsSafari(safari)
 
-    // Test webm support
+    // Test webm support - canPlayType returns "" | "maybe" | "probably"
     const video = document.createElement('video')
     const webmSupport = video.canPlayType('video/webm')
-    const canPlayWebm = webmSupport !== '' && webmSupport !== 'no'
+    const canPlayWebm = webmSupport !== ''
     setSupportsWebm(canPlayWebm)
     
     console.log('Browser detection:', { safari, canPlayWebm, webmSupport, userAgent: navigator.userAgent })
