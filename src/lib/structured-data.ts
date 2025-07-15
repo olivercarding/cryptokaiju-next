@@ -67,6 +67,87 @@ export const websiteSchema: JsonLdSchema = {
   }
 }
 
+// Blog Schema for the blog listing page
+export const blogSchema: JsonLdSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Blog',
+  name: 'CryptoKaiju Blog',
+  description: 'Latest news, insights, and stories from the CryptoKaiju universe. Discover the intersection of digital collectibles and physical toys.',
+  url: 'https://cryptokaiju.io/blog',
+  publisher: {
+    '@type': 'Organization',
+    name: 'CryptoKaiju',
+    logo: {
+      '@type': 'ImageObject',
+      url: 'https://cryptokaiju.io/images/cryptokaiju-logo.png'
+    }
+  },
+  author: {
+    '@type': 'Organization',
+    name: 'CryptoKaiju'
+  },
+  inLanguage: 'en-US',
+  image: 'https://cryptokaiju.io/images/blog-og-image.jpg',
+  keywords: [
+    'CryptoKaiju',
+    'Connected Collectibles',
+    'Physical NFTs',
+    'Blockchain News',
+    'NFT Innovation'
+  ]
+}
+
+// Function to create blog post schema
+export function createBlogPostSchema(
+  title: string,
+  excerpt: string,
+  author: string,
+  publishDate: string,
+  slug: string,
+  tags: string[],
+  featuredImageUrl?: string,
+  readingTime?: number
+): JsonLdSchema {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: title,
+    description: excerpt,
+    image: featuredImageUrl || 'https://cryptokaiju.io/images/blog-og-image.jpg',
+    author: {
+      '@type': 'Person',
+      name: author || 'CryptoKaiju Team'
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'CryptoKaiju',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://cryptokaiju.io/images/cryptokaiju-logo.png'
+      }
+    },
+    datePublished: publishDate ? new Date(publishDate).toISOString() : new Date().toISOString(),
+    dateModified: publishDate ? new Date(publishDate).toISOString() : new Date().toISOString(),
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://cryptokaiju.io/blog/${slug}`
+    },
+    url: `https://cryptokaiju.io/blog/${slug}`,
+    keywords: tags.join(', '),
+    timeRequired: readingTime ? `PT${readingTime}M` : 'PT5M',
+    inLanguage: 'en-US',
+    isPartOf: {
+      '@type': 'Blog',
+      name: 'CryptoKaiju Blog',
+      url: 'https://cryptokaiju.io/blog'
+    },
+    about: {
+      '@type': 'Thing',
+      name: 'Connected Collectibles'
+    }
+  }
+}
+
 // Collection Schema for NFT Collection
 export const collectionSchema: JsonLdSchema = {
   '@context': 'https://schema.org',

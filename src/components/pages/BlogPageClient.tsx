@@ -2,7 +2,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { ArrowLeft, BookOpen, Clock, Users } from 'lucide-react'
+import { ArrowLeft, BookOpen, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import Header from '@/components/layout/Header'
 import BlogCard from '@/components/blog/BlogCard'
@@ -14,6 +14,9 @@ interface BlogPageClientProps {
 }
 
 export default function BlogPageClient({ posts, tags }: BlogPageClientProps) {
+  // Replace with your actual Substack URL
+  const substackUrl = "https://cryptokaiju.substack.com/subscribe"
+
   return (
     <>
       <Header />
@@ -91,10 +94,26 @@ export default function BlogPageClient({ posts, tags }: BlogPageClientProps) {
                   CryptoKaiju Blog
                 </h1>
               </div>
-              <p className="text-xl text-white/90 max-w-3xl mx-auto">
+              <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8">
                 Dive into the latest news, insights, and stories from the CryptoKaiju universe. 
                 Discover the intersection of digital collectibles and physical toys.
               </p>
+              
+              {/* Newsletter CTA in Hero */}
+              <div className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 max-w-md mx-auto">
+                <p className="text-white/90 mb-4 text-sm">
+                  Get updates delivered to your inbox
+                </p>
+                <a
+                  href={substackUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 bg-kaiju-pink hover:bg-kaiju-red px-6 py-3 rounded-xl font-semibold transition-colors text-white"
+                >
+                  Subscribe to Newsletter
+                  <ExternalLink className="w-4 h-4" />
+                </a>
+              </div>
             </motion.div>
           </div>
         </section>
@@ -102,39 +121,11 @@ export default function BlogPageClient({ posts, tags }: BlogPageClientProps) {
         {/* Light Content Section */}
         <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
           <div className="max-w-7xl mx-auto">
-            
-            {/* Stats Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16"
-            >
-              <div className="bg-white rounded-2xl p-6 text-center shadow-lg border-2 border-gray-100">
-                <div className="text-3xl font-bold text-kaiju-pink mb-2">
-                  {posts.length}
-                </div>
-                <div className="text-gray-600 font-medium">Articles Published</div>
-              </div>
-              <div className="bg-white rounded-2xl p-6 text-center shadow-lg border-2 border-gray-100">
-                <div className="text-3xl font-bold text-kaiju-pink mb-2">
-                  {tags.length}
-                </div>
-                <div className="text-gray-600 font-medium">Topics Covered</div>
-              </div>
-              <div className="bg-white rounded-2xl p-6 text-center shadow-lg border-2 border-gray-100">
-                <div className="text-3xl font-bold text-kaiju-pink mb-2">
-                  {posts.length > 0 ? Math.floor(posts.reduce((acc, post) => acc + (Number(post.fields.readingTime) || 5), 0) / posts.length) : 5}
-                </div>
-                <div className="text-gray-600 font-medium">Avg. Reading Time</div>
-              </div>
-            </motion.div>
-
             {/* Blog Posts Grid */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
             >
               {posts.length > 0 ? (
                 <>
@@ -151,6 +142,9 @@ export default function BlogPageClient({ posts, tags }: BlogPageClientProps) {
                   <h3 className="text-2xl font-bold text-kaiju-navy mb-2">No Articles Yet</h3>
                   <p className="text-gray-600 mb-6">
                     We're working on some amazing content. Check back soon!
+                  </p>
+                  <p className="text-gray-500 text-sm">
+                    Don't miss our launch - subscribe to get notified when we publish our first articles.
                   </p>
                 </div>
               )}
