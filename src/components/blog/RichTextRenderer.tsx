@@ -1,306 +1,344 @@
-// src/components/pages/BlogPostPageClient.tsx
+// src/components/blog/RichTextRenderer.tsx
 'use client'
 
-import { motion } from 'framer-motion'
-import { Calendar, Clock, User, ArrowLeft, Share2, Tag, ExternalLink } from 'lucide-react'
-import Link from 'next/link'
+import { documentToReactComponents } from '@contentful/rich-text-react-renderer'
+import { BLOCKS, MARKS, INLINES } from '@contentful/rich-text-types'
+import type { Document, Node } from '@contentful/rich-text-types'
 import Image from 'next/image'
-import { useState } from 'react'
-import Header from '@/components/layout/Header'
-import RichTextRenderer from '@/components/blog/RichTextRenderer'
-import BlogCard from '@/components/blog/BlogCard'
-import type { BlogPost } from '@/lib/contentful'
-import { toStringValue, toStringArray, isValidDocument, getAssetUrl, getAssetTitle } from '@/lib/contentful'
+import Link from 'next/link'
+import { motion } from 'framer-motion'
+import { ExternalLink, Quote } from 'lucide-react'
+import { isValidDocument } from '@/lib/contentful'
 
-interface BlogPostPageClientProps {
-  post: BlogPost
-  relatedPosts: BlogPost[]
+interface RichTextRendererProps {
+  content: Document
 }
 
-export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageClientProps) {
-  const [shareUrl, setShareUrl] = useState('')
-
-  // Safely extract fields from the post
-  const fields = post.fields
-  const titleStr = toStringValue(fields.title)
-  const excerptStr = toStringValue(fields.excerpt)
-  const authorStr = toStringValue(fields.author)
-  const publishDateStr = toStringValue(fields.publishDate)
-  const slugStr = toStringValue(fields.slug)
-  const tagsArray = toStringArray(fields.tags)
-  const readingTimeNum = fields.readingTime ? Number(fields.readingTime) : undefined
-
-  // Set share URL on client side
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      setShareUrl(window.location.href)
-    }
-  })
-
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'Recently'
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: titleStr,
-          text: excerptStr,
-          url: shareUrl,
-        })
-      } catch (error) {
-        console.log('Error sharing:', error)
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(shareUrl)
-      // You could show a toast notification here
-    }
-  }
-
-  // Replace with your actual Substack URL
-  const substackUrl = "https://cryptokaiju.substack.com/subscribe"
-
+export default function RichTextRenderer({ content }: RichTextRendererProps) {
   // Validate content before rendering
-  if (!isValidDocument(fields.content)) {
+  if (!isValidDocument(content)) {
     return (
-      <>
-        <Header />
-        <main className="text-kaiju-navy overflow-x-hidden">
-          <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy pt-32 lg:pt-40 pb-16 lg:pb-20">
-            <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="mb-8"
-              >
-                <Link 
-                  href="/blog"
-                  className="inline-flex items-center gap-2 text-white hover:text-kaiju-pink transition-colors font-mono"
-                >
-                  <ArrowLeft className="w-4 h-4" />
-                  Back to Blog
-                </Link>
-              </motion.div>
-              
-              <h1 className="text-4xl font-bold text-white mb-6">
-                Content Error
-              </h1>
-              <p className="text-white/90 mb-8">
-                This blog post content is not properly formatted. Please check the Contentful entry.
-              </p>
-              <Link
-                href="/blog"
-                className="bg-kaiju-pink text-white px-6 py-3 rounded-xl hover:bg-kaiju-red transition-colors font-medium"
-              >
-                Back to Blog
-              </Link>
-            </div>
-          </section>
-        </main>
-      </>
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
+        <p className="font-semibold">Content Error</p>
+        <p className="text-sm">The content for this article is not properly formatted.</p>
+      </div>
     )
   }
 
-  return (
-    <>
-      <Header />
-      
-      <main className="text-kaiju-navy overflow-x-hidden">
-        {/* Dark Hero Section */}
-        <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
-          {/* Animated background elements */}
-          <div className="absolute inset-0">
-            <motion.div 
-              className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
-              animate={{ 
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.6, 0.3]
-              }}
-              transition={{ duration: 8, repeat: Infinity }}
-            />
+  const options = {
+    renderMark: {
+      [MARKS.BOLD]: (text: React.ReactNode) => (
+        <strong className="font-bold text-kaiju-navy">{text}</strong>
+      ),
+      [MARKS.ITALIC]: (text: React.ReactNode) => (
+        <em className="italic">{text}</em>
+      ),
+      [MARKS.UNDERLINE]: (text: React.ReactNode) => (
+        <u className="underline">{text}</u>
+      ),
+      [MARKS.CODE]: (text: React.ReactNode) => (
+        <code className="bg-gray-100 px-2 py-1 rounded text-sm font-mono text-kaiju-pink">
+          {text}
+        </code>
+      ),
+    },
+    renderNode: {
+      [BLOCKS.PARAGRAPH]: (node: Node, children: React.ReactNode) => (
+        <p className="mb-6 leading-relaxed text-gray-700 text-lg">
+          {children}
+        </p>
+      ),
+      [BLOCKS.HEADING_1]: (node: Node, children: React.ReactNode) => (
+        <h1 className="text-4xl font-bold text-kaiju-navy mb-8 mt-12 leading-tight">
+          {children}
+        </h1>
+      ),
+      [BLOCKS.HEADING_2]: (node: Node, children: React.ReactNode) => (
+        <h2 className="text-3xl font-bold text-kaiju-navy mb-6 mt-10 leading-tight">
+          {children}
+        </h2>
+      ),
+      [BLOCKS.HEADING_3]: (node: Node, children: React.ReactNode) => (
+        <h3 className="text-2xl font-bold text-kaiju-navy mb-4 mt-8 leading-tight">
+          {children}
+        </h3>
+      ),
+      [BLOCKS.HEADING_4]: (node: Node, children: React.ReactNode) => (
+        <h4 className="text-xl font-bold text-kaiju-navy mb-4 mt-6 leading-tight">
+          {children}
+        </h4>
+      ),
+      [BLOCKS.HEADING_5]: (node: Node, children: React.ReactNode) => (
+        <h5 className="text-lg font-bold text-kaiju-navy mb-3 mt-6 leading-tight">
+          {children}
+        </h5>
+      ),
+      [BLOCKS.HEADING_6]: (node: Node, children: React.ReactNode) => (
+        <h6 className="text-base font-bold text-kaiju-navy mb-3 mt-4 leading-tight">
+          {children}
+        </h6>
+      ),
+      [BLOCKS.UL_LIST]: (node: Node, children: React.ReactNode) => (
+        <ul className="mb-6 space-y-2 list-disc list-inside text-gray-700">
+          {children}
+        </ul>
+      ),
+      [BLOCKS.OL_LIST]: (node: Node, children: React.ReactNode) => (
+        <ol className="mb-6 space-y-2 list-decimal list-inside text-gray-700">
+          {children}
+        </ol>
+      ),
+      [BLOCKS.LIST_ITEM]: (node: Node, children: React.ReactNode) => (
+        <li className="mb-2 leading-relaxed">
+          {children}
+        </li>
+      ),
+      [BLOCKS.QUOTE]: (node: Node, children: React.ReactNode) => (
+        <motion.blockquote
+          initial={{ opacity: 0, x: -20 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          className="border-l-4 border-kaiju-pink bg-kaiju-light-pink p-6 my-8 rounded-r-lg"
+        >
+          <div className="flex items-start gap-3">
+            <Quote className="w-6 h-6 text-kaiju-pink mt-1 flex-shrink-0" />
+            <div className="text-kaiju-navy font-medium italic text-lg leading-relaxed">
+              {children}
+            </div>
           </div>
-          
-          <div className="relative z-10 max-w-4xl mx-auto px-6">
-            {/* Back Navigation */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="mb-8"
-            >
-              <Link 
-                href="/blog"
-                className="inline-flex items-center gap-2 text-white hover:text-kaiju-pink transition-colors font-mono"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Back to Blog
-              </Link>
-            </motion.div>
-
-            {/* Article Header */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center"
-            >
-              {/* Tags */}
-              {tagsArray && tagsArray.length > 0 && (
-                <div className="flex justify-center flex-wrap gap-2 mb-6">
-                  {tagsArray.map(tag => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 bg-kaiju-pink/20 text-kaiju-pink px-3 py-1 rounded-full text-sm font-medium border border-kaiju-pink/30"
-                    >
-                      <Tag className="w-3 h-3" />
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Title */}
-              <h1 className="text-4xl md:text-5xl font-black text-white mb-6 leading-tight">
-                {titleStr}
-              </h1>
-
-              {/* Excerpt */}
-              <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
-                {excerptStr}
-              </p>
-
-              {/* Meta Information */}
-              <div className="flex justify-center flex-wrap items-center gap-6 text-white/80 mb-6">
-                {authorStr && (
-                  <div className="flex items-center gap-2">
-                    <User className="w-5 h-5" />
-                    <span className="font-medium">{authorStr}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  <span>{formatDate(publishDateStr)}</span>
-                </div>
-                {readingTimeNum && (
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-5 h-5" />
-                    <span>{readingTimeNum} min read</span>
-                  </div>
-                )}
+        </motion.blockquote>
+      ),
+      [BLOCKS.HR]: () => (
+        <hr className="border-t-2 border-gray-200 my-12" />
+      ),
+      [BLOCKS.EMBEDDED_ASSET]: (node: Node) => {
+        try {
+          const asset = node.data?.target
+          if (!asset?.fields) {
+            return (
+              <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 my-6">
+                <p className="text-gray-600">Asset could not be loaded</p>
               </div>
+            )
+          }
 
-              {/* Share Button */}
-              <button
-                onClick={handleShare}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-white/30 bg-white/10 text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
-              >
-                <Share2 className="w-4 h-4" />
-                Share Article
-              </button>
-            </motion.div>
-          </div>
-        </section>
-
-        {/* Light Content Section */}
-        <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6">
-          <div className="max-w-4xl mx-auto">
-            
-            {/* Featured Image */}
-            {fields.featuredImage && (
-              <motion.div
+          const { file, title, description } = asset.fields
+          const isImage = file?.contentType?.startsWith('image/')
+          
+          if (isImage && file?.url) {
+            return (
+              <motion.figure
                 initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-                className="mb-12"
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="my-8"
               >
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-100 max-w-3xl mx-auto">
                   <Image
-                    src={getAssetUrl(fields.featuredImage, { w: 1200, h: 600, fit: 'fill' }) || ''}
-                    alt={getAssetTitle(fields.featuredImage) || titleStr}
-                    width={1200}
-                    height={600}
-                    className="w-full h-auto object-cover"
-                    priority
+                    src={`https:${file.url}?w=800&fit=pad&bg=rgb:ffffff`}
+                    alt={title || description || 'Blog image'}
+                    width={800}
+                    height={0}
+                    style={{ height: 'auto', maxHeight: '500px', objectFit: 'contain' }}
+                    className="w-full h-auto"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
                   />
                 </div>
-              </motion.div>
-            )}
-
-            {/* Article Content */}
-            <motion.article
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-2 border-gray-100 mb-16"
-            >
-              <div className="prose prose-lg prose-kaiju max-w-none">
-                <RichTextRenderer content={fields.content} />
-              </div>
-            </motion.article>
-
-            {/* Related Posts */}
-            {relatedPosts && relatedPosts.length > 0 && (
-              <motion.section
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-                className="mb-16"
-              >
-                <h2 className="text-3xl font-bold text-kaiju-navy mb-8 text-center">
-                  Related Articles
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {relatedPosts.map((relatedPost, index) => (
-                    <BlogCard
-                      key={relatedPost.sys.id}
-                      post={relatedPost}
-                      index={index}
-                    />
-                  ))}
-                </div>
-              </motion.section>
-            )}
-
-            {/* Substack Newsletter CTA */}
-            <motion.section
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="bg-gradient-to-r from-kaiju-navy to-kaiju-purple-dark rounded-3xl p-8 md:p-12 text-center text-white shadow-xl"
-            >
-              <h3 className="text-2xl md:text-3xl font-bold mb-4">
-                Stay Updated with CryptoKaiju
-              </h3>
-              <p className="text-xl mb-8 opacity-90">
-                Get the latest news, insights, and stories delivered to your inbox via our Substack newsletter.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto items-center">
-                <p className="text-white/80 text-sm">
-                  Join our community of crypto collectors and enthusiasts
+                {(title || description) && (
+                  <figcaption className="text-center text-sm text-gray-600 mt-3 italic">
+                    {title || description}
+                  </figcaption>
+                )}
+              </motion.figure>
+            )
+          }
+          
+          // For non-image assets
+          if (file?.url) {
+            return (
+              <div className="my-8 p-4 border-2 border-gray-200 rounded-xl bg-gray-50">
+                <p className="text-gray-600">
+                  📎 Attachment: <strong>{title || 'Download'}</strong>
                 </p>
                 <a
-                  href={substackUrl}
+                  href={`https:${file.url}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-kaiju-pink hover:bg-kaiju-red px-6 py-3 rounded-xl font-semibold transition-colors whitespace-nowrap"
+                  className="text-kaiju-pink hover:text-kaiju-red font-medium inline-flex items-center gap-1 mt-2"
                 >
-                  Subscribe on Substack
-                  <ExternalLink className="w-4 h-4" />
+                  Download <ExternalLink className="w-4 h-4" />
                 </a>
               </div>
-              <p className="text-white/60 text-sm mt-4">
-                Free • No spam • Unsubscribe anytime
-              </p>
-            </motion.section>
-          </div>
-        </section>
-      </main>
-    </>
-  )
+            )
+          }
+
+          return (
+            <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 my-6">
+              <p className="text-gray-600">Asset could not be loaded</p>
+            </div>
+          )
+        } catch (error) {
+          console.error('Error rendering embedded asset:', error)
+          return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 my-6">
+              <p className="text-red-600">Error loading asset</p>
+            </div>
+          )
+        }
+      },
+      [BLOCKS.EMBEDDED_ENTRY]: (node: Node) => {
+        try {
+          const entry = node.data?.target
+          if (!entry?.fields) {
+            return (
+              <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 my-6">
+                <p className="text-gray-600">Embedded content could not be loaded</p>
+              </div>
+            )
+          }
+
+          const contentType = entry.sys?.contentType?.sys?.id
+          
+          if (contentType === 'blogPost') {
+            const { title, excerpt, slug } = entry.fields
+            return (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="my-8 p-6 bg-gradient-to-r from-kaiju-light-pink to-white border-2 border-kaiju-pink/30 rounded-xl"
+              >
+                <h4 className="text-lg font-bold text-kaiju-navy mb-2">
+                  Related Article:
+                </h4>
+                <h5 className="text-xl font-bold text-kaiju-navy mb-3">
+                  {title}
+                </h5>
+                {excerpt && (
+                  <p className="text-gray-700 mb-4">{excerpt}</p>
+                )}
+                {slug && (
+                  <Link
+                    href={`/blog/${slug}`}
+                    className="text-kaiju-pink hover:text-kaiju-red font-medium inline-flex items-center gap-1"
+                  >
+                    Read More <ExternalLink className="w-4 h-4" />
+                  </Link>
+                )}
+              </motion.div>
+            )
+          }
+          
+          // Default embedded entry fallback
+          return (
+            <div className="my-8 p-4 border-2 border-gray-200 rounded-xl bg-gray-50">
+              <p className="text-gray-600">Embedded content ({contentType || 'unknown type'})</p>
+            </div>
+          )
+        } catch (error) {
+          console.error('Error rendering embedded entry:', error)
+          return (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-4 my-6">
+              <p className="text-red-600">Error loading embedded content</p>
+            </div>
+          )
+        }
+      },
+      [INLINES.HYPERLINK]: (node: Node, children: React.ReactNode) => {
+        try {
+          const uri = node.data?.uri
+          if (!uri) return <span>{children}</span>
+          
+          const isExternal = uri.startsWith('http')
+          
+          if (isExternal) {
+            return (
+              <a
+                href={uri}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-kaiju-pink hover:text-kaiju-red font-medium underline inline-flex items-center gap-1"
+              >
+                {children}
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            )
+          }
+          
+          return (
+            <Link
+              href={uri}
+              className="text-kaiju-pink hover:text-kaiju-red font-medium underline"
+            >
+              {children}
+            </Link>
+          )
+        } catch (error) {
+          console.error('Error rendering hyperlink:', error)
+          return <span className="text-gray-500">{children}</span>
+        }
+      },
+      [INLINES.ENTRY_HYPERLINK]: (node: Node, children: React.ReactNode) => {
+        try {
+          const entry = node.data?.target
+          const slug = entry?.fields?.slug
+          
+          if (!slug) return <span>{children}</span>
+          
+          return (
+            <Link
+              href={`/blog/${slug}`}
+              className="text-kaiju-pink hover:text-kaiju-red font-medium underline"
+            >
+              {children}
+            </Link>
+          )
+        } catch (error) {
+          console.error('Error rendering entry hyperlink:', error)
+          return <span className="text-gray-500">{children}</span>
+        }
+      },
+      [INLINES.ASSET_HYPERLINK]: (node: Node, children: React.ReactNode) => {
+        try {
+          const asset = node.data?.target
+          const file = asset?.fields?.file
+          
+          if (!file?.url) return <span>{children}</span>
+          
+          return (
+            <a
+              href={`https:${file.url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-kaiju-pink hover:text-kaiju-red font-medium underline inline-flex items-center gap-1"
+            >
+              {children}
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          )
+        } catch (error) {
+          console.error('Error rendering asset hyperlink:', error)
+          return <span className="text-gray-500">{children}</span>
+        }
+      },
+    },
+  }
+
+  try {
+    return (
+      <div className="prose prose-lg max-w-none">
+        {documentToReactComponents(content, options)}
+      </div>
+    )
+  } catch (error) {
+    console.error('Error rendering rich text content:', error)
+    return (
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <h3 className="text-red-800 font-semibold mb-2">Content Rendering Error</h3>
+        <p className="text-red-700">
+          There was an error rendering this content. Please check the Contentful entry format.
+        </p>
+      </div>
+    )
+  }
 }
