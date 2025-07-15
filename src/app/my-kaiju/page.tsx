@@ -253,7 +253,7 @@ const SearchSection = ({ connected }: { connected: boolean }) => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-gray-500">No Kaiju found on blockchain matching your search.</div>
+              <div className="text-center py-8 text-gray-500">Sorry, no Kaiju found matching your search.</div>
             )}
           </motion.div>
         )}
