@@ -379,8 +379,8 @@ export async function getAllTags(): Promise<string[]> {
         select: ['fields.tags'],
       })
       const tags = res.items
-        .filter(item => item && item.fields && item.fields.tags)
-        .flatMap(item => toStringArray(item.fields.tags))
+        .filter((item: any) => item && item.fields && item.fields.tags)
+        .flatMap((item: any) => toStringArray(item.fields.tags))
         .filter(Boolean)
         .filter((t, idx, arr) => arr.indexOf(t) === idx)
         .sort()
