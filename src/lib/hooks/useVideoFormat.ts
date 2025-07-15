@@ -14,10 +14,11 @@ export function useVideoFormat() {
 
     // Test webm support
     const video = document.createElement('video')
-    const canPlayWebm = video.canPlayType('video/webm') !== '' && video.canPlayType('video/webm') !== 'no'
+    const webmSupport = video.canPlayType('video/webm')
+    const canPlayWebm = webmSupport !== '' && webmSupport !== 'no'
     setSupportsWebm(canPlayWebm)
     
-    console.log('Browser detection:', { safari, canPlayWebm, userAgent: navigator.userAgent })
+    console.log('Browser detection:', { safari, canPlayWebm, webmSupport, userAgent: navigator.userAgent })
   }, [])
 
   const shouldUseWebm = (webmSrc: string, mp4Src?: string): boolean => {
