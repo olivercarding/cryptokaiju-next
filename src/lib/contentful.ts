@@ -57,11 +57,46 @@ export type Author = Entry<AuthorSkeleton, undefined, string>
 export type BlogPostFields = BlogPostSkeleton['fields']
 export type AuthorFields = AuthorSkeleton['fields']
 
+// Helper function to extract value from potentially localized field
+function extractLocalizedValue(field: any): any {
+  if (!field) return null
+  
+  // If it's not an object or has a direct value property, return as-is
+  if (typeof field !== 'object' || field.nodeType || Array.isArray(field)) {
+    return field
+  }
+  
+  // Check if it's a localized field (has locale keys)
+  const keys = Object.keys(field)
+  if (keys.length > 0 && !field.url && !field.sys) {
+    // Looks like a localized field, return the first locale's value
+    // In production, you might want to specify a default locale
+    return field[keys[0]]
+  }
+  
+  return field
+}
+
 // Helper function to safely access asset URL
 export function getAssetUrl(asset: Asset | undefined, options?: { w?: number; h?: number; fit?: string }): string | null {
-  if (!asset?.fields?.file?.url) return null
+  if (!asset?.fields?.file) return null
   
-  const baseUrl = `https:${asset.fields.file.url}`
+  let fileData = asset.fields.file
+  
+  // Handle localized file field
+  if (typeof fileData === 'object' && !fileData.url) {
+    // It's a localized object, get the first locale
+    const locales = Object.keys(fileData)
+    if (locales.length > 0 && fileData[locales[0]]) {
+      fileData = fileData[locales[0]]
+    } else {
+      return null
+    }
+  }
+  
+  if (!fileData?.url) return null
+  
+  const baseUrl = `https:${fileData.url}`
   
   if (options) {
     const params = new URLSearchParams()
@@ -78,21 +113,61 @@ export function getAssetUrl(asset: Asset | undefined, options?: { w?: number; h?
 
 // Helper function to safely get asset title/description
 export function getAssetTitle(asset: Asset | undefined): string {
-  return asset?.fields?.title || asset?.fields?.description || ''
+  if (!asset?.fields) return ''
+  
+  // Handle both localized and non-localized fields
+  const title = asset.fields.title
+  const description = asset.fields.description
+  
+  // If title exists
+  if (title) {
+    if (typeof title === 'string') return title
+    if (typeof title === 'object') {
+      // Get the first available locale value
+      const locales = Object.keys(title)
+      if (locales.length > 0 && title[locales[0]]) {
+        return title[locales[0]] || ''
+      }
+    }
+  }
+  
+  // If description exists
+  if (description) {
+    if (typeof description === 'string') return description
+    if (typeof description === 'object') {
+      // Get the first available locale value
+      const locales = Object.keys(description)
+      if (locales.length > 0 && description[locales[0]]) {
+        return description[locales[0]] || ''
+      }
+    }
+  }
+  
+  return ''
 }
 
 // Utility function to safely convert Contentful field types to strings
 export function toStringValue(value: any): string {
   if (value == null) return ''
-  if (typeof value === 'string') return value
-  if (typeof value === 'object' && value.toString) return value.toString()
-  return String(value)
+  
+  // Extract from localized field if needed
+  const extractedValue = extractLocalizedValue(value)
+  
+  if (extractedValue == null) return ''
+  if (typeof extractedValue === 'string') return extractedValue
+  if (typeof extractedValue === 'object' && extractedValue.toString) return extractedValue.toString()
+  return String(extractedValue)
 }
 
 // Utility function to safely convert Contentful arrays to string arrays
 export function toStringArray(value: any): string[] {
-  if (!Array.isArray(value)) return []
-  return value.map(toStringValue).filter(Boolean)
+  if (!value) return []
+  
+  // Extract from localized field if needed
+  const extractedValue = extractLocalizedValue(value)
+  
+  if (!Array.isArray(extractedValue)) return []
+  return extractedValue.map(toStringValue).filter(Boolean)
 }
 
 // Type guard to check if an entry is a valid blog post
