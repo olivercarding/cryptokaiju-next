@@ -57,11 +57,6 @@ export type Author = Entry<AuthorSkeleton, undefined, string>
 export type BlogPostFields = BlogPostSkeleton['fields']
 export type AuthorFields = AuthorSkeleton['fields']
 
-// Helper function to safely access blog post fields
-export function getBlogPostFields(post: BlogPost): BlogPostFields {
-  return post.fields
-}
-
 // Helper function to safely access asset URL
 export function getAssetUrl(asset: Asset | undefined, options?: { w?: number; h?: number; fit?: string }): string | null {
   if (!asset?.fields?.file?.url) return null
