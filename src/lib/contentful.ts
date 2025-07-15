@@ -382,7 +382,7 @@ export async function getAllTags(): Promise<string[]> {
         .filter((item: any) => item && item.fields && item.fields.tags)
         .flatMap((item: any) => toStringArray(item.fields.tags))
         .filter(Boolean)
-        .filter((t, idx, arr) => arr.indexOf(t) === idx)
+        .filter((t: any, idx: number, arr: any[]) => arr.indexOf(t) === idx)
         .sort()
       return tags
     },
