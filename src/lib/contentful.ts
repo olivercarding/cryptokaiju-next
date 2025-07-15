@@ -1,5 +1,4 @@
 // src/lib/contentful.ts
-import { createClient } from 'contentful'
 import type {
   Asset,
   AssetFile,
@@ -13,25 +12,39 @@ import type { Document } from '@contentful/rich-text-types'
 /*  Environment setup                                                 */
 /* ------------------------------------------------------------------ */
 
-// Only validate environment variables on the server side
-if (typeof window === 'undefined') {
-  if (!process.env.CONTENTFUL_SPACE_ID) {
-    throw new Error('CONTENTFUL_SPACE_ID environment variable is required')
+// Only create client on server side using dynamic import
+let contentfulClient: any = null
+
+async function getContentfulClient() {
+  if (typeof window !== 'undefined') {
+    // On client side, return null
+    return null
   }
 
-  if (!process.env.CONTENTFUL_ACCESS_TOKEN) {
-    throw new Error('CONTENTFUL_ACCESS_TOKEN environment variable is required')
+  if (!contentfulClient) {
+    if (!process.env.CONTENTFUL_SPACE_ID) {
+      throw new Error('CONTENTFUL_SPACE_ID environment variable is required')
+    }
+
+    if (!process.env.CONTENTFUL_ACCESS_TOKEN) {
+      throw new Error('CONTENTFUL_ACCESS_TOKEN environment variable is required')
+    }
+
+    // Dynamic import to avoid including contentful in client bundle
+    const { createClient } = await import('contentful')
+    
+    contentfulClient = createClient({
+      space: process.env.CONTENTFUL_SPACE_ID,
+      accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
+      host:
+        process.env.CONTENTFUL_PREVIEW === 'true'
+          ? 'preview.contentful.com'
+          : 'cdn.contentful.com',
+    })
   }
+
+  return contentfulClient
 }
-
-export const contentfulClient = createClient({
-  space: process.env.CONTENTFUL_SPACE_ID || '',
-  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN || '',
-  host:
-    process.env.CONTENTFUL_PREVIEW === 'true'
-      ? 'preview.contentful.com'
-      : 'cdn.contentful.com',
-})
 
 /* ------------------------------------------------------------------ */
 /*  Content models - FIXED: Updated content type ID                  */
@@ -220,12 +233,19 @@ function sortPostsNewestFirst(items: BlogPost[]): BlogPost[] {
 }
 
 async function safeContentfulCall<T>(
-  operation: () => Promise<T>,
+  operation: (client: any) => Promise<T>,
   fallback: T,
   message: string,
 ): Promise<T> {
   try {
-    return await operation()
+    const client = await getContentfulClient()
+    
+    // Return fallback immediately if on client side or no client
+    if (!client) {
+      return fallback
+    }
+
+    return await operation(client)
   } catch (error) {
     console.error(`${message}:`, error)
 
@@ -249,9 +269,9 @@ export async function getBlogPosts(
   skip = 0,
 ): Promise<BlogPost[]> {
   return safeContentfulCall(
-    async () => {
-      const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
+    async (client) => {
+      const res = await client.getEntries<BlogPostSkeleton>({
+        content_type: 'blogpost',
         limit: Math.min(limit, 1000),
         skip,
         include: 2,
@@ -272,9 +292,9 @@ export async function getBlogPostBySlug(
   }
 
   return safeContentfulCall(
-    async () => {
-      const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
+    async (client) => {
+      const res = await client.getEntries<BlogPostSkeleton>({
+        content_type: 'blogpost',
         'fields.slug': slug,
         limit: 1,
         include: 2,
@@ -291,9 +311,9 @@ export async function getFeaturedBlogPosts(
   limit = 3,
 ): Promise<BlogPost[]> {
   return safeContentfulCall(
-    async () => {
-      const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
+    async (client) => {
+      const res = await client.getEntries<BlogPostSkeleton>({
+        content_type: 'blogpost',
         'fields.featured': true,
         limit: Math.min(limit, 100),
         include: 2,
@@ -315,9 +335,9 @@ export async function getBlogPostsByTag(
   }
 
   return safeContentfulCall(
-    async () => {
-      const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
+    async (client) => {
+      const res = await client.getEntries<BlogPostSkeleton>({
+        content_type: 'blogpost',
         'fields.tags[in]': [tag],
         limit: Math.min(limit, 1000),
         include: 2,
@@ -336,9 +356,9 @@ export async function searchBlogPosts(
   if (!query.trim()) return []
 
   return safeContentfulCall(
-    async () => {
-      const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
+    async (client) => {
+      const res = await client.getEntries<BlogPostSkeleton>({
+        content_type: 'blogpost',
         query: query.trim(),
         limit: Math.min(limit, 1000),
         include: 2,
@@ -352,14 +372,14 @@ export async function searchBlogPosts(
 
 export async function getAllTags(): Promise<string[]> {
   return safeContentfulCall(
-    async () => {
-      const res = await contentfulClient.getEntries<BlogPostSkeleton>({
+    async (client) => {
+      const res = await client.getEntries<BlogPostSkeleton>({
         content_type: 'blogpost',
         limit: 1000,
         select: ['fields.tags'],
       })
       const tags = res.items
-        .filter(item => item && item.fields && item.fields.tags) // Add null checking
+        .filter(item => item && item.fields && item.fields.tags)
         .flatMap(item => toStringArray(item.fields.tags))
         .filter(Boolean)
         .filter((t, idx, arr) => arr.indexOf(t) === idx)
@@ -373,9 +393,9 @@ export async function getAllTags(): Promise<string[]> {
 
 export async function getBlogPostsCount(): Promise<number> {
   return safeContentfulCall(
-    async () => {
-      const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
+    async (client) => {
+      const res = await client.getEntries<BlogPostSkeleton>({
+        content_type: 'blogpost',
         limit: 0,
       })
       return res.total
@@ -389,9 +409,9 @@ export async function getRecentBlogPosts(
   limit = 50,
 ): Promise<BlogPost[]> {
   return safeContentfulCall(
-    async () => {
-      const res = await contentfulClient.getEntries<BlogPostSkeleton>({
-        content_type: 'blogpost', // Changed from 'blogPost' to 'blogpost'
+    async (client) => {
+      const res = await client.getEntries<BlogPostSkeleton>({
+        content_type: 'blogpost',
         limit: Math.min(limit, 1000),
         select: [
           'fields.title',
