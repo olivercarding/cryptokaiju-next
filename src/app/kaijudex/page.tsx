@@ -1,9 +1,9 @@
-// src/app/kaijudex/page.tsx - FIXED VERSION - REMOVED batch.element reference
+// src/app/kaijudex/page.tsx - UPDATED FOR ENHANCED STRUCTURE
 import { Metadata } from 'next'
 import { generatePageMetadata } from '@/lib/seo'
 import { createJsonLd } from '@/lib/structured-data'
 import KaijudexPageClient from '@/components/pages/KaijudexPageClient'
-import { KAIJU_BATCHES, getBatchesByType, getBatchesByRarity } from '@/config/batches'
+import { KAIJU_BATCHES, getBatchesByType, getBatchesByRarity, KaijuBatch } from '@/config/batches'
 
 // Generate metadata for SEO
 export const metadata: Metadata = {
@@ -50,14 +50,9 @@ export const metadata: Metadata = {
   }
 }
 
-// Helper function to get description for batch (supports both structures)
-const getBatchDescription = (batch: any) => {
-  return batch.characterDescription || batch.description || `${batch.name} is a mysterious and powerful entity from the realm of Komorebi, carrying the essence of ${batch.essence.toLowerCase()} within their being.`
-}
-
-// Helper function to get image for batch (supports both structures)
-const getBatchImage = (batch: any) => {
-  return batch.images?.physical?.[0] || batch.physicalImage || batch.images?.nft || batch.nftImage
+// Helper function to get image for enhanced batch structure
+const getBatchImage = (batch: KaijuBatch) => {
+  return batch.images?.physical?.[0] || batch.images?.nft || '/images/placeholder-kaiju.png'
 }
 
 // Generate structured data for the collection
@@ -107,13 +102,13 @@ function generateCollectionStructuredData() {
       '@type': 'CreativeWork',
       '@id': `https://cryptokaiju.io/kaijudex/${batch.slug}`,
       name: batch.name,
-      description: getBatchDescription(batch), // FIXED: Use helper function
+      description: batch.characterDescription,
       url: `https://cryptokaiju.io/kaijudex/${batch.slug}`,
-      image: getBatchImage(batch), // FIXED: Use helper function
+      image: getBatchImage(batch),
       position: index + 1,
       additionalType: batch.type + ' Collectible',
       category: batch.rarity,
-      keywords: [batch.colors[0] || 'Collectible', batch.essence, batch.type] // FIXED: Use colors[0] instead of batch.element
+      keywords: [batch.colors[0] || 'Collectible', batch.essence, batch.type]
     }))
   }
 }
@@ -137,9 +132,9 @@ function generateFeaturedItemsStructuredData() {
         '@type': 'CreativeWork',
         '@id': `https://cryptokaiju.io/kaijudex/${batch.slug}`,
         name: batch.name,
-        description: getBatchDescription(batch), // FIXED: Use helper function
+        description: batch.characterDescription,
         url: `https://cryptokaiju.io/kaijudex/${batch.slug}`,
-        image: getBatchImage(batch), // FIXED: Use helper function
+        image: getBatchImage(batch),
         additionalType: batch.type + ' Collectible',
         category: batch.rarity
       }
@@ -182,7 +177,7 @@ function generateKaijudexFAQStructuredData() {
         name: 'Can I see all the traits and details for each Kaiju?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes! Each Kaiju in the database shows detailed information including their element, essence, habitat, estimated supply, and discovery date. You can also filter by type and rarity to find specific characters.'
+          text: 'Yes! Each Kaiju in the database shows detailed information including their essence, habitat, estimated supply, and discovery date. You can also filter by type and rarity to find specific characters.'
         }
       }
     ]

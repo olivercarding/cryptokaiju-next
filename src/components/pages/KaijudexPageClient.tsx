@@ -1,4 +1,4 @@
-// src/components/pages/KaijudexPageClient.tsx - FIXED FOR NEW BATCH STRUCTURE
+// src/components/pages/KaijudexPageClient.tsx - UPDATED FOR ENHANCED STRUCTURE
 'use client'
 
 import { useState, useRef } from 'react'
@@ -18,17 +18,13 @@ interface KaijudexPageClientProps {
   }
 }
 
-// Helper functions to handle both enhanced and legacy batch structures
-const getBatchPrimaryImage = (batch: KaijuBatch | any) => {
-  return batch.images?.physical?.[0] || batch.physicalImage || batch.images?.nft || batch.nftImage || '/images/placeholder-kaiju.png'
+// Helper functions for enhanced batch structure
+const getBatchPrimaryImage = (batch: KaijuBatch) => {
+  return batch.images?.physical?.[0] || '/images/placeholder-kaiju.png'
 }
 
-const getBatchNFTImage = (batch: KaijuBatch | any) => {
-  return batch.images?.nft || batch.nftImage
-}
-
-const getBatchDescription = (batch: KaijuBatch | any) => {
-  return batch.characterDescription || batch.description || `${batch.name} is a mysterious and powerful entity from the realm of Komorebi.`
+const getBatchNFTImage = (batch: KaijuBatch) => {
+  return batch.images?.nft
 }
 
 // Polaroid-style Character Card with flip interaction

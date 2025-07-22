@@ -1,4 +1,4 @@
-// src/app/kaijudex/[slug]/page.tsx - UPDATED VERSION WITH CHANGES
+// src/app/kaijudex/[slug]/page.tsx - UPDATED WITH SECONDARY MARKET URL SUPPORT
 'use client'
 
 import { useState, useRef } from 'react'
@@ -28,15 +28,14 @@ const availabilityColors = {
   'Secondary': 'text-blue-600 bg-blue-50 border-blue-200'
 }
 
-// Simplified Photo Gallery - No Categories, Show All Available Images
+// Simplified Photo Gallery - Show All Available Images
 const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
   const [activeImage, setActiveImage] = useState(0)
   
-  // Collect all available images from both structures
+  // Collect all available images from enhanced structure
   const getAllImages = (): string[] => {
     const images: string[] = []
     
-    // New enhanced structure
     if (batch.images) {
       // Add all images from each category if they exist
       if (batch.images.physical) images.push(...batch.images.physical)
@@ -45,19 +44,6 @@ const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
       if (batch.images.detail) images.push(...batch.images.detail)
       if (batch.images.concept) images.push(...batch.images.concept)
       if (batch.images.packaging) images.push(...batch.images.packaging)
-    }
-    
-    // Legacy fallback - add if not already included
-    if ((batch as any).physicalImage && !images.includes((batch as any).physicalImage)) {
-      images.push((batch as any).physicalImage)
-    }
-    if ((batch as any).nftImage && !images.includes((batch as any).nftImage)) {
-      images.push((batch as any).nftImage)
-    }
-    if ((batch as any).conceptArt) {
-      (batch as any).conceptArt.forEach((img: string) => {
-        if (!images.includes(img)) images.push(img)
-      })
     }
     
     return images.filter(img => img && img.length > 0)
@@ -146,29 +132,27 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
-  const handleMintRedirect = () => {
-    window.location.href = '/#hero'
+  // UPDATED: Handle both mint and secondary market redirects
+  const handleActionClick = () => {
+    if (batch.availability === 'Mintable') {
+      // Redirect to mint page
+      window.location.href = '/#hero'
+    } else {
+      // Redirect to secondary market
+      if (batch.secondaryMarketUrl) {
+        window.open(batch.secondaryMarketUrl, '_blank')
+      } else {
+        // Fallback to general collection page
+        window.open('https://opensea.io/collection/cryptokaiju', '_blank')
+      }
+    }
   }
 
-  // Get primary image - PRIORITIZE NFT OVER PHYSICAL
+  // Get primary image - NFT takes priority over physical
   const getPrimaryImage = () => {
-    // First try NFT image from enhanced structure
     if (batch.images?.nft) return batch.images.nft
-    // Then try legacy NFT image
-    if ((batch as any).nftImage) return (batch as any).nftImage
-    // Fall back to physical images
     if (batch.images?.physical?.[0]) return batch.images.physical[0]
-    if ((batch as any).physicalImage) return (batch as any).physicalImage
     return '/images/placeholder-kaiju.png'
-  }
-
-  // Get descriptions (support both structures)
-  const getCharacterDescription = () => {
-    return (batch as any).characterDescription || (batch as any).description || `${batch.name} is a mysterious and powerful entity from the realm of Komorebi, carrying the essence of ${batch.essence.toLowerCase()} within their being.`
-  }
-
-  const getPhysicalDescription = () => {
-    return (batch as any).physicalDescription || `Experience the ${batch.name} ${batch.type.toLowerCase()} collectible - a premium piece crafted with attention to detail and designed for collectors who appreciate quality.`
   }
 
   return (
@@ -176,7 +160,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
       <Header />
 
       <main className="text-kaiju-navy overflow-x-hidden">
-        {/* Hero Section - REMOVED CHARACTER DESCRIPTION */}
+        {/* Hero Section */}
         <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
           {/* Background animations */}
           <div className="absolute inset-0">
@@ -280,20 +264,30 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                   </div>
                 </div>
 
-                {/* CTA Button */}
+                {/* CTA Button - UPDATED */}
                 <motion.button
-                  onClick={handleMintRedirect}
+                  onClick={handleActionClick}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className={`font-bold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-3 ${
                     batch.availability === 'Mintable' 
                       ? 'bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white'
-                      : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white'
+                      : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
                   }`}
                 >
-                  <Package className="w-5 h-5" />
-                  {batch.availability === 'Mintable' ? 'Mint Mystery Box' : 'Find on Secondary'}
-                  <Sparkles className="w-5 h-5" />
+                  {batch.availability === 'Mintable' ? (
+                    <>
+                      <Package className="w-5 h-5" />
+                      Mint Mystery Box
+                      <Sparkles className="w-5 h-5" />
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="w-5 h-5" />
+                      Find on Secondary
+                      <ExternalLink className="w-5 h-5" />
+                    </>
+                  )}
                 </motion.button>
               </motion.div>
 
@@ -367,7 +361,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                         <Database className="w-6 h-6 text-kaiju-pink" />
                         Character Lore
                       </h3>
-                      <p className="text-kaiju-navy/80 leading-relaxed text-lg">{getCharacterDescription()}</p>
+                      <p className="text-kaiju-navy/80 leading-relaxed text-lg">{batch.characterDescription}</p>
                     </motion.div>
                   </div>
 
@@ -442,23 +436,21 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                         <Package className="w-6 h-6 text-kaiju-pink" />
                         About This Collectible
                       </h3>
-                      <p className="text-kaiju-navy/80 leading-relaxed text-lg mb-6">{getPhysicalDescription()}</p>
+                      <p className="text-kaiju-navy/80 leading-relaxed text-lg mb-6">{batch.physicalDescription}</p>
                       
-                      {/* Features list if available */}
-                      {(batch as any).features && (
-                        <div>
-                          <h4 className="font-bold text-kaiju-navy mb-3">Special Features:</h4>
-                          <ul className="list-disc list-inside space-y-2 text-kaiju-navy/70">
-                            {(batch as any).features.map((feature: string, index: number) => (
-                              <li key={index}>{feature}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
+                      {/* Features list */}
+                      <div>
+                        <h4 className="font-bold text-kaiju-navy mb-3">Special Features:</h4>
+                        <ul className="list-disc list-inside space-y-2 text-kaiju-navy/70">
+                          {batch.features.map((feature: string, index: number) => (
+                            <li key={index}>{feature}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </motion.div>
 
                     {/* Production Notes if available */}
-                    {(batch as any).productionNotes && (
+                    {batch.productionNotes && (
                       <motion.div 
                         initial={{ opacity: 0, y: 20 }} 
                         animate={{ opacity: 1, y: 0 }}
@@ -469,7 +461,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                           <Star className="w-4 h-4 text-kaiju-pink" />
                           Production Notes
                         </h4>
-                        <p className="text-kaiju-navy/70 text-sm">{(batch as any).productionNotes}</p>
+                        <p className="text-kaiju-navy/70 text-sm">{batch.productionNotes}</p>
                       </motion.div>
                     )}
                   </div>
@@ -486,24 +478,18 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                         Specifications
                       </h4>
                       <div className="space-y-3 text-sm">
-                        {(batch as any).materials && (
-                          <div>
-                            <span className="text-kaiju-navy/60 block mb-1">Materials:</span>
-                            <span className="font-semibold text-xs leading-relaxed">{(batch as any).materials}</span>
-                          </div>
-                        )}
-                        {(batch as any).dimensions && (
-                          <div>
-                            <span className="text-kaiju-navy/60 block mb-1">Dimensions:</span>
-                            <span className="font-semibold">{(batch as any).dimensions}</span>
-                          </div>
-                        )}
-                        {(batch as any).packagingStyle && (
-                          <div>
-                            <span className="text-kaiju-navy/60 block mb-1">Packaging:</span>
-                            <span className="font-semibold text-xs leading-relaxed">{(batch as any).packagingStyle}</span>
-                          </div>
-                        )}
+                        <div>
+                          <span className="text-kaiju-navy/60 block mb-1">Materials:</span>
+                          <span className="font-semibold text-xs leading-relaxed">{batch.materials}</span>
+                        </div>
+                        <div>
+                          <span className="text-kaiju-navy/60 block mb-1">Dimensions:</span>
+                          <span className="font-semibold">{batch.dimensions}</span>
+                        </div>
+                        <div>
+                          <span className="text-kaiju-navy/60 block mb-1">Packaging:</span>
+                          <span className="font-semibold text-xs leading-relaxed">{batch.packagingStyle}</span>
+                        </div>
                         <div>
                           <span className="text-kaiju-navy/60 block mb-1">Supply:</span>
                           <span className="font-semibold">~{batch.estimatedSupply} pieces</span>
@@ -514,7 +500,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                 </motion.div>
               )}
 
-              {/* Photo Gallery Tab - SIMPLIFIED */}
+              {/* Photo Gallery Tab */}
               {activeTab === 'gallery' && (
                 <motion.div 
                   key="gallery" 
@@ -535,7 +521,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
               )}
             </AnimatePresence>
 
-            {/* Bottom CTA */}
+            {/* Bottom CTA - UPDATED */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
@@ -543,19 +529,38 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
               className="text-center mt-16"
             >
               <div className="bg-white rounded-2xl p-8 shadow-xl border-2 border-gray-100 max-w-2xl mx-auto">
-                <h3 className="text-2xl font-bold text-kaiju-navy mb-4">Ready to mint a CryptoKaiju?</h3>
+                <h3 className="text-2xl font-bold text-kaiju-navy mb-4">
+                  {batch.availability === 'Mintable' ? 'Ready to mint a CryptoKaiju?' : 'Want to collect this Kaiju?'}
+                </h3>
                 <p className="text-kaiju-navy/70 mb-6">
-                  Who knows what's in your next mystery box...
+                  {batch.availability === 'Mintable' 
+                    ? 'Who knows what\'s in your next mystery box...'
+                    : 'Find this collectible on secondary marketplaces'
+                  }
                 </p>
                 <motion.button
-                  onClick={handleMintRedirect}
+                  onClick={handleActionClick}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-3 mx-auto"
+                  className={`font-bold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-3 mx-auto ${
+                    batch.availability === 'Mintable'
+                      ? 'bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white'
+                      : 'bg-gradient-to-r from-blue-600 to-blue-700 text-white'
+                  }`}
                 >
-                  <Package className="w-5 h-5" />
-                  Open Mystery Box
-                  <Sparkles className="w-5 h-5" />
+                  {batch.availability === 'Mintable' ? (
+                    <>
+                      <Package className="w-5 h-5" />
+                      Open Mystery Box
+                      <Sparkles className="w-5 h-5" />
+                    </>
+                  ) : (
+                    <>
+                      <ExternalLink className="w-5 h-5" />
+                      Find on Secondary
+                      <ExternalLink className="w-5 h-5" />
+                    </>
+                  )}
                 </motion.button>
               </div>
             </motion.div>
