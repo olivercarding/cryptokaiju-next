@@ -66,7 +66,7 @@ const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
   const [activeImage, setActiveImage] = useState(0)
   
   // Handle both new enhanced structure and legacy structure
-  const getImagesByCategory = (category: string) => {
+  const getImagesByCategory = (category: string): string[] => {
     // New enhanced structure
     if (batch.images) {
       switch (category) {
