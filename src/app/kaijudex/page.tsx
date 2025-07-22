@@ -1,4 +1,4 @@
-// src/app/kaijudex/page.tsx - FIXED FOR NEW BATCH STRUCTURE
+// src/app/kaijudex/page.tsx - FIXED VERSION - REMOVED batch.element reference
 import { Metadata } from 'next'
 import { generatePageMetadata } from '@/lib/seo'
 import { createJsonLd } from '@/lib/structured-data'
@@ -113,7 +113,7 @@ function generateCollectionStructuredData() {
       position: index + 1,
       additionalType: batch.type + ' Collectible',
       category: batch.rarity,
-      keywords: [batch.element, batch.essence, batch.type]
+      keywords: [batch.colors[0] || 'Collectible', batch.essence, batch.type] // FIXED: Use colors[0] instead of batch.element
     }))
   }
 }
