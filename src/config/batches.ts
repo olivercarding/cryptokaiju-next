@@ -135,7 +135,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     rarity: 'Rare',
     element: 'Living Zest',
     essence: 'Wake-Up Call',
-    description: 'Mr Wasabi is concentrated enthusiasm in emerald form, rolling through Komorebi like a tiny green comet. His presence cuts through mental fog and stagnant routines, leaving behind the bright clarity that comes after a good surprise.',
+    description: 'Mr Wasabi is a spicy little goofball, a bright emerald blob who zips around Komorebi pulling harmless pranks and popping out of teacups with a loud surprise. He makes noses tingle and eyes water for a heartbeat, then laughs and offers snacks. The postman is his sworn rival; a single knock at the door can send him into a tiny tempest until someone waves soy sauce or a new trick in front of him.',
     nftImage: '/images/mr-wasabi.png',
     physicalImage: '/images/mr-wasabi-physical.png',
     backgroundColor: 'bg-green-200',
