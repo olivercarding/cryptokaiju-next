@@ -29,7 +29,7 @@
       "permanent": true
     },
     {
-      "source": "/product/genesis/",
+      "source": "/product/genesis",
       "destination": "/kaijudex/genesis",
       "permanent": true
     },
