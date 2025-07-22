@@ -1,4 +1,4 @@
-// src/components/pages/KaijudexPageClient.tsx
+// src/components/pages/KaijudexPageClient.tsx - FIXED FOR NEW BATCH STRUCTURE
 'use client'
 
 import { useState, useRef } from 'react'
@@ -18,6 +18,19 @@ interface KaijudexPageClientProps {
   }
 }
 
+// Helper functions to handle both enhanced and legacy batch structures
+const getBatchPrimaryImage = (batch: KaijuBatch | any) => {
+  return batch.images?.physical?.[0] || batch.physicalImage || batch.images?.nft || batch.nftImage || '/images/placeholder-kaiju.png'
+}
+
+const getBatchNFTImage = (batch: KaijuBatch | any) => {
+  return batch.images?.nft || batch.nftImage
+}
+
+const getBatchDescription = (batch: KaijuBatch | any) => {
+  return batch.characterDescription || batch.description || `${batch.name} is a mysterious and powerful entity from the realm of Komorebi.`
+}
+
 // Polaroid-style Character Card with flip interaction
 const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: number }) => {
   const [isHovered, setIsHovered] = useState(false)
@@ -32,6 +45,10 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
 
   const rotations = ['-2deg', '1deg', '-1deg', '2deg', '-1.5deg', '1.5deg']
   const rotation = rotations[index % rotations.length]
+
+  // Get images using helper functions
+  const primaryImage = getBatchPrimaryImage(batch)
+  const nftImage = getBatchNFTImage(batch)
 
   return (
     <motion.div
@@ -73,7 +90,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
               transition={{ duration: 0.6, ease: "easeInOut" }}
             >
               <Image
-                src={batch.physicalImage}
+                src={primaryImage}
                 alt={`${batch.name} Physical Collectible`}
                 fill
                 className="object-contain p-4"
@@ -87,7 +104,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
             </motion.div>
 
             {/* NFT image (back) - only show if exists */}
-            {batch.nftImage && (
+            {nftImage && (
               <motion.div
                 className="absolute inset-0"
                 style={{
@@ -98,7 +115,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
               >
                 <div className="w-full h-full flex items-center justify-center p-6 bg-gradient-to-br from-kaiju-navy/10 via-kaiju-purple-light/10 to-kaiju-pink/10">
                   <motion.img
-                    src={batch.nftImage}
+                    src={nftImage}
                     alt={`${batch.name} NFT`}
                     className="max-w-full max-h-full object-contain drop-shadow-2xl"
                     animate={{
@@ -120,7 +137,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
             )}
 
             {/* Hover instruction - only show if NFT image exists */}
-            {batch.nftImage && (
+            {nftImage && (
               <motion.div
                 className="absolute top-2 right-2 bg-black/70 backdrop-blur-sm text-white text-xs px-2 py-1 rounded"
                 initial={{ opacity: 0 }}
@@ -132,7 +149,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
             )}
 
             {/* Physical only indicator */}
-            {!batch.nftImage && (
+            {!nftImage && (
               <div className="absolute top-2 right-2 bg-yellow-400/90 text-yellow-900 px-2 py-1 rounded text-xs font-bold">
                 Physical Only
               </div>
