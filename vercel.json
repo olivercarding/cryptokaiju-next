@@ -57,9 +57,9 @@
       "source": "/product/monster-marathon-subscription-box-3-months/",
       "destination": "/kaijudex/genesis",
       "permanent": true
-    },
+    },ß
     {
-      "source": "/product/kaiju-genesis/",
+      "source": "/product/genesis/",
       "destination": "/kaijudex/genesis",
       "permanent": true
     },
