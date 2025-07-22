@@ -226,7 +226,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
 
   // Get descriptions (support both structures)
   const getCharacterDescription = () => {
-    return (batch as any).characterDescription || (batch as any).description || batch.description
+    return (batch as any).characterDescription || (batch as any).description || `${batch.name} is a mysterious and powerful entity from the realm of Komorebi, carrying the essence of ${batch.essence.toLowerCase()} within their being.`
   }
 
   const getPhysicalDescription = () => {
