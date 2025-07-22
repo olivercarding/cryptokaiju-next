@@ -92,7 +92,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     rarity: 'Common',
     essence: 'Community Heart',
     availability: 'Secondary',
-    colors: ['Brown'],
+    colors: ['Brown, Orange'],
     description: 'Jaiantokoin appears as a gentle giant whose round form and vintage cartoon movements remind everyone of simpler joys. His laughter echoes across valleys, calling scattered friends to gather. When communities need lifting, his presence alone lightens every burden.',
     nftImage: '/images/jaiantokoin.png',
     physicalImage: '/images/jaiantokoin-physical.png',
