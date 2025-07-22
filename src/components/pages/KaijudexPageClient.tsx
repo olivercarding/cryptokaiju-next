@@ -160,7 +160,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
           <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2 mb-2">
               <span className="text-kaiju-pink font-mono text-sm font-bold">#{batch.id}</span>
-              <span className="text-kaiju-navy/60 text-xs">{batch.element}</span>
+              <span className="text-kaiju-navy/60 text-xs">{batch.colors.join(', ')}</span>
             </div>
             
             <motion.h3 

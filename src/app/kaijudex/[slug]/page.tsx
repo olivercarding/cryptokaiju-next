@@ -1,9 +1,9 @@
-// src/app/kaijudex/[slug]/page.tsx - ENHANCED THREE-TAB VERSION
+// src/app/kaijudex/[slug]/page.tsx - UPDATED VERSION WITH CHANGES
 'use client'
 
 import { useState, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ExternalLink, Package, Sparkles, Zap, Star, Database, Camera, Flame, Droplets, Leaf, Mountain, Wind, Skull, Info, Palette, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Package, Sparkles, Zap, Star, Database, Camera, Info, Palette, Image as ImageIcon } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
@@ -23,88 +23,50 @@ const rarityColors = {
   'Legendary': 'text-yellow-600 bg-yellow-50 border-yellow-200'
 }
 
-const elementIcons = {
-  'Digital Fire': Flame,
-  'Digital Earth': Mountain,
-  'Moonlight': Star,
-  'Creative Air': Wind,
-  'Meme Wind': Wind,
-  'Tide': Droplets,
-  'Spice': Leaf,
-  'Court': Package,
-  'Tropic': Leaf,
-  'Crystal': Star,
-  'Starfire': Flame,
-  'Autumn Flame': Flame,
-  'Comfort': Star,
-  'Heritage': Database,
-  'Voxel': Package,
-  'Spectral Finance': Star,
-  'Ghost': Skull,
-  'Ancient Ember': Flame,
-  'Gathering Stone': Mountain,
-  'Luna\'s Blessing': Star,
-  'Creative Spark': Sparkles,
-  'Joy Wind': Wind,
-  'Tidal Comfort': Droplets,
-  'Living Zest': Leaf,
-  'Unity Field': Database,
-  'Tropical Breeze': Wind,
-  'Crystal Clarity': Star,
-  'Celebration Fire': Flame,
-  'Autumn\'s Mystery': Leaf,
-  'Soft Wonder': Star,
-  'Living Archive': Database,
-  'Building Blocks': Package,
-  'Ethereal Flow': Wind,
-  'Twilight Mist': Star
+const availabilityColors = {
+  'Mintable': 'text-green-600 bg-green-50 border-green-200',
+  'Secondary': 'text-blue-600 bg-blue-50 border-blue-200'
 }
 
-// Enhanced Photo Gallery with Categories
-const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
-  const [activeCategory, setActiveCategory] = useState<'physical' | 'lifestyle' | 'detail' | 'concept' | 'packaging'>('physical')
+// Simplified Photo Gallery - No Categories, Show All Available Images
+const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
   const [activeImage, setActiveImage] = useState(0)
   
-  // Handle both new enhanced structure and legacy structure
-  const getImagesByCategory = (category: string): string[] => {
+  // Collect all available images from both structures
+  const getAllImages = (): string[] => {
+    const images: string[] = []
+    
     // New enhanced structure
     if (batch.images) {
-      switch (category) {
-        case 'physical': return batch.images.physical || []
-        case 'lifestyle': return batch.images.lifestyle || []
-        case 'detail': return batch.images.detail || []
-        case 'concept': return batch.images.concept || []
-        case 'packaging': return batch.images.packaging || []
-        default: return []
-      }
+      // Add all images from each category if they exist
+      if (batch.images.physical) images.push(...batch.images.physical)
+      if (batch.images.nft) images.push(batch.images.nft)
+      if (batch.images.lifestyle) images.push(...batch.images.lifestyle)
+      if (batch.images.detail) images.push(...batch.images.detail)
+      if (batch.images.concept) images.push(...batch.images.concept)
+      if (batch.images.packaging) images.push(...batch.images.packaging)
     }
     
-    // Legacy fallback
-    if (category === 'physical') return [(batch as any).physicalImage].filter(Boolean)
-    if (category === 'concept') return (batch as any).conceptArt || []
-    return []
+    // Legacy fallback - add if not already included
+    if ((batch as any).physicalImage && !images.includes((batch as any).physicalImage)) {
+      images.push((batch as any).physicalImage)
+    }
+    if ((batch as any).nftImage && !images.includes((batch as any).nftImage)) {
+      images.push((batch as any).nftImage)
+    }
+    if ((batch as any).conceptArt) {
+      (batch as any).conceptArt.forEach((img: string) => {
+        if (!images.includes(img)) images.push(img)
+      })
+    }
+    
+    return images.filter(img => img && img.length > 0)
   }
 
-  const currentImages = getImagesByCategory(activeCategory)
-  
-  // Create category tabs with counts
-  const categories = [
-    { id: 'physical', label: 'Product', icon: Package, images: getImagesByCategory('physical') },
-    { id: 'lifestyle', label: 'In Action', icon: Camera, images: getImagesByCategory('lifestyle') },
-    { id: 'detail', label: 'Close-ups', icon: Zap, images: getImagesByCategory('detail') },
-    { id: 'concept', label: 'Concept', icon: Palette, images: getImagesByCategory('concept') },
-    { id: 'packaging', label: 'Packaging', icon: Package, images: getImagesByCategory('packaging') }
-  ].filter(cat => cat.images.length > 0) // Only show categories with images
-
+  const allImages = getAllImages()
   const rotations = ['-3deg', '2deg', '-1deg', '1.5deg', '-2deg']
 
-  // Reset active image when category changes
-  const handleCategoryChange = (category: any) => {
-    setActiveCategory(category)
-    setActiveImage(0)
-  }
-
-  if (categories.length === 0) {
+  if (allImages.length === 0) {
     return (
       <div className="text-center py-12">
         <ImageIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -115,34 +77,9 @@ const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
 
   return (
     <div className="space-y-8">
-      {/* Category Tabs */}
-      {categories.length > 1 && (
-        <div className="flex flex-wrap justify-center gap-3">
-          {categories.map((category) => (
-            <motion.button
-              key={category.id}
-              onClick={() => handleCategoryChange(category.id)}
-              whileHover={{ y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-semibold transition-all text-sm ${
-                activeCategory === category.id
-                  ? 'bg-kaiju-pink text-white shadow-lg'
-                  : 'bg-white text-kaiju-navy hover:bg-gray-50 shadow border border-gray-200'
-              }`}
-            >
-              <category.icon className="w-4 h-4" />
-              {category.label}
-              <span className="bg-kaiju-navy/20 text-xs px-2 py-0.5 rounded-full">
-                {category.images.length}
-              </span>
-            </motion.button>
-          ))}
-        </div>
-      )}
-
       {/* Main Featured Image */}
       <motion.div
-        key={`${activeCategory}-${activeImage}`}
+        key={activeImage}
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="relative max-w-lg mx-auto"
@@ -150,33 +87,31 @@ const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
         <div className="bg-white p-4 rounded-xl shadow-2xl border-4 border-gray-100 transform hover:rotate-0 transition-transform duration-300"
              style={{ transform: 'rotate(-1deg)' }}>
           <div className="relative h-80 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden">
-            {currentImages[activeImage] && (
-              <Image
-                src={currentImages[activeImage]}
-                alt={`${batch.name} ${activeCategory} view`}
-                fill
-                className="object-contain p-4"
-              />
-            )}
+            <Image
+              src={allImages[activeImage]}
+              alt={`${batch.name} image ${activeImage + 1}`}
+              fill
+              className="object-contain p-4"
+            />
 
             <div className="absolute bottom-2 left-2 bg-kaiju-navy/80 text-white text-xs px-2 py-1 rounded">
-              {categories.find(c => c.id === activeCategory)?.label} {currentImages.length > 1 && `${activeImage + 1}/${currentImages.length}`}
+              {activeImage + 1} of {allImages.length}
             </div>
           </div>
 
           <div className="pt-3 text-center">
             <div className="text-kaiju-navy font-bold text-lg handwritten">{batch.name}</div>
-            <div className="text-kaiju-navy/60 text-sm">{batch.element} • {batch.rarity}</div>
+            <div className="text-kaiju-navy/60 text-sm">{batch.essence} • {batch.rarity}</div>
           </div>
         </div>
       </motion.div>
 
       {/* Thumbnail Gallery - Only show if there are multiple images */}
-      {currentImages.length > 1 && (
+      {allImages.length > 1 && (
         <div className="flex justify-center gap-3 flex-wrap max-w-2xl mx-auto">
-          {currentImages.map((image, index) => (
+          {allImages.map((image, index) => (
             <motion.button
-              key={`${activeCategory}-thumb-${index}`}
+              key={`thumb-${index}`}
               onClick={() => setActiveImage(index)}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -197,7 +132,7 @@ const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
       
       {/* Gallery Stats */}
       <div className="text-center text-gray-500 text-sm">
-        <p>Total {categories.reduce((acc, cat) => acc + cat.images.length, 0)} images across {categories.length} categories</p>
+        <p>{allImages.length} image{allImages.length === 1 ? '' : 's'} available</p>
       </div>
     </div>
   )
@@ -215,13 +150,16 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
     window.location.href = '/#hero'
   }
 
-  const ElementIcon = elementIcons[batch.element as keyof typeof elementIcons] || Sparkles
-
-  // Get primary image (support both structures)
+  // Get primary image - PRIORITIZE NFT OVER PHYSICAL
   const getPrimaryImage = () => {
-    if (batch.images?.physical?.[0]) return batch.images.physical[0]
+    // First try NFT image from enhanced structure
     if (batch.images?.nft) return batch.images.nft
-    return (batch as any).physicalImage || (batch as any).nftImage
+    // Then try legacy NFT image
+    if ((batch as any).nftImage) return (batch as any).nftImage
+    // Fall back to physical images
+    if (batch.images?.physical?.[0]) return batch.images.physical[0]
+    if ((batch as any).physicalImage) return (batch as any).physicalImage
+    return '/images/placeholder-kaiju.png'
   }
 
   // Get descriptions (support both structures)
@@ -238,9 +176,9 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
       <Header />
 
       <main className="text-kaiju-navy overflow-x-hidden">
-        {/* Hero Section - Same as before but with primary image */}
+        {/* Hero Section - REMOVED CHARACTER DESCRIPTION */}
         <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
-          {/* Background animations - same as before */}
+          {/* Background animations */}
           <div className="absolute inset-0">
             <motion.div 
               className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
@@ -311,9 +249,8 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                   <div className={`px-3 py-1 rounded-full text-sm font-bold ${rarityColors[batch.rarity]}`}>
                     {batch.rarity}
                   </div>
-                  <div className="flex items-center gap-2 text-white/80">
-                    <ElementIcon className="w-4 h-4" />
-                    <span className="text-sm">{batch.element}</span>
+                  <div className={`px-3 py-1 rounded-full text-sm font-bold ${availabilityColors[batch.availability]}`}>
+                    {batch.availability}
                   </div>
                 </div>
                 
@@ -324,21 +261,12 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                 <div className="flex items-center gap-3 mb-6">
                   <Package className="w-5 h-5 text-kaiju-pink" />
                   <span className="text-xl text-kaiju-pink font-bold">{batch.type} Collectible</span>
-                  {!(batch.images?.nft || (batch as any).nftImage) && (
-                    <span className="text-sm text-yellow-400 bg-yellow-400/20 px-2 py-1 rounded-full">
-                      Physical Only
-                    </span>
-                  )}
                 </div>
                 
-                <div className="flex items-center gap-2 mb-6">
+                <div className="flex items-center gap-2 mb-8">
                   <Sparkles className="w-5 h-5 text-white/80" />
                   <span className="text-lg text-white/90 italic">"{batch.essence}"</span>
                 </div>
-
-                <p className="text-lg text-white/90 leading-relaxed mb-8">
-                  {getCharacterDescription()}
-                </p>
 
                 {/* Quick Stats */}
                 <div className="grid grid-cols-2 gap-4 mb-8">
@@ -357,10 +285,14 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                   onClick={handleMintRedirect}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-3"
+                  className={`font-bold text-lg px-8 py-4 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center gap-3 ${
+                    batch.availability === 'Mintable' 
+                      ? 'bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white'
+                      : 'bg-gradient-to-r from-gray-600 to-gray-700 text-white'
+                  }`}
                 >
                   <Package className="w-5 h-5" />
-                  Mint Mystery Box
+                  {batch.availability === 'Mintable' ? 'Mint Mystery Box' : 'Find on Secondary'}
                   <Sparkles className="w-5 h-5" />
                 </motion.button>
               </motion.div>
@@ -382,13 +314,6 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                   
                   {/* Glow effect */}
                   <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/20 to-kaiju-purple-light/20 mix-blend-overlay"></div>
-                  
-                  {/* Show indicator if no NFT version */}
-                  {!(batch.images?.nft || (batch as any).nftImage) && (
-                    <div className="absolute top-4 right-4 bg-yellow-400/90 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold">
-                      Physical Only
-                    </div>
-                  )}
                 </div>
               </motion.div>
             </div>
@@ -463,10 +388,6 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                           <span className="font-semibold">{batch.type}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-kaiju-navy/60">Element:</span>
-                          <span className="font-semibold">{batch.element}</span>
-                        </div>
-                        <div className="flex justify-between">
                           <span className="text-kaiju-navy/60">Essence:</span>
                           <span className="font-semibold">{batch.essence}</span>
                         </div>
@@ -474,6 +395,12 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                           <span className="text-kaiju-navy/60">Rarity:</span>
                           <span className={`font-semibold px-2 py-1 rounded text-xs ${rarityColors[batch.rarity]}`}>
                             {batch.rarity}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-kaiju-navy/60">Availability:</span>
+                          <span className={`font-semibold px-2 py-1 rounded text-xs ${availabilityColors[batch.availability]}`}>
+                            {batch.availability}
                           </span>
                         </div>
                       </div>
@@ -487,7 +414,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                       className="bg-white p-6 rounded-2xl shadow-xl border-2 border-gray-100"
                     >
                       <h4 className="font-bold text-kaiju-navy mb-4 flex items-center gap-2">
-                        <Mountain className="w-4 h-4 text-kaiju-pink" />
+                        <Sparkles className="w-4 h-4 text-kaiju-pink" />
                         Natural Habitat
                       </h4>
                       <p className="text-kaiju-navy/70 text-sm leading-relaxed">{batch.habitat}</p>
@@ -587,7 +514,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                 </motion.div>
               )}
 
-              {/* Photo Gallery Tab */}
+              {/* Photo Gallery Tab - SIMPLIFIED */}
               {activeTab === 'gallery' && (
                 <motion.div 
                   key="gallery" 
@@ -597,7 +524,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                   className="text-center"
                 >
                   <h3 className="text-2xl font-bold text-kaiju-navy mb-8">Visual Collection</h3>
-                  <EnhancedPhotoGallery batch={batch} />
+                  <SimplifiedPhotoGallery batch={batch} />
                   <div className="mt-8 text-kaiju-navy/60">
                     <p>Complete visual archive of {batch.name}</p>
                     <p className="text-sm mt-2">
@@ -608,7 +535,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
               )}
             </AnimatePresence>
 
-            {/* Bottom CTA - Same as before */}
+            {/* Bottom CTA */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
