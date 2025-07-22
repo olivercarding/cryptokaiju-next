@@ -68,7 +68,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
       lifestyle: [],
       detail: [],
       concept: [],
-      packaging: Clear plastic bag with header card.
+      packaging: 'Clear plastic bag with header card.'
     },
     
     backgroundColor: 'bg-orange-200',
