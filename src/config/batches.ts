@@ -57,7 +57,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     rarity: 'Rare',
     essence: 'First Light',
     availability: 'Secondary',
-    colors: ['Green', 'Orange'], // Multiple colors for Genesis
+    colors: ['Green', 'Purple'], // Multiple colors for Genesis
     
     characterDescription: 'Genesis carries memories from before Komorebi\'s first dawn, wrapped in a beloved dinosaur costume that has become part of his soul. Where he rests, old seeds remember how to grow and forgotten paths reveal themselves. His presence whispers that every ending holds a new beginning.',
     physicalDescription: 'Our inaugural CryptoKaiju design, Genesis represents the perfect fusion of nostalgic charm and modern craftsmanship. This premium vinyl figure captures the whimsical spirit of childhood imagination with its beloved dinosaur costume aesthetic.',
@@ -68,7 +68,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
       lifestyle: [],
       detail: [],
       concept: [],
-      packaging: []
+      packaging: Clear plastic bag with header card.
     },
     
     backgroundColor: 'bg-orange-200',
