@@ -49,228 +49,168 @@
       "permanent": true
     },
     {
-      "source": "/product/kaiju-solitaire/",
-      "destination": "/kaijudex/genesis",
+      "source": "/product/spooky-halloween-special-kaiju/",
+      "destination": "/kaijudex/spooky",
       "permanent": true
     },
     {
-      "source": "/product/monster-marathon-subscription-box-3-months/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },ß
-    {
-      "source": "/product/genesis/",
-      "destination": "/kaijudex/genesis",
+      "source": "/product/cryptokitties-toy-enamel-pin-bundle/",
+      "destination": "/kaijudex/cryptokitty",
       "permanent": true
     },
     {
-      "source": "/product/kaiju-legends/",
-      "destination": "/kaijudex/legends",
+      "source": "/product/cryptokitties-bundle/",
+      "destination": "/kaijudex/cryptokitty",
       "permanent": true
     },
     {
-      "source": "/product/cryptokitties-collaboration-keiko/",
-      "destination": "/kaijudex/genesis",
+      "source": "/product/dogejira-super-bundle-gold-variant-limited-to-5-pcs/",
+      "destination": "/kaijudex/dogejira",
       "permanent": true
     },
     {
-      "source": "/product-category/genesis/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },
-    {
-      "source": "/product-category/legends/",
-      "destination": "/kaijudex/legends",
-      "permanent": true
-    },
-    {
-      "source": "/product-category/mystery-boxes/",
+      "source": "/product/unisex-hoodie/",
       "destination": "/kaijudex",
       "permanent": true
     },
     {
-      "source": "/product/cryptokitties-collaboration-catsuko/",
-      "destination": "/kaijudex/genesis",
+      "source": "/product/jaiantokoin/",
+      "destination": "/kaijudex/jaiantokoin",
       "permanent": true
     },
     {
-      "source": "/product/cryptokitties-collaboration-trappy/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },
-    {
-      "source": "/product/cryptokitties-collaboration-kara/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },
-    {
-      "source": "/product/cryptokitties-collaboration-catter/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },
-    {
-      "source": "/product/baby-kaiju-box/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },
-    {
-      "source": "/product/kaiju-mystery-box/",
+      "source": "/product/cryptokaiju-face-masks-pack-of-2/",
       "destination": "/kaijudex",
       "permanent": true
     },
     {
-      "source": "/product/mega-city-mystery-box/",
+      "source": "/product/cryptokaiju-iron-on-patch/",
       "destination": "/kaijudex",
       "permanent": true
     },
     {
-      "source": "/product/mega-city-box/",
+      "source": "/product/dogejira-bundle-red/",
+      "destination": "/kaijudex/dogejira",
+      "permanent": true
+    },
+    {
+      "source": "/product/cats-dogs-super-black-friday-bundle-limited-to-10/",
+      "destination": "/kaijudex/dogejira",
+      "permanent": true
+    },
+    {
+      "source": "/product/cats-dogs-black-friday-bundle-limited-to-10/",
+      "destination": "/kaijudex/dogejira",
+      "permanent": true
+    },
+    {
+      "source": "/product/black-friday-bundle/",
+      "destination": "/kaijudex/dogejira",
+      "permanent": true
+    },
+    {
+      "source": "/product/instant-kaiju-collection-bundle/",
       "destination": "/kaijudex",
       "permanent": true
     },
     {
-      "source": "/hello-world/",
-      "destination": "/blog",
+      "source": "/product/all-you-can-eat-sushiswap-buffet-animated-nft/",
+      "destination": "/kaijudex/sushi",
       "permanent": true
     },
     {
-      "source": "/product/cryptokitties-collaboration-meowzilla/",
-      "destination": "/kaijudex/genesis",
+      "source": "/product/dogejira-vinyl-figure/",
+      "destination": "/kaijudex/dogejira",
       "permanent": true
     },
     {
-      "source": "/product/cryptokitties-collaboration-pawzilla/",
-      "destination": "/kaijudex/genesis",
+      "source": "/product/cryptokitty/",
+      "destination": "/kaijudex/cryptokitty",
       "permanent": true
     },
     {
-      "source": "/product/cryptokitties-collaboration-nekozilla/",
-      "destination": "/kaijudex/genesis",
+      "source": "/product/cute-nigiri-animated-nft/",
+      "destination": "/kaijudex/sushi",
       "permanent": true
     },
     {
-      "source": "/product/kaiju-genesis-mystery-box/",
-      "destination": "/kaijudex/genesis",
+      "source": "/product/sushi-moon-shiny-sushi-surprise-bundle/",
+      "destination": "/kaijudex/sushi",
       "permanent": true
     },
     {
-      "source": "/product/kaiju-legends-mystery-box/",
-      "destination": "/kaijudex/legends",
+      "source": "/product/ko-bundle-checkout/",
+      "destination": "/kaijudex/sushi",
       "permanent": true
     },
     {
-      "source": "/product/hybrid-kaiju-mystery-box/",
+      "source": "/product/sushi-snackbox-bundle/",
+      "destination": "/kaijudex/sushi",
+      "permanent": true
+    },
+    {
+      "source": "/product/full-fish-supper/",
+      "destination": "/kaijudex/sushi",
+      "permanent": true
+    },
+    {
+      "source": "/product/sushimon-single/",
+      "destination": "/kaijudex/sushi",
+      "permanent": true
+    },
+    {
+      "source": "/product/pool-party-namazu-bundle/",
+      "destination": "/kaijudex/sushi",
+      "permanent": true
+    },
+    {
+      "source": "/product/mrwasabi/",
+      "destination": "/kaijudex/sushi",
+      "permanent": true
+    },
+    {
+      "source": "/product/%f0%9f%8d%8d/",
+      "destination": "/kaijudex/sushi",
+      "permanent": true
+    },
+    {
+      "source": "/product/sushigotchi-physidigital-t-shirt/",
+      "destination": "/kaijudex/sushi",
+      "permanent": true
+    },
+    {
+      "source": "/product/spangle/",
+      "destination": "/kaijudex/spangle",
+      "permanent": true
+    },
+    {
+      "source": "/product/plush-genesis/",
+      "destination": "/kaijudex/pretty-fine-plushies",
+      "permanent": true
+    },
+    {
+      "source": "/product/uri/",
+      "destination": "/kaijudex/uri",
+      "permanent": true
+    },
+    {
+      "source": "/cart/",
       "destination": "/kaijudex",
       "permanent": true
     },
     {
-      "source": "/product/kaiju-genesis-fusion-potion/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },
-    {
-      "source": "/product/kaiju-genesis-mutation-serum/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },
-    {
-      "source": "/product/kaiju-genesis-baby-food/",
-      "destination": "/kaijudex/genesis",
-      "permanent": true
-    },
-    {
-      "source": "/product/kaiju-legends-fusion-potion/",
-      "destination": "/kaijudex/legends",
-      "permanent": true
-    },
-    {
-      "source": "/product/kaiju-legends-mutation-serum/",
-      "destination": "/kaijudex/legends",
-      "permanent": true
-    },
-    {
-      "source": "/product/kaiju-legends-baby-food/",
-      "destination": "/kaijudex/legends",
-      "permanent": true
-    },
-    {
-      "source": "/product-category/fusion-potions/",
+      "source": "/checkout/",
       "destination": "/kaijudex",
       "permanent": true
     },
     {
-      "source": "/product-category/mutation-serums/",
-      "destination": "/kaijudex",
+      "source": "/my-account/",
+      "destination": "/my-kaiju",
       "permanent": true
     },
     {
-      "source": "/product-category/baby-food/",
-      "destination": "/kaijudex",
-      "permanent": true
-    },
-    {
-      "source": "/news/",
-      "destination": "/blog",
-      "permanent": true
-    },
-    {
-      "source": "/2022/07/01/introducing-the-kaiju-kingz/",
-      "destination": "/blog/introducing-the-kaiju-kingz",
-      "permanent": true
-    },
-    {
-      "source": "/2022/10/15/kaiju-kingz-roadmap/",
-      "destination": "/blog/kaiju-kingz-roadmap",
-      "permanent": true
-    },
-    {
-      "source": "/2023/01/10/genesis-launch-announcement/",
-      "destination": "/blog/genesis-launch-announcement",
-      "permanent": true
-    },
-    {
-      "source": "/2023/03/20/kaiju-legends-revealed/",
-      "destination": "/blog/kaiju-legends-revealed",
-      "permanent": true
-    },
-    {
-      "source": "/category/announcements/",
-      "destination": "/blog",
-      "permanent": true
-    },
-    {
-      "source": "/category/community/",
-      "destination": "/blog",
-      "permanent": true
-    },
-    {
-      "source": "/category/updates/",
-      "destination": "/blog",
-      "permanent": true
-    },
-    {
-      "source": "/about/",
-      "destination": "/kaijudex",
-      "permanent": true
-    },
-    {
-      "source": "/contact/",
-      "destination": "/kaijudex",
-      "permanent": true
-    },
-    {
-      "source": "/team/",
-      "destination": "/kaijudex",
-      "permanent": true
-    },
-    {
-      "source": "/faq/",
-      "destination": "/kaijudex",
-      "permanent": true
-    },
-    {
-      "source": "/whitepaper/",
-      "destination": "/kaijudex",
+      "source": "/test/",
+      "destination": "/",
       "permanent": true
     },
     {
@@ -279,78 +219,128 @@
       "permanent": true
     },
     {
-      "source": "/terms-of-service/",
+      "source": "/%e3%82%af%e3%83%aa%e3%83%97%e3%83%88%e6%80%aa%e7%8d%a3%e3%82%92%e5%bd%93%e3%81%a6%e3%82%88%e3%81%86/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/about-us/",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/cryptokitties2-2/",
+      "destination": "/kaijudex/cryptokitty",
+      "permanent": true
+    },
+    {
+      "source": "/terms-conditions/",
       "destination": "/terms",
       "permanent": true
     },
     {
-      "source": "/2023/05/15/fusion-mechanics-explained/",
-      "destination": "/blog/fusion-mechanics-explained",
+      "source": "/getting-started-with-cryptokaiju/",
+      "destination": "/faq",
       "permanent": true
     },
     {
-      "source": "/2023/07/22/community-spotlight/",
-      "destination": "/blog/community-spotlight",
+      "source": "/cryptokitties/",
+      "destination": "/kaijudex/cryptokitty",
       "permanent": true
     },
     {
-      "source": "/2023/09/01/kaiju-kingz-anniversary/",
-      "destination": "/blog/kaiju-kingz-anniversary",
+      "source": "/kings/",
+      "destination": "/sacramento-kings",
       "permanent": true
     },
     {
-      "source": "/2023/11/10/winter-event-announcement/",
-      "destination": "/blog/winter-event-announcement",
+      "source": "/dapp-hero-test/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/author/admin/",
-      "destination": "/blog",
+      "source": "/bitcoin-halving-celebration/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/tag/genesis/",
-      "destination": "/kaijudex/genesis",
+      "source": "/home/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/tag/legends/",
-      "destination": "/kaijudex/legends",
+      "source": "/login-test/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/tag/fusion/",
-      "destination": "/kaijudex",
+      "source": "/claim-meme/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/tag/community/",
-      "destination": "/blog",
+      "source": "/ko-claim/",
+      "destination": "/contact",
       "permanent": true
     },
     {
-      "source": "/search/",
-      "destination": "/kaijudex",
+      "source": "/contact-us/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml",
+      "source": "/auto-draft/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/feed/",
-      "destination": "/api/feed",
+      "source": "/test-eth-press/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/wp-admin/",
-      "destination": "/kaijudex",
+      "source": "/ethpress-account-test/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/wp-login.php",
-      "destination": "/kaijudex",
+      "source": "/5799-2/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/claim-your-spangle/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/checkout-2/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/transactions/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/claim-form-test/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/home-2/",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/faqs/",
+      "destination": "/faq",
+      "permanent": true
+    },
+    {
+      "source": "/plushclaim/",
+      "destination": "/",
       "permanent": true
     }
   ]
