@@ -21,5 +21,337 @@
         }
       ]
     }
+  ],
+  "redirects": [
+    {
+      "source": "/shop/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/product/genesis/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/monster-marathon-subscription-box-2/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-slap-pack/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/monster-marathon-subscription-box-6-months/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-solitaire/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/monster-marathon-subscription-box-3-months/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-genesis/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-legends/",
+      "destination": "/kaijudex/legends",
+      "permanent": true
+    },
+    {
+      "source": "/product/cryptokitties-collaboration-keiko/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/genesis/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/legends/",
+      "destination": "/kaijudex/legends",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/mystery-boxes/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/product/cryptokitties-collaboration-catsuko/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/cryptokitties-collaboration-trappy/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/cryptokitties-collaboration-kara/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/cryptokitties-collaboration-catter/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/baby-kaiju-box/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-mystery-box/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/product/mega-city-mystery-box/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/product/mega-city-box/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/hello-world/",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/product/cryptokitties-collaboration-meowzilla/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/cryptokitties-collaboration-pawzilla/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/cryptokitties-collaboration-nekozilla/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-genesis-mystery-box/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-legends-mystery-box/",
+      "destination": "/kaijudex/legends",
+      "permanent": true
+    },
+    {
+      "source": "/product/hybrid-kaiju-mystery-box/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-genesis-fusion-potion/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-genesis-mutation-serum/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-genesis-baby-food/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-legends-fusion-potion/",
+      "destination": "/kaijudex/legends",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-legends-mutation-serum/",
+      "destination": "/kaijudex/legends",
+      "permanent": true
+    },
+    {
+      "source": "/product/kaiju-legends-baby-food/",
+      "destination": "/kaijudex/legends",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/fusion-potions/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/mutation-serums/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/baby-food/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/news/",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/2022/07/01/introducing-the-kaiju-kingz/",
+      "destination": "/blog/introducing-the-kaiju-kingz",
+      "permanent": true
+    },
+    {
+      "source": "/2022/10/15/kaiju-kingz-roadmap/",
+      "destination": "/blog/kaiju-kingz-roadmap",
+      "permanent": true
+    },
+    {
+      "source": "/2023/01/10/genesis-launch-announcement/",
+      "destination": "/blog/genesis-launch-announcement",
+      "permanent": true
+    },
+    {
+      "source": "/2023/03/20/kaiju-legends-revealed/",
+      "destination": "/blog/kaiju-legends-revealed",
+      "permanent": true
+    },
+    {
+      "source": "/category/announcements/",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/category/community/",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/category/updates/",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/about/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/contact/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/team/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/faq/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/whitepaper/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/privacy-policy/",
+      "destination": "/privacy",
+      "permanent": true
+    },
+    {
+      "source": "/terms-of-service/",
+      "destination": "/terms",
+      "permanent": true
+    },
+    {
+      "source": "/2023/05/15/fusion-mechanics-explained/",
+      "destination": "/blog/fusion-mechanics-explained",
+      "permanent": true
+    },
+    {
+      "source": "/2023/07/22/community-spotlight/",
+      "destination": "/blog/community-spotlight",
+      "permanent": true
+    },
+    {
+      "source": "/2023/09/01/kaiju-kingz-anniversary/",
+      "destination": "/blog/kaiju-kingz-anniversary",
+      "permanent": true
+    },
+    {
+      "source": "/2023/11/10/winter-event-announcement/",
+      "destination": "/blog/winter-event-announcement",
+      "permanent": true
+    },
+    {
+      "source": "/author/admin/",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/tag/genesis/",
+      "destination": "/kaijudex/genesis",
+      "permanent": true
+    },
+    {
+      "source": "/tag/legends/",
+      "destination": "/kaijudex/legends",
+      "permanent": true
+    },
+    {
+      "source": "/tag/fusion/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/tag/community/",
+      "destination": "/blog",
+      "permanent": true
+    },
+    {
+      "source": "/search/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml",
+      "permanent": true
+    },
+    {
+      "source": "/feed/",
+      "destination": "/api/feed",
+      "permanent": true
+    },
+    {
+      "source": "/wp-admin/",
+      "destination": "/kaijudex",
+      "permanent": true
+    },
+    {
+      "source": "/wp-login.php",
+      "destination": "/kaijudex",
+      "permanent": true
+    }
   ]
 }
