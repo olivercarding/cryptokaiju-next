@@ -119,7 +119,7 @@
       "permanent": true
     },
     {
-      "source": "/product/dogejira-vinyl-figure/",
+      "source": "/product/dogejira-vinyl-figure",
       "destination": "/kaijudex/dogejira",
       "permanent": true
     },
@@ -184,7 +184,7 @@
       "permanent": true
     },
     {
-      "source": "/product/plush-genesis/",
+      "source": "/product/plush-genesis",
       "destination": "/kaijudex/pretty-fine-plushies",
       "permanent": true
     },
