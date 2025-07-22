@@ -140,7 +140,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     physicalImage: '/images/mr-wasabi-physical.png',
     backgroundColor: 'bg-green-200',
     habitat: 'The spice gardens of Mochigawa',
-    estimatedSupply: 400,
+    estimatedSupply: 6,
     discoveredDate: '2025.07.22'
   },
   // 008 Sacramento Kings
