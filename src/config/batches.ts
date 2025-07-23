@@ -384,16 +384,20 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     slug: 'diamond-hands',
     name: 'Diamond Hands',
     type: 'Vinyl',
-    rarity: 'Ultra Rare',
-    essence: 'Unwavering Faith',
-    availability: 'Secondary',
-    colors: ['Clear', 'Blue'],
+    rarity: 'Common',
+    essence: 'Cultured Conviction',
+    availability: 'Mintable',
+    colors: ['Robin Egg'],
     
-    characterDescription: 'Diamond Hands moves through Kiyosawa\'s neon-kissed districts with the confidence of someone who has found their truth. In record shops and rooftop cafés, he listens to Deftones and Nas while sharing pizza and philosophy. His crystalline nature reflects only what is real.',
-    physicalDescription: 'A stunning translucent vinyl figure that embodies the crypto culture concept of "diamond hands." The crystal-clear material with blue accents creates an almost ethereal appearance that catches and refracts light beautifully.',
+    characterDescription: 'Diamond Hands are the cool heads of the CryptoKaiju crew, city born strategists with nerves like crystal. They roll through Kiyosawa\'s shopping district on scuffed skateboards, pause at record stalls, and map futures while the needle hums. They study the quiet craft of Auralee, Comoli, Maatee and Sons, and the playful grit of Nike SB, treating each label like a blueprint for balance. Culture is their compass, pizza their pause, patience their mantra. When markets shiver they read the current, hold firm, and guide the others.',
+    physicalDescription: 'A stunning translucent vinyl figure that embodies the crypto culture concept of "diamond hands." Robin blue with a silver pouch on its stomach, featuring a vibrant diamond emblem at the centre. Its look is a direct nod to the Diamond Supply Co. x Dunk Low Pro SB "Tiffany", one of the most iconic Nike SB releases of all time.',
     
     images: {
-      physical: ['/images/Diamond_hands_product_shot.png'],
+      physical: ['/images/Diamond_hands_product_shot.png',
+                 '/images/Diamond_hands_product_shot_2.png',
+                  '/images/Diamond_hands_product_shot_3.png',
+                  '/images/Diamond_hands_product_shot_4.png'
+      ],
       nft: '/images/Diamond-Hands-NFT.png',
       lifestyle: [],
       detail: [],
@@ -403,16 +407,15 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     
     habitat: 'Urban rooftops and music venues in Kiyosawa city',
     
-    materials: 'Translucent vinyl with crystalline finish and blue accents',
+    materials: 'Robin egg body with metallic silver pouch and diamond emblem',
     dimensions: '4.6" tall x 3.8" wide x 3.2" deep',
-    features: ['Translucent crystal effect', 'Light-refracting properties', 'Ultra rare exclusive design'],
-    packagingStyle: 'Premium display box with crystal-clear window and holographic certificate',
+    packagingStyle: 'Blister pack with holographic foiled backing card',
     
-    estimatedSupply: 250,
-    discoveredDate: '2025.10.18',
+    estimatedSupply: 150,
+    discoveredDate: '2022.08.31',
     
-    secondaryMarketUrl: 'https://opensea.io/collection/cryptokaiju?search[stringTraits][0][name]=Diamond%20Hands',
-    backgroundColor: 'bg-cyan-200'
+    // No secondary URL since it's mintable
+    backgroundColor: 'bg-cyan-700'
   },
 
   // 011 Spangle
