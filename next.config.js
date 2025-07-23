@@ -4,7 +4,7 @@ const nextConfig = {
   // Image optimization
   images: {
     remotePatterns: [
-      // Contentful images - ADD THIS
+      // Contentful images
       {
         protocol: 'https',
         hostname: 'images.ctfassets.net',
@@ -30,7 +30,7 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      // IPFS gateways
+      // IPFS gateways - Updated with more reliable options
       {
         protocol: 'https',
         hostname: 'cryptokaiju.mypinata.cloud',
@@ -49,15 +49,36 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+      // Replace cloudflare-ipfs.com with cf-ipfs.com (new domain)
       {
         protocol: 'https',
-        hostname: 'cloudflare-ipfs.com',
+        hostname: 'cf-ipfs.com',
         port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
         hostname: 'dweb.link',
+        port: '',
+        pathname: '/**',
+      },
+      // Add infura IPFS gateway
+      {
+        protocol: 'https',
+        hostname: 'ipfs.infura.io',
+        port: '',
+        pathname: '/**',
+      },
+      // Add more reliable IPFS gateways
+      {
+        protocol: 'https',
+        hostname: 'gateway.ipfs.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'nftstorage.link',
         port: '',
         pathname: '/**',
       },
@@ -78,12 +99,15 @@ const nextConfig = {
     // More lenient image optimization
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Increase timeout for IPFS images
+    // Increase timeout for IPFS images and add fallback options
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    // Add image optimization settings for better IPFS handling
+    minimumCacheTTL: 60,
+    formats: ['image/webp'],
   },
   
-  // Add CORS headers for API routes
+  // Enhanced CORS headers for API routes
   async headers() {
     return [
       {
@@ -101,6 +125,16 @@ const nextConfig = {
             key: 'Access-Control-Allow-Headers',
             value: 'Content-Type',
           },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600, s-maxage=3600',
+          },
+        ],
+      },
+      // Add headers for all image requests
+      {
+        source: '/_next/image/:path*',
+        headers: [
           {
             key: 'Cache-Control',
             value: 'public, max-age=3600, s-maxage=3600',
