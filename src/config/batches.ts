@@ -407,7 +407,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     habitat: 'Urban rooftops and music venues in Kiyosawa city',
     
     materials: 'Robin egg body with metallic silver pouch and diamond emblem',
-    dimensions: '4.6" tall x 3.8" wide x 3.2" deep',
+    dimensions: '5.5" tall',
     packagingStyle: 'Blister pack with holographic foiled backing card',
     
     estimatedSupply: 150,

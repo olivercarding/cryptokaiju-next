@@ -522,10 +522,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                   <h3 className="text-2xl font-bold text-kaiju-navy mb-8">Visual Collection</h3>
                   <SimplifiedPhotoGallery batch={batch} />
                   <div className="mt-8 text-kaiju-navy/60">
-                    <p>Complete visual archive of {batch.name}</p>
-                    <p className="text-sm mt-2">
-                      High-quality photography showcasing every detail
-                    </p>
+                    <p>Product and NFT images for {batch.name}</p>
                   </div>
                 </motion.div>
               )}
