@@ -1,4 +1,4 @@
-// src/config/batches.ts - UPDATED WITH ENHANCED STRUCTURE AND SECONDARY MARKET URLS
+// src/config/batches.ts - UPDATED WITH OPTIONAL PROPERTIES
 export interface KaijuBatch {
   id: string
   slug: string
@@ -24,13 +24,13 @@ export interface KaijuBatch {
   }
   
   // Character details
-  habitat: string
+  habitat?: string // Made optional
   
-  // PHYSICAL PRODUCT DETAILS
-  materials: string           
-  dimensions: string         
-  features: string[]         
-  packagingStyle: string     
+  // PHYSICAL PRODUCT DETAILS - Made optional since not all batches have complete info
+  materials?: string           
+  dimensions?: string         
+  features?: string[]         
+  packagingStyle?: string     
   productionNotes?: string   
   
   // Collection stats
@@ -300,7 +300,6 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     estimatedSupply: 6,
     discoveredDate: '2025.07.22',
     
-    // No secondary URL since it's mintable
     backgroundColor: 'bg-green-200'
   },
 
@@ -414,7 +413,6 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     estimatedSupply: 150,
     discoveredDate: '2022.08.31',
     
-    // No secondary URL since it's mintable
     backgroundColor: 'bg-cyan-700'
   },
 
@@ -525,7 +523,6 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     estimatedSupply: 150,
     discoveredDate: '2026.01.05',
     
-    // No secondary URL since it's mintable
     backgroundColor: 'bg-pink-100'
   },
 
