@@ -1,4 +1,4 @@
-// src/app/kaijudex/[slug]/page.tsx - UPDATED WITH SECONDARY MARKET URL SUPPORT
+// src/app/kaijudex/[slug]/page.tsx - FIXED WITH OPTIONAL PROPERTY CHECKS
 'use client'
 
 import { useState, useRef } from 'react'
@@ -400,19 +400,21 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                       </div>
                     </motion.div>
 
-                    {/* Habitat Card */}
-                    <motion.div 
-                      initial={{ opacity: 0, x: 20 }} 
-                      animate={{ opacity: 1, x: 0 }} 
-                      transition={{ delay: 0.1 }}
-                      className="bg-white p-6 rounded-2xl shadow-xl border-2 border-gray-100"
-                    >
-                      <h4 className="font-bold text-kaiju-navy mb-4 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-kaiju-pink" />
-                        Natural Habitat
-                      </h4>
-                      <p className="text-kaiju-navy/70 text-sm leading-relaxed">{batch.habitat}</p>
-                    </motion.div>
+                    {/* Habitat Card - UPDATED with optional check */}
+                    {batch.habitat && (
+                      <motion.div 
+                        initial={{ opacity: 0, x: 20 }} 
+                        animate={{ opacity: 1, x: 0 }} 
+                        transition={{ delay: 0.1 }}
+                        className="bg-white p-6 rounded-2xl shadow-xl border-2 border-gray-100"
+                      >
+                        <h4 className="font-bold text-kaiju-navy mb-4 flex items-center gap-2">
+                          <Sparkles className="w-4 h-4 text-kaiju-pink" />
+                          Natural Habitat
+                        </h4>
+                        <p className="text-kaiju-navy/70 text-sm leading-relaxed">{batch.habitat}</p>
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
               )}
@@ -438,15 +440,17 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                       </h3>
                       <p className="text-kaiju-navy/80 leading-relaxed text-lg mb-6">{batch.physicalDescription}</p>
                       
-                      {/* Features list */}
-                      <div>
-                        <h4 className="font-bold text-kaiju-navy mb-3">Special Features:</h4>
-                        <ul className="list-disc list-inside space-y-2 text-kaiju-navy/70">
-                          {batch.features.map((feature: string, index: number) => (
-                            <li key={index}>{feature}</li>
-                          ))}
-                        </ul>
-                      </div>
+                      {/* Features list - UPDATED with optional check */}
+                      {batch.features && batch.features.length > 0 && (
+                        <div>
+                          <h4 className="font-bold text-kaiju-navy mb-3">Special Features:</h4>
+                          <ul className="list-disc list-inside space-y-2 text-kaiju-navy/70">
+                            {batch.features.map((feature: string, index: number) => (
+                              <li key={index}>{feature}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
                     </motion.div>
 
                     {/* Production Notes if available */}
@@ -466,7 +470,7 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                     )}
                   </div>
 
-                  {/* Specifications Sidebar */}
+                  {/* Specifications Sidebar - UPDATED with optional checks */}
                   <div className="space-y-6">
                     <motion.div 
                       initial={{ opacity: 0, x: 20 }} 
@@ -478,18 +482,24 @@ export default function BatchDetailPage({ params }: BatchDetailPageProps) {
                         Specifications
                       </h4>
                       <div className="space-y-3 text-sm">
-                        <div>
-                          <span className="text-kaiju-navy/60 block mb-1">Materials:</span>
-                          <span className="font-semibold text-xs leading-relaxed">{batch.materials}</span>
-                        </div>
-                        <div>
-                          <span className="text-kaiju-navy/60 block mb-1">Dimensions:</span>
-                          <span className="font-semibold">{batch.dimensions}</span>
-                        </div>
-                        <div>
-                          <span className="text-kaiju-navy/60 block mb-1">Packaging:</span>
-                          <span className="font-semibold text-xs leading-relaxed">{batch.packagingStyle}</span>
-                        </div>
+                        {batch.materials && (
+                          <div>
+                            <span className="text-kaiju-navy/60 block mb-1">Materials:</span>
+                            <span className="font-semibold text-xs leading-relaxed">{batch.materials}</span>
+                          </div>
+                        )}
+                        {batch.dimensions && (
+                          <div>
+                            <span className="text-kaiju-navy/60 block mb-1">Dimensions:</span>
+                            <span className="font-semibold">{batch.dimensions}</span>
+                          </div>
+                        )}
+                        {batch.packagingStyle && (
+                          <div>
+                            <span className="text-kaiju-navy/60 block mb-1">Packaging:</span>
+                            <span className="font-semibold text-xs leading-relaxed">{batch.packagingStyle}</span>
+                          </div>
+                        )}
                         <div>
                           <span className="text-kaiju-navy/60 block mb-1">Supply:</span>
                           <span className="font-semibold">~{batch.estimatedSupply} pieces</span>
