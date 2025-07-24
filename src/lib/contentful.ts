@@ -604,6 +604,6 @@ export async function getRecentBlogPosts(
       return sortPostsNewestFirst(res.items.filter(isValidBlogPost))
     },
     [],
-    'Error fetching recent posts',
+    'Error fetching recent posts.',
   )
 }
