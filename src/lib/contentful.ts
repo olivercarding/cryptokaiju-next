@@ -1,3 +1,4 @@
+
 // src/lib/contentful.ts
 import type {
   Asset,
@@ -60,7 +61,49 @@ export interface ImageGallerySkeleton extends EntrySkeletonType {
   }
 }
 
-export type ImageGallery = Entry<ImageGallerySkeleton, undefined, string>
+export interface ProductShowcaseSkeleton extends EntrySkeletonType {
+  contentTypeId: 'productShowcase'
+  fields: {
+    name: EntryFieldTypes.Text
+    description: EntryFieldTypes.Text
+    image: EntryFieldTypes.AssetLink | any
+    price?: EntryFieldTypes.Text
+    mintPrice?: EntryFieldTypes.Text
+    status: EntryFieldTypes.Symbol // 'available' | 'sold-out' | 'coming-soon' | 'minting'
+    mintUrl?: EntryFieldTypes.Symbol
+    collectionName?: EntryFieldTypes.Symbol
+    rarity?: EntryFieldTypes.Symbol
+    edition?: EntryFieldTypes.Text
+    specifications?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
+  }
+}
+
+export type ProductShowcase = Entry<ProductShowcaseSkeleton, undefined, string>
+
+export interface VideoEmbedSkeleton extends EntrySkeletonType {
+  contentTypeId: 'videoEmbed'
+  fields: {
+    title: EntryFieldTypes.Text
+    videoUrl: EntryFieldTypes.Symbol // YouTube, Vimeo, etc.
+    thumbnail?: EntryFieldTypes.AssetLink | any
+    description?: EntryFieldTypes.Text
+    autoplay?: EntryFieldTypes.Boolean
+  }
+}
+
+export type VideoEmbed = Entry<VideoEmbedSkeleton, undefined, string>
+
+export interface SocialEmbedSkeleton extends EntrySkeletonType {
+  contentTypeId: 'socialEmbed'
+  fields: {
+    platform: EntryFieldTypes.Symbol // 'twitter' | 'instagram' | 'discord' | 'tiktok'
+    embedUrl: EntryFieldTypes.Symbol
+    caption?: EntryFieldTypes.Text
+    showCaption?: EntryFieldTypes.Boolean
+  }
+}
+
+export type SocialEmbed = Entry<SocialEmbedSkeleton, undefined, string>
 
 export interface BlogPostSkeleton extends EntrySkeletonType {
   contentTypeId: 'blogpost'
@@ -98,6 +141,9 @@ export type Author = Entry<AuthorSkeleton, undefined, string>
 export type BlogPostFields = BlogPostSkeleton['fields']
 export type AuthorFields = AuthorSkeleton['fields']
 export type ImageGalleryFields = ImageGallerySkeleton['fields']
+export type ProductShowcaseFields = ProductShowcaseSkeleton['fields']
+export type VideoEmbedFields = VideoEmbedSkeleton['fields']
+export type SocialEmbedFields = SocialEmbedSkeleton['fields']
 
 // Re-export Asset type for use in components
 export type { Asset } from 'contentful'
@@ -276,6 +322,37 @@ export function isValidImageGallery(entry: any): entry is ImageGallery {
     entry.fields.galleryStyle &&
     entry.fields.images &&
     Array.isArray(extractLocalizedValue(entry.fields.images))
+  )
+}
+
+export function isValidProductShowcase(entry: any): entry is ProductShowcase {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    entry.fields &&
+    entry.fields.name &&
+    entry.fields.description &&
+    entry.fields.status
+  )
+}
+
+export function isValidVideoEmbed(entry: any): entry is VideoEmbed {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    entry.fields &&
+    entry.fields.title &&
+    entry.fields.videoUrl
+  )
+}
+
+export function isValidSocialEmbed(entry: any): entry is SocialEmbed {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    entry.fields &&
+    entry.fields.platform &&
+    entry.fields.embedUrl
   )
 }
 

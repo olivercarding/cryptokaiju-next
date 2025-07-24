@@ -7,9 +7,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import Header from '@/components/layout/Header'
-import RichTextRenderer from '@/components/blog/RichTextRenderer'
+import EnhancedRichTextRenderer from '@/components/blog/EnhancedRichTextRenderer'
 import BlogCard from '@/components/blog/BlogCard'
-import Gallery from '@/components/blog/Gallery'
 import type { BlogPost, ImageGallery } from '@/lib/contentful'
 import { toStringValue, toStringArray, isValidDocument, getAssetUrl, getAssetTitle, extractLocalizedValue } from '@/lib/contentful'
 
@@ -30,24 +29,6 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
   const slugStr = toStringValue(fields.slug)
   const tagsArray = toStringArray(fields.tags)
   const readingTimeNum = fields.readingTime ? Number(fields.readingTime) : undefined
-
-  // Extract galleries from the post
-  const galleries: ImageGallery[] = []
-  if (fields.galleries) {
-    // Handle localized gallery references
-    const galleryData = extractLocalizedValue(fields.galleries)
-    if (Array.isArray(galleryData)) {
-      galleries.push(...galleryData.filter(gallery => 
-        gallery && 
-        gallery.fields && 
-        gallery.fields.title && 
-        gallery.fields.images &&
-        gallery.sys &&
-        gallery.sys.contentType &&
-        gallery.sys.contentType.sys.id === 'imageGallery'
-      ))
-    }
-  }
 
   // Set share URL on client side
   useState(() => {
@@ -258,17 +239,8 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
               transition={{ duration: 0.6, delay: 0.2 }}
               className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-2 border-gray-100 mb-16"
             >
-              {/* Render Galleries before main content */}
-              {galleries.length > 0 && (
-                <div className="mb-8">
-                  {galleries.map((gallery, index) => (
-                    <Gallery key={gallery.sys.id || index} gallery={gallery} />
-                  ))}
-                </div>
-              )}
-
               <div className="prose prose-lg prose-kaiju max-w-none">
-                <RichTextRenderer content={fields.content} />
+                <EnhancedRichTextRenderer content={fields.content} />
               </div>
             </motion.article>
 
