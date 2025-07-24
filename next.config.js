@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   trailingSlash: true,
-  // Image optimization
+  
+  // Image optimization with improved IPFS and OpenSea support
   images: {
     remotePatterns: [
       // Contentful images
@@ -11,10 +12,10 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      // OpenSea domains
+      // OpenSea domains - UPDATED with current domains
       {
         protocol: 'https',
-        hostname: 'i2c.seadn.io',
+        hostname: 'i.seadn.io',
         port: '',
         pathname: '/**',
       },
@@ -30,10 +31,22 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      // IPFS gateways - Updated with more reliable options
+      // IPFS gateways - UPDATED with reliable options
       {
         protocol: 'https',
         hostname: 'cryptokaiju.mypinata.cloud',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'gateway.pinata.cloud',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cf-ipfs.com',
         port: '',
         pathname: '/**',
       },
@@ -45,31 +58,10 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'gateway.pinata.cloud',
-        port: '',
-        pathname: '/**',
-      },
-      // Replace cloudflare-ipfs.com with cf-ipfs.com (new domain)
-      {
-        protocol: 'https',
-        hostname: 'cf-ipfs.com',
-        port: '',
-        pathname: '/**',
-      },
-      {
-        protocol: 'https',
         hostname: 'dweb.link',
         port: '',
         pathname: '/**',
       },
-      // Add infura IPFS gateway
-      {
-        protocol: 'https',
-        hostname: 'ipfs.infura.io',
-        port: '',
-        pathname: '/**',
-      },
-      // Add more reliable IPFS gateways
       {
         protocol: 'https',
         hostname: 'gateway.ipfs.io',
@@ -96,15 +88,15 @@ const nextConfig = {
         pathname: '/**',
       }
     ],
-    // More lenient image optimization
+    // Improved image optimization settings
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    // Increase timeout for IPFS images and add fallback options
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    // Add image optimization settings for better IPFS handling
     minimumCacheTTL: 60,
     formats: ['image/webp'],
+    // Add unoptimized flag for development debugging
+    unoptimized: process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_IMAGES === 'true',
   },
   
   // Enhanced CORS headers for API routes
@@ -123,11 +115,37 @@ const nextConfig = {
           },
           {
             key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type',
+            value: 'Content-Type, Authorization',
           },
           {
             key: 'Cache-Control',
-            value: 'public, max-age=3600, s-maxage=3600',
+            value: 'public, max-age=86400, s-maxage=86400',
+          },
+          // Add CORS headers for preflight
+          {
+            key: 'Access-Control-Max-Age',
+            value: '86400',
+          },
+        ],
+      },
+      {
+        source: '/api/opensea/:path*',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, OPTIONS',
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, s-maxage=300',
           },
         ],
       },
@@ -137,15 +155,29 @@ const nextConfig = {
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=3600, s-maxage=3600',
+            value: 'public, max-age=86400, s-maxage=86400',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+      // Add headers for static assets
+      {
+        source: '/images/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
     ]
   },
   
-  // Simplified webpack configuration to handle dependency issues
-  webpack: (config, { isServer }) => {
+  // Improved webpack configuration to handle dependency issues
+  webpack: (config, { isServer, dev }) => {
     // Handle Node.js modules that don't work in the browser
     if (!isServer) {
       config.resolve.fallback = {
@@ -169,12 +201,31 @@ const nextConfig = {
       }
     }
 
-    // Ignore problematic modules - simple approach
+    // Ignore problematic modules and warnings
     config.ignoreWarnings = [
       { module: /node_modules\/pino\/lib\/tools\.js/ },
       { module: /node_modules\/pino-pretty/ },
       /Failed to parse source map/,
+      /Critical dependency: the request of a dependency is an expression/,
     ]
+    
+    // Add optimization for production builds
+    if (!dev) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          ...config.optimization.splitChunks,
+          cacheGroups: {
+            ...config.optimization.splitChunks.cacheGroups,
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              chunks: 'all',
+            },
+          },
+        },
+      }
+    }
     
     return config
   },
@@ -192,6 +243,31 @@ const nextConfig = {
   // Experimental features to help with Web3 compatibility
   experimental: {
     esmExternals: 'loose',
+  },
+
+  // Add redirects for legacy routes (already in vercel.json but good to have here too)
+  async redirects() {
+    return [
+      {
+        source: '/shop/:path*',
+        destination: '/kaijudex',
+        permanent: true,
+      },
+      {
+        source: '/my-account/:path*',
+        destination: '/my-kaiju',
+        permanent: true,
+      },
+    ]
+  },
+
+  // Improve performance
+  compress: true,
+  poweredByHeader: false,
+  
+  // Environment variables
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
 }
 

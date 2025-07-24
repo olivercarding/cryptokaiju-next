@@ -1,4 +1,4 @@
-// src/components/pages/KaijuDetailsPageClient.tsx - REMOVED BATTLE STATS
+// src/components/pages/KaijuDetailsPageClient.tsx - FIXED IMAGE LOADING
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -59,6 +59,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
   const { kaiju, openSeaData, isLoading, error } = useBlockchainKaiju(tokenId)
   const [activeTab, setActiveTab] = useState<'overview' | 'traits'>('overview')
   const [imageError, setImageError] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
   // Update page title when kaiju data loads
   useEffect(() => {
@@ -67,22 +68,57 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
     }
   }, [kaiju, tokenId])
 
-  const getImageSrc = (): string => {
-    if (imageError) return '/images/placeholder-kaiju.png'
+  // FIXED: Proper image source priority with proxy first
+  const getImageSources = (): string[] => {
+    const sources: string[] = []
     
-    // Prefer OpenSea image if available
-    if (openSeaData?.display_image_url) return openSeaData.display_image_url
-    if (openSeaData?.image_url) return openSeaData.image_url
-    
-    // Fall back to IPFS metadata
-    if (kaiju?.ipfsData?.image) {
-      if (kaiju.ipfsData.image.startsWith('ipfs://')) {
-        return kaiju.ipfsData.image.replace('ipfs://', 'https://cryptokaiju.mypinata.cloud/ipfs/')
-      }
-      return kaiju.ipfsData.image
+    // 1. FIRST: OpenSea images (most reliable)
+    if (openSeaData?.display_image_url) {
+      sources.push(openSeaData.display_image_url)
+    }
+    if (openSeaData?.image_url && openSeaData.image_url !== openSeaData.display_image_url) {
+      sources.push(openSeaData.image_url)
     }
     
-    return '/images/placeholder-kaiju.png'
+    // 2. SECOND: IPFS proxy (avoids CORS)
+    if (kaiju?.ipfsData?.image) {
+      let ipfsUrl = kaiju.ipfsData.image
+      if (ipfsUrl.startsWith('ipfs://')) {
+        const hash = ipfsUrl.replace('ipfs://', '')
+        sources.push(`/api/ipfs/${hash}`)
+      } else if (ipfsUrl.includes('/ipfs/')) {
+        const hash = ipfsUrl.split('/ipfs/')[1]
+        sources.push(`/api/ipfs/${hash}`)
+      }
+    }
+    
+    // 3. THIRD: Token URI via proxy if it's IPFS
+    if (kaiju?.tokenURI) {
+      if (kaiju.tokenURI.startsWith('ipfs://')) {
+        const hash = kaiju.tokenURI.replace('ipfs://', '')
+        sources.push(`/api/ipfs/${hash}`)
+      } else if (kaiju.tokenURI.includes('/ipfs/')) {
+        const hash = kaiju.tokenURI.split('/ipfs/')[1]
+        sources.push(`/api/ipfs/${hash}`)
+      }
+    }
+    
+    // 4. LAST: Fallback placeholder
+    sources.push('/images/placeholder-kaiju.png')
+    
+    return sources
+  }
+
+  const imageSources = getImageSources()
+  const currentSrc = imageSources[currentImageIndex] || '/images/placeholder-kaiju.png'
+
+  const handleImageError = () => {
+    console.log(`Image failed: ${currentSrc}, trying next source...`)
+    if (currentImageIndex < imageSources.length - 1) {
+      setCurrentImageIndex(prev => prev + 1)
+    } else {
+      setImageError(true)
+    }
   }
 
   const getTraits = (): TraitData[] => {
@@ -280,12 +316,20 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
               <div className="lg:col-span-1">
                 <div className="relative h-96 bg-gradient-to-br from-white/10 to-white/5 rounded-xl overflow-hidden border border-white/20 backdrop-blur-sm">
                   <Image
-                    src={getImageSrc()}
+                    src={currentSrc}
                     alt={kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
                     fill
                     className="object-contain p-6"
-                    onError={() => setImageError(true)}
+                    onError={handleImageError}
+                    priority
                   />
+                  
+                  {/* Debug info */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="absolute top-2 left-2 bg-black/70 text-white text-xs p-1 rounded">
+                      {currentImageIndex + 1}/{imageSources.length}
+                    </div>
+                  )}
                   
                   {/* Floating action buttons */}
                   <div className="absolute bottom-4 right-4 flex gap-2">

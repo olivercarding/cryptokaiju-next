@@ -1,4 +1,4 @@
-// src/app/nft/page.tsx - FIXED VERSION WITH OPENSEA IMAGE FALLBACKS
+// src/app/nft/page.tsx - FIXED VERSION WITH PROPER IMAGE LOADING
 'use client'
 
 import { useState } from 'react'
@@ -10,7 +10,7 @@ import Header from '@/components/layout/Header'
 import { useBlockchainNFTSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
 import type { KaijuNFT, OpenSeaAsset } from '@/lib/services/BlockchainCryptoKaijuService'
 
-// Enhanced Image Component with OpenSea fallbacks - FIXED VERSION
+// FIXED: Enhanced Image Component with proper fallback handling
 const KaijuImage = ({ 
   nft, 
   openSeaData,
@@ -20,10 +20,9 @@ const KaijuImage = ({
   openSeaData?: OpenSeaAsset | null
   onError?: () => void
 }) => {
-  const [imageError, setImageError] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  // Build image source priority list - FIXED to match KaijuDetailsPageClient
+  // FIXED: Build proper image source priority list
   const getImageSources = (): string[] => {
     const sources: string[] = []
     
@@ -35,64 +34,69 @@ const KaijuImage = ({
       sources.push(openSeaData.image_url)
     }
     
-    // 2. SECOND: IPFS sources (via our proxy to avoid CORS)
+    // 2. SECOND: IPFS sources via our proxy (to avoid CORS)
     if (nft?.ipfsData?.image) {
       let ipfsUrl = nft.ipfsData.image
       if (ipfsUrl.startsWith('ipfs://')) {
         const hash = ipfsUrl.replace('ipfs://', '')
         sources.push(`/api/ipfs/${hash}`)
-        // Also try the direct pinata URL like in KaijuDetailsPageClient
-        sources.push(`https://cryptokaiju.mypinata.cloud/ipfs/${hash}`)
       } else if (ipfsUrl.includes('/ipfs/')) {
-        const hash = ipfsUrl.split('/ipfs/')[1]
+        const hash = ipfsUrl.split('/ipfs/')[1].split('?')[0] // Remove query params if any
         sources.push(`/api/ipfs/${hash}`)
-        sources.push(`https://cryptokaiju.mypinata.cloud/ipfs/${hash}`)
-      } else {
-        sources.push(`/api/ipfs/${ipfsUrl}`)
       }
     }
     
-    // 3. THIRD: Token URI as IPFS source
+    // 3. THIRD: Token URI as IPFS source via proxy
     if (nft?.tokenURI) {
-      let tokenUri = nft.tokenURI
-      if (tokenUri.startsWith('ipfs://')) {
-        const hash = tokenUri.replace('ipfs://', '')
+      if (nft.tokenURI.startsWith('ipfs://')) {
+        const hash = nft.tokenURI.replace('ipfs://', '')
         sources.push(`/api/ipfs/${hash}`)
-        sources.push(`https://cryptokaiju.mypinata.cloud/ipfs/${hash}`)
-      } else if (tokenUri.includes('/ipfs/')) {
-        const hash = tokenUri.split('/ipfs/')[1]
+      } else if (nft.tokenURI.includes('/ipfs/')) {
+        const hash = nft.tokenURI.split('/ipfs/')[1].split('?')[0]
         sources.push(`/api/ipfs/${hash}`)
-        sources.push(`https://cryptokaiju.mypinata.cloud/ipfs/${hash}`)
       }
     }
     
     // 4. LAST: Fallback placeholder
     sources.push('/images/placeholder-kaiju.png')
     
-    return sources
+    return sources.filter(Boolean) // Remove any undefined/empty sources
   }
 
   const imageSources = getImageSources()
   const currentSrc = imageSources[currentImageIndex] || '/images/placeholder-kaiju.png'
 
   const handleImageError = () => {
+    console.log(`Image failed: ${currentSrc}, trying next source...`)
+    
     if (currentImageIndex < imageSources.length - 1) {
       setCurrentImageIndex(prev => prev + 1)
     } else {
-      setImageError(true)
+      console.warn('All image sources failed, using placeholder')
       onError?.()
     }
   }
 
   return (
-    <Image
-      src={currentSrc}
-      alt={nft?.ipfsData?.name || `Kaiju #${nft?.tokenId}`}
-      fill
-      className="object-contain p-6"
-      onError={handleImageError}
-      priority
-    />
+    <>
+      <Image
+        src={currentSrc}
+        alt={nft?.ipfsData?.name || `Kaiju #${nft?.tokenId}`}
+        fill
+        className="object-contain p-6"
+        onError={handleImageError}
+        priority
+      />
+      
+      {/* Debug info in development */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute top-2 left-2 bg-black/70 text-white text-xs p-1 rounded">
+          Source {currentImageIndex + 1}/{imageSources.length}
+          <br />
+          {currentSrc.substring(0, 30)}...
+        </div>
+      )}
+    </>
   )
 }
 
@@ -116,12 +120,14 @@ const NFTDisplayCard = ({
   // Get the display name with fallback priority
   const getDisplayName = (): string => {
     if (nft?.ipfsData?.name) return nft.ipfsData.name
+    if (openSeaData?.name) return openSeaData.name
     return `CryptoKaiju #${nft?.tokenId || 'Unknown'}`
   }
 
   // Get description with fallback
   const getDescription = (): string => {
     if (nft?.ipfsData?.description) return nft.ipfsData.description
+    if (openSeaData?.description) return openSeaData.description
     return 'A unique CryptoKaiju NFT with physical collectible counterpart.'
   }
 
@@ -136,7 +142,6 @@ const NFTDisplayCard = ({
         {/* NFT Image */}
         <div className="relative">
           <div className="relative h-80 lg:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
-            {/* FIXED: Pass openSeaData to KaijuImage */}
             <KaijuImage 
               nft={nft} 
               openSeaData={openSeaData}
@@ -153,6 +158,11 @@ const NFTDisplayCard = ({
               {nft?.ipfsData && (
                 <div className="bg-blue-500/90 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-bold">
                   IPFS ✓
+                </div>
+              )}
+              {openSeaData && (
+                <div className="bg-purple-500/90 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-bold">
+                  OPENSEA ✓
                 </div>
               )}
             </div>
@@ -326,7 +336,7 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter Token ID (e.g., 1129) or NFC ID (e.g., 042C0A8A9F6580)"
+            placeholder="Enter Token ID (e.g., 1) or NFC ID (e.g., 042C0A8A9F6580)"
             className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-4 pr-12 focus:border-kaiju-pink focus:outline-none font-medium text-lg"
             disabled={isLoading}
           />
@@ -360,7 +370,7 @@ export default function NFTLookupPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [hasSearched, setHasSearched] = useState(false)
 
-  // Get the first result with both nft and openSeaData - FIXED
+  // Get the first result with both nft and openSeaData
   const searchResult = results.length > 0 ? results[0] : null
   const nft = searchResult?.nft || null
   const openSeaData = searchResult?.openSeaData || null
