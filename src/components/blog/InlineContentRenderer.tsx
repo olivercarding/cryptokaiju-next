@@ -315,52 +315,43 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
     )
   }
 
-  // Pre-process content to detect consecutive images and group them
-  const processedContent = React.useMemo(() => {
+  // Track image rendering for gallery detection
+  const imageTracker = React.useRef({ 
+    consecutiveImages: [] as any[], 
+    lastWasImage: false,
+    renderedGalleries: new Set<string>()
+  })
+
+  const shouldRenderAsGallery = (node: any, index: number) => {
     const nodes = content.content || []
-    const processed = []
-    let i = 0
     
-    while (i < nodes.length) {
-      const node = nodes[i]
-      
-      // Check if this is an embedded asset (image)
-      if (node.nodeType === 'embedded-asset-block' && 
-          node.data?.target?.fields?.file?.contentType?.startsWith('image/')) {
-        
-        // Collect consecutive images
-        const imageGroup = [node]
-        let j = i + 1
-        
-        while (j < nodes.length && 
-               nodes[j].nodeType === 'embedded-asset-block' &&
-               nodes[j].data?.target?.fields?.file?.contentType?.startsWith('image/')) {
-          imageGroup.push(nodes[j])
-          j++
-        }
-        
-        // If we have multiple images, create a gallery node
-        if (imageGroup.length > 1) {
-          processed.push({
-            nodeType: 'gallery',
-            data: { images: imageGroup.map(n => n.data.target) },
-            content: []
-          })
-          i = j // Skip processed images
-        } else {
-          // Single image, keep as is
-          processed.push(node)
-          i++
-        }
+    // Check if this image is part of a consecutive group
+    let consecutiveCount = 0
+    let startIndex = index
+    
+    // Count backwards to find start of consecutive images
+    while (startIndex > 0 && 
+           nodes[startIndex - 1].nodeType === 'embedded-asset-block' &&
+           nodes[startIndex - 1].data?.target?.fields?.file?.contentType?.startsWith('image/')) {
+      startIndex--
+    }
+    
+    // Count forward to find all consecutive images
+    for (let i = startIndex; i < nodes.length; i++) {
+      if (nodes[i].nodeType === 'embedded-asset-block' &&
+          nodes[i].data?.target?.fields?.file?.contentType?.startsWith('image/')) {
+        consecutiveCount++
       } else {
-        // Non-image node, keep as is
-        processed.push(node)
-        i++
+        break
       }
     }
     
-    return { ...content, content: processed }
-  }, [content])
+    return {
+      isFirstInGroup: index === startIndex,
+      groupSize: consecutiveCount,
+      shouldRenderGallery: consecutiveCount > 1 && index === startIndex
+    }
+  }
 
   const options = {
     renderMark: {
@@ -380,10 +371,6 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
       ),
     },
     renderNode: {
-      // Custom gallery node handler
-      ['gallery' as any]: (node: any) => {
-        return <AutoGallery images={node.data.images} style="grid" />
-      },
       [BLOCKS.PARAGRAPH]: (node: Node, children: React.ReactNode) => {
         // Check if paragraph contains special patterns
         const textContent = (node as any).content
@@ -506,7 +493,33 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
           const isImage = file?.contentType?.startsWith('image/')
           
           if (isImage && file?.url) {
-            // Individual images (auto-gallery detection simplified for TypeScript compatibility)
+            // Find the current node index
+            const nodes = content.content || []
+            const currentIndex = nodes.findIndex((n: any) => 
+              n.nodeType === 'embedded-asset-block' && 
+              n.data?.target?.sys?.id === asset.sys?.id
+            )
+            
+            if (currentIndex >= 0) {
+              const galleryInfo = shouldRenderAsGallery(node, currentIndex)
+              
+              if (galleryInfo.shouldRenderGallery) {
+                // Render gallery for the first image in a consecutive group
+                const galleryImages = []
+                for (let i = currentIndex; i < Math.min(currentIndex + galleryInfo.groupSize, nodes.length); i++) {
+                  const imgNode = nodes[i]
+                  if (imgNode.data?.target?.fields?.file?.contentType?.startsWith('image/')) {
+                    galleryImages.push(imgNode.data.target)
+                  }
+                }
+                return <AutoGallery images={galleryImages} style="grid" />
+              } else if (galleryInfo.groupSize > 1 && !galleryInfo.isFirstInGroup) {
+                // Skip rendering for subsequent images in a gallery group
+                return null
+              }
+            }
+            
+            // Single image display
             return (
               <motion.figure
                 initial={{ opacity: 0, y: 20 }}
@@ -607,7 +620,7 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
   try {
     return (
       <div className="prose prose-lg max-w-none">
-        {documentToReactComponents(processedContent, options)}
+        {documentToReactComponents(content, options)}
       </div>
     )
   } catch (error) {
