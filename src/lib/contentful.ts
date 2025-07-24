@@ -99,6 +99,9 @@ export type BlogPostFields = BlogPostSkeleton['fields']
 export type AuthorFields = AuthorSkeleton['fields']
 export type ImageGalleryFields = ImageGallerySkeleton['fields']
 
+// Re-export Asset type for use in components
+export type { Asset } from 'contentful'
+
 /* ------------------------------------------------------------------ */
 /*  Localisation helpers                                              */
 /* ------------------------------------------------------------------ */
