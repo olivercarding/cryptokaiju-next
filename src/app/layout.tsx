@@ -5,6 +5,7 @@ import { ThirdwebProvider } from 'thirdweb/react'
 import { ethereum } from 'thirdweb/chains'
 import { thirdwebClient } from '@/lib/thirdweb'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Analytics } from '@vercel/analytics/react'
 import Footer from '@/components/layout/Footer'
 import {
   GoogleTagManager,
@@ -148,6 +149,7 @@ export default function RootLayout({
           {children}
           <Footer />
           <SpeedInsights />
+          <Analytics />
         </ThirdwebProvider>
       </body>
     </html>
