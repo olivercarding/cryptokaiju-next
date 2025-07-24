@@ -1,4 +1,4 @@
-// src/components/pages/KaijuDetailsPageClient.tsx - FIXED IMAGE LOADING
+// src/components/pages/KaijuDetailsPageClient.tsx - SIMPLE BATCH LINK FIX
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -28,6 +28,68 @@ interface IPFSAttribute {
   trait_type?: string
   value?: any
   [key: string]: any
+}
+
+// Simple batch name to slug conversion
+const batchNameToSlug = (batchName: string): string => {
+  if (!batchName) return ''
+  
+  // Common batch mappings
+  const mappings: Record<string, string> = {
+    'Halloween Celebration': 'halloween-celebration',
+    'Spooky Halloween Special': 'spooky',
+    'Genesis Kaiju': 'genesis',
+    'Genesis': 'genesis',
+    'Mr. Wasabi': 'mr-wasabi',
+    'Mr Wasabi': 'mr-wasabi',
+    'Dogejira': 'dogejira',
+    'CryptoKitty': 'cryptokitty',
+    'CryptoKitties': 'cryptokitty',
+    'Sushi': 'sushi',
+    'SushiSwap': 'sushi',
+    'Pretty Fine Plushies': 'pretty-fine-plushies',
+    'Jaiantokoin': 'jaiantokoin',
+    'URI': 'uri',
+    'Spangle': 'spangle',
+  }
+  
+  if (mappings[batchName]) {
+    return mappings[batchName]
+  }
+  
+  // Convert to slug format
+  return batchName
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+// Simple batch page existence check (we'll assume common ones exist)
+const batchPageExists = (batchName: string): boolean => {
+  if (!batchName) return false
+  
+  const knownBatches = [
+    'Halloween Celebration',
+    'Spooky Halloween Special', 
+    'Genesis Kaiju',
+    'Genesis',
+    'Mr. Wasabi',
+    'Mr Wasabi',
+    'Dogejira',
+    'CryptoKitty',
+    'CryptoKitties',
+    'Sushi',
+    'SushiSwap',
+    'Pretty Fine Plushies',
+    'Jaiantokoin',
+    'URI',
+    'Spangle'
+  ]
+  
+  return knownBatches.includes(batchName)
 }
 
 const TraitCard = ({ traitType, value, rarity }: { 
@@ -60,6 +122,17 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
   const [activeTab, setActiveTab] = useState<'overview' | 'traits'>('overview')
   const [imageError, setImageError] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+
+  // Debug logging
+  useEffect(() => {
+    if (kaiju) {
+      console.log('🐛 Kaiju data:', { 
+        tokenId: kaiju.tokenId, 
+        batch: kaiju.batch,
+        openSeaData: openSeaData?.traits?.find(t => t.trait_type?.toLowerCase() === 'batch')
+      })
+    }
+  }, [kaiju, openSeaData])
 
   // Update page title when kaiju data loads
   useEffect(() => {
@@ -366,14 +439,31 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
               {/* Right: Kaiju Info */}
               <div className="lg:col-span-2 space-y-6">
                 <div>
-                  <div className="flex items-center gap-4 mb-4">
+                  <div className="flex items-center gap-4 mb-4 flex-wrap">
                     <span className="text-kaiju-pink font-mono text-lg">#{kaiju.tokenId}</span>
                     {kaiju.nfcId && (
                       <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">NFC: {kaiju.nfcId}</span>
                     )}
+                    {/* UPDATED: Simple batch linking */}
                     {kaiju.batch && (
                       <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">
-                        Batch: {kaiju.batch}
+                        Batch: {batchPageExists(kaiju.batch) ? (
+                          <Link 
+                            href={`/kaijudex/${batchNameToSlug(kaiju.batch)}`}
+                            className="text-kaiju-pink hover:text-white transition-colors underline decoration-dotted underline-offset-2 ml-1"
+                            title={`View ${kaiju.batch} collection page`}
+                          >
+                            {kaiju.batch}
+                          </Link>
+                        ) : (
+                          <span className="ml-1">{kaiju.batch}</span>
+                        )}
+                      </span>
+                    )}
+                    {/* Debug batch info */}
+                    {process.env.NODE_ENV === 'development' && kaiju.batch && (
+                      <span className="text-yellow-400 text-xs bg-black/50 px-2 py-1 rounded">
+                        Batch: "{kaiju.batch}" → Exists: {batchPageExists(kaiju.batch) ? 'YES' : 'NO'}
                       </span>
                     )}
                   </div>

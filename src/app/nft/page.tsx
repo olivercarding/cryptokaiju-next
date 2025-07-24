@@ -1,4 +1,4 @@
-// src/app/nft/page.tsx - FIXED VERSION WITH PROPER IMAGE LOADING
+// src/app/nft/page.tsx - SIMPLE BATCH LINK FIX
 'use client'
 
 import { useState } from 'react'
@@ -9,6 +9,68 @@ import Image from 'next/image'
 import Header from '@/components/layout/Header'
 import { useBlockchainNFTSearch } from '@/lib/hooks/useBlockchainCryptoKaiju'
 import type { KaijuNFT, OpenSeaAsset } from '@/lib/services/BlockchainCryptoKaijuService'
+
+// Simple batch name to slug conversion (same as in details page)
+const batchNameToSlug = (batchName: string): string => {
+  if (!batchName) return ''
+  
+  // Common batch mappings
+  const mappings: Record<string, string> = {
+    'Halloween Celebration': 'halloween-celebration',
+    'Spooky Halloween Special': 'spooky',
+    'Genesis Kaiju': 'genesis',
+    'Genesis': 'genesis',
+    'Mr. Wasabi': 'mr-wasabi',
+    'Mr Wasabi': 'mr-wasabi',
+    'Dogejira': 'dogejira',
+    'CryptoKitty': 'cryptokitty',
+    'CryptoKitties': 'cryptokitty',
+    'Sushi': 'sushi',
+    'SushiSwap': 'sushi',
+    'Pretty Fine Plushies': 'pretty-fine-plushies',
+    'Jaiantokoin': 'jaiantokoin',
+    'URI': 'uri',
+    'Spangle': 'spangle',
+  }
+  
+  if (mappings[batchName]) {
+    return mappings[batchName]
+  }
+  
+  // Convert to slug format
+  return batchName
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+// Simple batch page existence check
+const batchPageExists = (batchName: string): boolean => {
+  if (!batchName) return false
+  
+  const knownBatches = [
+    'Halloween Celebration',
+    'Spooky Halloween Special', 
+    'Genesis Kaiju',
+    'Genesis',
+    'Mr. Wasabi',
+    'Mr Wasabi',
+    'Dogejira',
+    'CryptoKitty',
+    'CryptoKitties',
+    'Sushi',
+    'SushiSwap',
+    'Pretty Fine Plushies',
+    'Jaiantokoin',
+    'URI',
+    'Spangle'
+  ]
+  
+  return knownBatches.includes(batchName)
+}
 
 // FIXED: Enhanced Image Component with proper fallback handling
 const KaijuImage = ({ 
@@ -194,7 +256,7 @@ const NFTDisplayCard = ({
         {/* NFT Info */}
         <div className="space-y-6">
           <div>
-            <div className="flex items-center gap-4 mb-4">
+            <div className="flex items-center gap-4 mb-4 flex-wrap">
               <span className="text-kaiju-pink font-mono text-lg font-bold">#{nft?.tokenId || 'Unknown'}</span>
               {nft?.nfcId && (
                 <div className="flex flex-col gap-1">
@@ -202,6 +264,12 @@ const NFTDisplayCard = ({
                     NFC: {nft.nfcId}
                   </span>
                 </div>
+              )}
+              {/* Debug batch info */}
+              {process.env.NODE_ENV === 'development' && nft?.batch && (
+                <span className="text-yellow-600 text-xs bg-yellow-100 px-2 py-1 rounded">
+                  Batch: "{nft.batch}" → Exists: {batchPageExists(nft.batch) ? 'YES' : 'NO'}
+                </span>
               )}
             </div>
             
@@ -226,7 +294,7 @@ const NFTDisplayCard = ({
               </div>
             </div>
 
-            {/* Add batch information */}
+            {/* UPDATED: Simple batch linking */}
             {nft?.batch && (
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-center gap-2 text-gray-600 text-sm font-medium mb-1">
@@ -234,7 +302,17 @@ const NFTDisplayCard = ({
                   BATCH
                 </div>
                 <div className="text-kaiju-pink font-bold text-sm">
-                  {nft.batch}
+                  {batchPageExists(nft.batch) ? (
+                    <Link 
+                      href={`/kaijudex/${batchNameToSlug(nft.batch)}`}
+                      className="hover:text-kaiju-red transition-colors underline decoration-dotted underline-offset-2"
+                      title={`View ${nft.batch} collection page`}
+                    >
+                      {nft.batch}
+                    </Link>
+                  ) : (
+                    nft.batch
+                  )}
                 </div>
               </div>
             )}
@@ -336,7 +414,7 @@ const SearchForm = ({ onSearch, isLoading }: { onSearch: (query: string) => void
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Enter Token ID (e.g., 1) or NFC ID (e.g., 042C0A8A9F6580)"
+            placeholder="Enter Token ID (e.g., 1600) or NFC ID (e.g., 042C0A8A9F6580)"
             className="w-full bg-gray-50 border-2 border-gray-200 rounded-xl px-4 py-4 pr-12 focus:border-kaiju-pink focus:outline-none font-medium text-lg"
             disabled={isLoading}
           />
