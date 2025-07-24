@@ -28,7 +28,70 @@ import {
 import BlockchainCryptoKaijuService, {
   type KaijuNFT,
 } from '@/lib/services/BlockchainCryptoKaijuService'
-import { batchPageExists, getBatchPageUrl } from '@/lib/utils/batchUtils'
+
+// Simple batch name to slug conversion (same as other pages)
+const batchNameToSlug = (batchName: string): string => {
+  if (!batchName) return ''
+  
+  const mappings: Record<string, string> = {
+    'Halloween Celebration': 'halloween-celebration',
+    'Spooky Halloween Special': 'spooky',
+    'Genesis Kaiju': 'genesis',
+    'Genesis': 'genesis',
+    'Mr. Wasabi': 'mr-wasabi',
+    'Mr Wasabi': 'mr-wasabi',
+    'Dogejira': 'dogejira',
+    'CryptoKitty': 'cryptokitty',
+    'CryptoKitties': 'cryptokitty',
+    'Sushi': 'sushi',
+    'SushiSwap': 'sushi',
+    'Pretty Fine Plushies': 'pretty-fine-plushies',
+    'Jaiantokoin': 'jaiantokoin',
+    'URI': 'uri',
+    'Spangle': 'spangle',
+  }
+  
+  if (mappings[batchName]) {
+    return mappings[batchName]
+  }
+  
+  return batchName
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+const batchPageExists = (batchName: string): boolean => {
+  if (!batchName) return false
+  
+  const knownBatches = [
+    'Halloween Celebration',
+    'Spooky Halloween Special', 
+    'Genesis Kaiju',
+    'Genesis',
+    'Mr. Wasabi',
+    'Mr Wasabi',
+    'Dogejira',
+    'CryptoKitty',
+    'CryptoKitties',
+    'Sushi',
+    'SushiSwap',
+    'Pretty Fine Plushies',
+    'Jaiantokoin',
+    'URI',
+    'Spangle',
+  ]
+  
+  return knownBatches.includes(batchName)
+}
+
+const getBatchPageUrl = (batchName: string): string => {
+  const slug = batchNameToSlug(batchName)
+  return `/kaijudex/${slug}`
+}
 
 /* ------------------------------------------------------------------ */
 /* -----------------------  helper functions  ----------------------- */
@@ -154,7 +217,7 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
             </div>
           )}
           
-          {/* UPDATED: Clickable batch link */}
+          {/* UPDATED: Clickable batch link with better contrast */}
           {kaiju.batch && (
             <div className="mb-4 p-2 bg-purple-50 rounded-lg border border-purple-200">
               <div className="text-xs text-purple-600 font-medium">BATCH</div>
