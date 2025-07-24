@@ -122,6 +122,15 @@ export default function RichTextRenderer({ content }: RichTextRendererProps) {
             )
           }
 
+          // Handle unresolved asset links
+          if (asset.sys && asset.sys.type === 'Link') {
+            return (
+              <div className="bg-gray-100 border border-gray-200 rounded-lg p-4 my-6">
+                <p className="text-gray-600">Asset is not fully loaded</p>
+              </div>
+            )
+          }
+
           const { file, title, description } = asset.fields
           const isImage = file?.contentType?.startsWith('image/')
           

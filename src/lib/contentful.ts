@@ -55,7 +55,7 @@ export interface ImageGallerySkeleton extends EntrySkeletonType {
   fields: {
     title: EntryFieldTypes.Text
     galleryStyle: EntryFieldTypes.Symbol // 'two-column' | 'grid' | 'carousel' | 'masonry'
-    images: EntryFieldTypes.Array<EntryFieldTypes.AssetLink>
+    images: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     captions?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
   }
 }
@@ -69,7 +69,7 @@ export interface BlogPostSkeleton extends EntrySkeletonType {
     slug: EntryFieldTypes.Symbol
     excerpt: EntryFieldTypes.Text
     content: Document
-    featuredImage?: EntryFieldTypes.AssetLink
+    featuredImage?: EntryFieldTypes.AssetLink | any
     author: EntryFieldTypes.Symbol
     publishDate: EntryFieldTypes.Date
     tags?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
@@ -149,10 +149,15 @@ export { extractLocalizedValue }
 /* ------------------------------------------------------------------ */
 
 export function getAssetUrl(
-  asset: Asset | EntryFieldTypes.AssetLink | undefined,
+  asset: Asset | EntryFieldTypes.AssetLink | any | undefined,
   options?: { w?: number; h?: number; fit?: string },
 ): string | null {
   if (!asset) return null
+  
+  // Handle unresolved links
+  if (asset.sys && asset.sys.type === 'Link') {
+    return null // Can't get URL from unresolved link
+  }
   
   // Handle both Asset and AssetLink types
   const assetFields = asset.fields
@@ -175,8 +180,15 @@ export function getAssetUrl(
   return baseUrl
 }
 
-export function getAssetTitle(asset: Asset | EntryFieldTypes.AssetLink | undefined): string {
-  if (!asset?.fields) return ''
+export function getAssetTitle(asset: Asset | EntryFieldTypes.AssetLink | any | undefined): string {
+  if (!asset) return ''
+  
+  // Handle unresolved links
+  if (asset.sys && asset.sys.type === 'Link') {
+    return '' // Can't get title from unresolved link
+  }
+  
+  if (!asset.fields) return ''
 
   const pick = (field: any): string => {
     if (!field) return ''
@@ -217,6 +229,10 @@ export function toAssetArray(value: any): Asset[] {
   const extracted = extractLocalizedValue(value)
   if (!Array.isArray(extracted)) return []
   return extracted.filter(item => {
+    // Skip unresolved links
+    if (item && item.sys && item.sys.type === 'Link') {
+      return false
+    }
     // Handle both direct Asset objects and AssetLink references
     if (item && item.fields && item.fields.file) {
       return true // Direct Asset
