@@ -1,4 +1,3 @@
-
 // src/lib/contentful.ts
 import type {
   Asset,
