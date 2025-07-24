@@ -7,7 +7,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState } from 'react'
 import Header from '@/components/layout/Header'
-import EnhancedRichTextRenderer from '@/components/blog/EnhancedRichTextRenderer'
+import InlineContentRenderer from '@/components/blog/InlineContentRenderer'
 import BlogCard from '@/components/blog/BlogCard'
 import type { BlogPost, ImageGallery } from '@/lib/contentful'
 import { toStringValue, toStringArray, isValidDocument, getAssetUrl, getAssetTitle, extractLocalizedValue } from '@/lib/contentful'
@@ -240,7 +240,7 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
               className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-2 border-gray-100 mb-16"
             >
               <div className="prose prose-lg prose-kaiju max-w-none">
-                <EnhancedRichTextRenderer content={fields.content} />
+                <InlineContentRenderer content={fields.content} />
               </div>
             </motion.article>
 
