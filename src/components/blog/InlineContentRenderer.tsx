@@ -1,6 +1,7 @@
 // src/components/blog/InlineContentRenderer.tsx
 'use client'
 
+import React from 'react'
 import { documentToReactComponents } from '@contentful/rich-text-react-renderer'
 import { BLOCKS, MARKS, INLINES } from '@contentful/rich-text-types'
 import type { Document, Node } from '@contentful/rich-text-types'
@@ -47,7 +48,7 @@ function getVimeoVideoId(url: string): string | null {
 // Product showcase parser
 function parseProductShowcase(text: string) {
   // Look for pattern: [PRODUCT: Name | Description | Price | Status | URL]
-  const productRegex = /\[PRODUCT:\s*([^|]+)\s*\|\s*([^|]+)\s*\|\s*([^|]*)\s*\|\s*([^|]*)\s*\|\s*([^\]]*)\s*\]/gi
+  const productRegex = /\[PRODUCT:\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|\s*([^|]*?)\s*\|\s*([^|]*?)\s*\|\s*([^\]]*?)\s*\]/gi
   const match = productRegex.exec(text)
   
   if (match) {
@@ -56,7 +57,7 @@ function parseProductShowcase(text: string) {
       description: match[2].trim(),
       price: match[3].trim() || undefined,
       status: match[4].trim() || 'available',
-      url: match[5].trim() || undefined
+      url: match[5].trim() === '#' ? undefined : match[5].trim()
     }
   }
   return null
@@ -314,6 +315,53 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
     )
   }
 
+  // Pre-process content to detect consecutive images and group them
+  const processedContent = React.useMemo(() => {
+    const nodes = content.content || []
+    const processed = []
+    let i = 0
+    
+    while (i < nodes.length) {
+      const node = nodes[i]
+      
+      // Check if this is an embedded asset (image)
+      if (node.nodeType === 'embedded-asset-block' && 
+          node.data?.target?.fields?.file?.contentType?.startsWith('image/')) {
+        
+        // Collect consecutive images
+        const imageGroup = [node]
+        let j = i + 1
+        
+        while (j < nodes.length && 
+               nodes[j].nodeType === 'embedded-asset-block' &&
+               nodes[j].data?.target?.fields?.file?.contentType?.startsWith('image/')) {
+          imageGroup.push(nodes[j])
+          j++
+        }
+        
+        // If we have multiple images, create a gallery node
+        if (imageGroup.length > 1) {
+          processed.push({
+            nodeType: 'gallery',
+            data: { images: imageGroup.map(n => n.data.target) },
+            content: []
+          })
+          i = j // Skip processed images
+        } else {
+          // Single image, keep as is
+          processed.push(node)
+          i++
+        }
+      } else {
+        // Non-image node, keep as is
+        processed.push(node)
+        i++
+      }
+    }
+    
+    return { ...content, content: processed }
+  }, [content])
+
   const options = {
     renderMark: {
       [MARKS.BOLD]: (text: React.ReactNode) => (
@@ -332,6 +380,10 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
       ),
     },
     renderNode: {
+      // Custom gallery node handler
+      ['gallery' as any]: (node: any) => {
+        return <AutoGallery images={node.data.images} style="grid" />
+      },
       [BLOCKS.PARAGRAPH]: (node: Node, children: React.ReactNode) => {
         // Check if paragraph contains special patterns
         const textContent = (node as any).content
@@ -555,7 +607,7 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
   try {
     return (
       <div className="prose prose-lg max-w-none">
-        {documentToReactComponents(content, options)}
+        {documentToReactComponents(processedContent, options)}
       </div>
     )
   } catch (error) {
