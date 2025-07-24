@@ -314,10 +314,6 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
     )
   }
 
-  // Track consecutive images for auto-gallery detection
-  let consecutiveImages: any[] = []
-  let imageGroups: any[][] = []
-
   const options = {
     renderMark: {
       [MARKS.BOLD]: (text: React.ReactNode) => (
@@ -338,7 +334,7 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
     renderNode: {
       [BLOCKS.PARAGRAPH]: (node: Node, children: React.ReactNode) => {
         // Check if paragraph contains special patterns
-        const textContent = node.content
+        const textContent = (node as any).content
           ?.map((child: any) => child.value || '')
           .join('') || ''
 
@@ -435,7 +431,7 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
       [BLOCKS.HR]: () => (
         <hr className="border-t-2 border-gray-200 my-12" />
       ),
-      [BLOCKS.EMBEDDED_ASSET]: (node: Node, context: any) => {
+      [BLOCKS.EMBEDDED_ASSET]: (node: Node) => {
         try {
           const asset = node.data?.target
           if (!asset?.fields) {
@@ -458,50 +454,32 @@ export default function InlineContentRenderer({ content }: InlineContentRenderer
           const isImage = file?.contentType?.startsWith('image/')
           
           if (isImage && file?.url) {
-            // Add to consecutive images for gallery detection
-            consecutiveImages.push(asset)
-            
-            // Check if this is the last image in a sequence
-            const nextSibling = context?.nextSibling
-            const isLastInSequence = !nextSibling || nextSibling.nodeType !== 'embedded-asset-block'
-            
-            if (isLastInSequence && consecutiveImages.length > 1) {
-              // Create gallery and reset
-              const gallery = <AutoGallery images={[...consecutiveImages]} style="grid" />
-              consecutiveImages = []
-              return gallery
-            } else if (isLastInSequence) {
-              // Single image
-              consecutiveImages = []
-              return (
-                <motion.figure
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  className="my-8"
-                >
-                  <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-100 max-w-3xl mx-auto">
-                    <Image
-                      src={`https:${file.url}?w=800&fit=pad&bg=rgb:ffffff`}
-                      alt={title || description || 'Blog image'}
-                      width={800}
-                      height={0}
-                      style={{ height: 'auto', maxHeight: '500px', objectFit: 'contain' }}
-                      className="w-full h-auto"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
-                    />
-                  </div>
-                  {(title || description) && (
-                    <figcaption className="text-center text-sm text-gray-600 mt-3 italic">
-                      {title || description}
-                    </figcaption>
-                  )}
-                </motion.figure>
-              )
-            }
-            
-            // Return null for middle images in sequence - they'll be handled by the gallery
-            return null
+            // Individual images (auto-gallery detection simplified for TypeScript compatibility)
+            return (
+              <motion.figure
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="my-8"
+              >
+                <div className="relative rounded-xl overflow-hidden shadow-lg bg-gray-100 max-w-3xl mx-auto">
+                  <Image
+                    src={`https:${file.url}?w=800&fit=pad&bg=rgb:ffffff`}
+                    alt={title || description || 'Blog image'}
+                    width={800}
+                    height={0}
+                    style={{ height: 'auto', maxHeight: '500px', objectFit: 'contain' }}
+                    className="w-full h-auto"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 800px"
+                  />
+                </div>
+                {(title || description) && (
+                  <figcaption className="text-center text-sm text-gray-600 mt-3 italic">
+                    {title || description}
+                  </figcaption>
+                )}
+              </motion.figure>
+            )
           }
           
           // For non-image assets
