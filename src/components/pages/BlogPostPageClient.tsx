@@ -9,7 +9,8 @@ import { useState } from 'react'
 import Header from '@/components/layout/Header'
 import RichTextRenderer from '@/components/blog/RichTextRenderer'
 import BlogCard from '@/components/blog/BlogCard'
-import type { BlogPost } from '@/lib/contentful'
+import Gallery from '@/components/blog/Gallery'
+import type { BlogPost, ImageGallery } from '@/lib/contentful'
 import { toStringValue, toStringArray, isValidDocument, getAssetUrl, getAssetTitle } from '@/lib/contentful'
 
 interface BlogPostPageClientProps {
@@ -29,6 +30,25 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
   const slugStr = toStringValue(fields.slug)
   const tagsArray = toStringArray(fields.tags)
   const readingTimeNum = fields.readingTime ? Number(fields.readingTime) : undefined
+
+  // Extract galleries from the post
+  const galleries: ImageGallery[] = []
+  if (fields.galleries && Array.isArray(fields.galleries)) {
+    // Handle both localized and non-localized gallery references
+    const galleryData = fields.galleries
+    if (galleryData) {
+      // If galleries is localized, extract the first locale
+      const extractedGalleries = typeof galleryData === 'object' && !Array.isArray(galleryData) 
+        ? Object.values(galleryData)[0] 
+        : galleryData
+      
+      if (Array.isArray(extractedGalleries)) {
+        galleries.push(...extractedGalleries.filter(gallery => 
+          gallery && gallery.fields && gallery.fields.title && gallery.fields.images
+        ))
+      }
+    }
+  }
 
   // Set share URL on client side
   useState(() => {
@@ -239,6 +259,15 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
               transition={{ duration: 0.6, delay: 0.2 }}
               className="bg-white rounded-3xl p-8 md:p-12 shadow-xl border-2 border-gray-100 mb-16"
             >
+              {/* Render Galleries before main content */}
+              {galleries.length > 0 && (
+                <div className="mb-8">
+                  {galleries.map((gallery, index) => (
+                    <Gallery key={gallery.sys.id || index} gallery={gallery} />
+                  ))}
+                </div>
+              )}
+
               <div className="prose prose-lg prose-kaiju max-w-none">
                 <RichTextRenderer content={fields.content} />
               </div>

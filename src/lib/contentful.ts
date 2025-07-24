@@ -47,11 +47,23 @@ async function getContentfulClient() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Content models - FIXED: Updated content type ID                  */
+/*  Content models - UPDATED: Added ImageGallery                     */
 /* ------------------------------------------------------------------ */
 
+export interface ImageGallerySkeleton extends EntrySkeletonType {
+  contentTypeId: 'imageGallery'
+  fields: {
+    title: EntryFieldTypes.Text
+    galleryStyle: EntryFieldTypes.Symbol // 'two-column' | 'grid' | 'carousel' | 'masonry'
+    images: EntryFieldTypes.Array<Asset>
+    captions?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
+  }
+}
+
+export type ImageGallery = Entry<ImageGallerySkeleton, undefined, string>
+
 export interface BlogPostSkeleton extends EntrySkeletonType {
-  contentTypeId: 'blogpost' // Changed from 'blogPost' to 'blogpost'
+  contentTypeId: 'blogpost'
   fields: {
     title: EntryFieldTypes.Text
     slug: EntryFieldTypes.Symbol
@@ -64,6 +76,8 @@ export interface BlogPostSkeleton extends EntrySkeletonType {
     metaDescription?: EntryFieldTypes.Text
     readingTime?: EntryFieldTypes.Number
     featured?: EntryFieldTypes.Boolean
+    // NEW: Add gallery references
+    galleries?: EntryFieldTypes.Array<ImageGallery>
   }
 }
 
@@ -83,6 +97,7 @@ export type Author = Entry<AuthorSkeleton, undefined, string>
 
 export type BlogPostFields = BlogPostSkeleton['fields']
 export type AuthorFields = AuthorSkeleton['fields']
+export type ImageGalleryFields = ImageGallerySkeleton['fields']
 
 /* ------------------------------------------------------------------ */
 /*  Localisation helpers                                              */
@@ -190,6 +205,13 @@ export function toStringArray(value: any): string[] {
   return extracted.map(toStringValue).filter(Boolean)
 }
 
+export function toAssetArray(value: any): Asset[] {
+  if (!value) return []
+  const extracted = extractLocalizedValue(value)
+  if (!Array.isArray(extracted)) return []
+  return extracted.filter(item => item && item.fields && item.fields.file)
+}
+
 /* ------------------------------------------------------------------ */
 /*  Type guards                                                       */
 /* ------------------------------------------------------------------ */
@@ -207,6 +229,18 @@ export function isValidBlogPost(entry: any): entry is BlogPost {
       entry.fields.content.nodeType === 'document' &&
       Array.isArray(entry.fields.content.content)
     ))
+  )
+}
+
+export function isValidImageGallery(entry: any): entry is ImageGallery {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    entry.fields &&
+    entry.fields.title &&
+    entry.fields.galleryStyle &&
+    entry.fields.images &&
+    Array.isArray(extractLocalizedValue(entry.fields.images))
   )
 }
 
@@ -261,7 +295,7 @@ async function safeContentfulCall<T>(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API - FIXED: Updated all content_type references          */
+/*  Public API - UPDATED: Added gallery functions                    */
 /* ------------------------------------------------------------------ */
 
 export async function getBlogPosts(
@@ -274,7 +308,7 @@ export async function getBlogPosts(
         content_type: 'blogpost',
         limit: Math.min(limit, 1000),
         skip,
-        include: 2,
+        include: 3, // Increased to include gallery references
       })
       return sortPostsNewestFirst(res.items.filter(isValidBlogPost))
     },
@@ -297,13 +331,48 @@ export async function getBlogPostBySlug(
         content_type: 'blogpost',
         'fields.slug': slug,
         limit: 1,
-        include: 2,
+        include: 3, // Increased to include gallery references
       })
       const entry = res.items[0]
       return isValidBlogPost(entry) ? entry : null
     },
     null,
     `Error fetching blog post with slug: ${slug}`,
+  )
+}
+
+export async function getImageGalleryById(
+  id: string,
+): Promise<ImageGallery | null> {
+  if (!id) {
+    console.error('Invalid id for getImageGalleryById:', id)
+    return null
+  }
+
+  return safeContentfulCall(
+    async (client) => {
+      const entry = await client.getEntry(id, { include: 2 })
+      return isValidImageGallery(entry) ? entry : null
+    },
+    null,
+    `Error fetching image gallery with id: ${id}`,
+  )
+}
+
+export async function getImageGalleries(
+  limit = 10,
+): Promise<ImageGallery[]> {
+  return safeContentfulCall(
+    async (client) => {
+      const res = await client.getEntries({
+        content_type: 'imageGallery',
+        limit: Math.min(limit, 1000),
+        include: 2,
+      })
+      return res.items.filter(isValidImageGallery)
+    },
+    [],
+    'Error fetching image galleries',
   )
 }
 
@@ -316,7 +385,7 @@ export async function getFeaturedBlogPosts(
         content_type: 'blogpost',
         'fields.featured': true,
         limit: Math.min(limit, 100),
-        include: 2,
+        include: 3,
       })
       return sortPostsNewestFirst(res.items.filter(isValidBlogPost))
     },
@@ -340,7 +409,7 @@ export async function getBlogPostsByTag(
         content_type: 'blogpost',
         'fields.tags[in]': [tag],
         limit: Math.min(limit, 1000),
-        include: 2,
+        include: 3,
       })
       return sortPostsNewestFirst(res.items.filter(isValidBlogPost))
     },
@@ -361,7 +430,7 @@ export async function searchBlogPosts(
         content_type: 'blogpost',
         query: query.trim(),
         limit: Math.min(limit, 1000),
-        include: 2,
+        include: 3,
       })
       return sortPostsNewestFirst(res.items.filter(isValidBlogPost))
     },
