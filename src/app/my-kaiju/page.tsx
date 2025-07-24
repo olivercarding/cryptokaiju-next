@@ -1,4 +1,4 @@
-// src/app/my-kaiju/page.tsx – RESTYLED VERSION MATCHING SITE DESIGN
+// src/app/my-kaiju/page.tsx – UPDATED VERSION WITH CLICKABLE BATCH LINKS
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -28,6 +28,7 @@ import {
 import BlockchainCryptoKaijuService, {
   type KaijuNFT,
 } from '@/lib/services/BlockchainCryptoKaijuService'
+import { batchPageExists, getBatchPageUrl } from '@/lib/utils/batchUtils'
 
 /* ------------------------------------------------------------------ */
 /* -----------------------  helper functions  ----------------------- */
@@ -152,10 +153,24 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
               <div className="text-sm font-mono font-bold text-blue-800">{kaiju.nfcId}</div>
             </div>
           )}
+          
+          {/* UPDATED: Clickable batch link */}
           {kaiju.batch && (
             <div className="mb-4 p-2 bg-purple-50 rounded-lg border border-purple-200">
               <div className="text-xs text-purple-600 font-medium">BATCH</div>
-              <div className="text-sm font-bold text-purple-800">{kaiju.batch}</div>
+              <div className="text-sm font-bold text-purple-800">
+                {batchPageExists(kaiju.batch) ? (
+                  <Link 
+                    href={getBatchPageUrl(kaiju.batch)}
+                    className="hover:text-kaiju-pink transition-colors underline decoration-dotted underline-offset-2"
+                    title={`View ${kaiju.batch} collection page`}
+                  >
+                    {kaiju.batch}
+                  </Link>
+                ) : (
+                  kaiju.batch
+                )}
+              </div>
             </div>
           )}
 
