@@ -296,19 +296,37 @@ export function toAssetArray(value: any): Asset[] {
 /* ------------------------------------------------------------------ */
 
 export function isValidBlogPost(entry: any): entry is BlogPost {
-  return (
+  const isValid = (
     entry &&
     typeof entry === 'object' &&
     entry.fields &&
     entry.fields.title &&
     entry.fields.slug &&
     entry.fields.excerpt &&
+    entry.fields.author &&
+    entry.fields.publishDate &&
     // Only validate content structure if content exists (it's optional)
     (!entry.fields.content || (
       entry.fields.content.nodeType === 'document' &&
       Array.isArray(entry.fields.content.content)
     ))
   )
+  
+  // Debug logging for invalid posts
+  if (!isValid && process.env.NODE_ENV === 'development') {
+    console.log('Invalid blog post:', {
+      hasEntry: !!entry,
+      hasFields: !!entry?.fields,
+      hasTitle: !!entry?.fields?.title,
+      hasSlug: !!entry?.fields?.slug,
+      hasExcerpt: !!entry?.fields?.excerpt,
+      hasAuthor: !!entry?.fields?.author,
+      hasPublishDate: !!entry?.fields?.publishDate,
+      entry: entry
+    })
+  }
+  
+  return isValid
 }
 
 export function isValidImageGallery(entry: any): entry is ImageGallery {
