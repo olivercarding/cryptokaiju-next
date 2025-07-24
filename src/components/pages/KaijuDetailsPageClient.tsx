@@ -129,7 +129,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
       console.log('🐛 Kaiju data:', { 
         tokenId: kaiju.tokenId, 
         batch: kaiju.batch,
-        openSeaData: openSeaData?.traits?.find(t => t.trait_type?.toLowerCase() === 'batch')
+        openSeaData: openSeaData?.traits?.find((t: OpenSeaTrait) => t.trait_type?.toLowerCase() === 'batch')
       })
     }
   }, [kaiju, openSeaData])
