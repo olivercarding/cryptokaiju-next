@@ -11,7 +11,7 @@ import RichTextRenderer from '@/components/blog/RichTextRenderer'
 import BlogCard from '@/components/blog/BlogCard'
 import Gallery from '@/components/blog/Gallery'
 import type { BlogPost, ImageGallery } from '@/lib/contentful'
-import { toStringValue, toStringArray, isValidDocument, getAssetUrl, getAssetTitle } from '@/lib/contentful'
+import { toStringValue, toStringArray, isValidDocument, getAssetUrl, getAssetTitle, extractLocalizedValue } from '@/lib/contentful'
 
 interface BlogPostPageClientProps {
   post: BlogPost
@@ -33,20 +33,19 @@ export default function BlogPostPageClient({ post, relatedPosts }: BlogPostPageC
 
   // Extract galleries from the post
   const galleries: ImageGallery[] = []
-  if (fields.galleries && Array.isArray(fields.galleries)) {
-    // Handle both localized and non-localized gallery references
-    const galleryData = fields.galleries
-    if (galleryData) {
-      // If galleries is localized, extract the first locale
-      const extractedGalleries = typeof galleryData === 'object' && !Array.isArray(galleryData) 
-        ? Object.values(galleryData)[0] 
-        : galleryData
-      
-      if (Array.isArray(extractedGalleries)) {
-        galleries.push(...extractedGalleries.filter(gallery => 
-          gallery && gallery.fields && gallery.fields.title && gallery.fields.images
-        ))
-      }
+  if (fields.galleries) {
+    // Handle localized gallery references
+    const galleryData = extractLocalizedValue(fields.galleries)
+    if (Array.isArray(galleryData)) {
+      galleries.push(...galleryData.filter(gallery => 
+        gallery && 
+        gallery.fields && 
+        gallery.fields.title && 
+        gallery.fields.images &&
+        gallery.sys &&
+        gallery.sys.contentType &&
+        gallery.sys.contentType.sys.id === 'imageGallery'
+      ))
     }
   }
 

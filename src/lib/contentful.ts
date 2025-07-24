@@ -55,7 +55,7 @@ export interface ImageGallerySkeleton extends EntrySkeletonType {
   fields: {
     title: EntryFieldTypes.Text
     galleryStyle: EntryFieldTypes.Symbol // 'two-column' | 'grid' | 'carousel' | 'masonry'
-    images: EntryFieldTypes.Array<Asset>
+    images: EntryFieldTypes.Array<EntryFieldTypes.AssetLink>
     captions?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
   }
 }
@@ -69,7 +69,7 @@ export interface BlogPostSkeleton extends EntrySkeletonType {
     slug: EntryFieldTypes.Symbol
     excerpt: EntryFieldTypes.Text
     content: Document
-    featuredImage?: Asset
+    featuredImage?: EntryFieldTypes.AssetLink
     author: EntryFieldTypes.Symbol
     publishDate: EntryFieldTypes.Date
     tags?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
@@ -77,7 +77,7 @@ export interface BlogPostSkeleton extends EntrySkeletonType {
     readingTime?: EntryFieldTypes.Number
     featured?: EntryFieldTypes.Boolean
     // NEW: Add gallery references
-    galleries?: EntryFieldTypes.Array<ImageGallery>
+    galleries?: EntryFieldTypes.Array<EntryFieldTypes.EntryLink<ImageGallerySkeleton>>
   }
 }
 
@@ -141,17 +141,24 @@ function extractLocalizedValue(field: any): any {
   return field
 }
 
+// Export for use in other components
+export { extractLocalizedValue }
+
 /* ------------------------------------------------------------------ */
 /*  Asset helpers                                                     */
 /* ------------------------------------------------------------------ */
 
 export function getAssetUrl(
-  asset: Asset | undefined,
+  asset: Asset | EntryFieldTypes.AssetLink | undefined,
   options?: { w?: number; h?: number; fit?: string },
 ): string | null {
-  if (!asset?.fields?.file) return null
+  if (!asset) return null
+  
+  // Handle both Asset and AssetLink types
+  const assetFields = asset.fields
+  if (!assetFields?.file) return null
 
-  const fileData = unwrapLocalizedFile(asset.fields.file)
+  const fileData = unwrapLocalizedFile(assetFields.file)
   if (!fileData?.url) return null
 
   const baseUrl = `https:${fileData.url}`
@@ -168,7 +175,7 @@ export function getAssetUrl(
   return baseUrl
 }
 
-export function getAssetTitle(asset: Asset | undefined): string {
+export function getAssetTitle(asset: Asset | EntryFieldTypes.AssetLink | undefined): string {
   if (!asset?.fields) return ''
 
   const pick = (field: any): string => {
@@ -209,7 +216,16 @@ export function toAssetArray(value: any): Asset[] {
   if (!value) return []
   const extracted = extractLocalizedValue(value)
   if (!Array.isArray(extracted)) return []
-  return extracted.filter(item => item && item.fields && item.fields.file)
+  return extracted.filter(item => {
+    // Handle both direct Asset objects and AssetLink references
+    if (item && item.fields && item.fields.file) {
+      return true // Direct Asset
+    }
+    if (item && item.sys && item.sys.type === 'Asset' && item.fields && item.fields.file) {
+      return true // AssetLink resolved to Asset
+    }
+    return false
+  })
 }
 
 /* ------------------------------------------------------------------ */

@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, X, ZoomIn } from 'lucide-react'
 import Image from 'next/image'
-import type { ImageGallery } from '@/lib/contentful'
+import type { ImageGallery, Asset } from '@/lib/contentful'
 import { toStringValue, toStringArray, toAssetArray, getAssetUrl, getAssetTitle } from '@/lib/contentful'
 
 interface GalleryProps {
