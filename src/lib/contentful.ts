@@ -47,7 +47,7 @@ async function getContentfulClient() {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Content models - UPDATED: Added ImageGallery                     */
+/*  Content models                                                    */
 /* ------------------------------------------------------------------ */
 
 export interface ImageGallerySkeleton extends EntrySkeletonType {
@@ -77,8 +77,6 @@ export interface ProductShowcaseSkeleton extends EntrySkeletonType {
   }
 }
 
-export type ProductShowcase = Entry<ProductShowcaseSkeleton, undefined, string>
-
 export interface VideoEmbedSkeleton extends EntrySkeletonType {
   contentTypeId: 'videoEmbed'
   fields: {
@@ -90,8 +88,6 @@ export interface VideoEmbedSkeleton extends EntrySkeletonType {
   }
 }
 
-export type VideoEmbed = Entry<VideoEmbedSkeleton, undefined, string>
-
 export interface SocialEmbedSkeleton extends EntrySkeletonType {
   contentTypeId: 'socialEmbed'
   fields: {
@@ -101,8 +97,6 @@ export interface SocialEmbedSkeleton extends EntrySkeletonType {
     showCaption?: EntryFieldTypes.Boolean
   }
 }
-
-export type SocialEmbed = Entry<SocialEmbedSkeleton, undefined, string>
 
 export interface BlogPostSkeleton extends EntrySkeletonType {
   contentTypeId: 'blogpost'
@@ -118,25 +112,30 @@ export interface BlogPostSkeleton extends EntrySkeletonType {
     metaDescription?: EntryFieldTypes.Text
     readingTime?: EntryFieldTypes.Number
     featured?: EntryFieldTypes.Boolean
-    // NEW: Add gallery references
+    // Gallery references (optional, for backward compatibility)
     galleries?: EntryFieldTypes.Array<EntryFieldTypes.EntryLink<ImageGallerySkeleton>>
   }
 }
-
-export type BlogPost = Entry<BlogPostSkeleton, undefined, string>
 
 export interface AuthorSkeleton extends EntrySkeletonType {
   contentTypeId: 'author'
   fields: {
     name: EntryFieldTypes.Symbol
     bio?: EntryFieldTypes.Text
-    avatar?: Asset
+    avatar?: EntryFieldTypes.AssetLink | any
     socialLinks?: EntryFieldTypes.Object
   }
 }
 
+// Type exports
+export type ImageGallery = Entry<ImageGallerySkeleton, undefined, string>
+export type ProductShowcase = Entry<ProductShowcaseSkeleton, undefined, string>
+export type VideoEmbed = Entry<VideoEmbedSkeleton, undefined, string>
+export type SocialEmbed = Entry<SocialEmbedSkeleton, undefined, string>
+export type BlogPost = Entry<BlogPostSkeleton, undefined, string>
 export type Author = Entry<AuthorSkeleton, undefined, string>
 
+// Field types
 export type BlogPostFields = BlogPostSkeleton['fields']
 export type AuthorFields = AuthorSkeleton['fields']
 export type ImageGalleryFields = ImageGallerySkeleton['fields']
@@ -406,7 +405,7 @@ async function safeContentfulCall<T>(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API - UPDATED: Added gallery functions                    */
+/*  Public API                                                        */
 /* ------------------------------------------------------------------ */
 
 export async function getBlogPosts(
@@ -604,6 +603,6 @@ export async function getRecentBlogPosts(
       return sortPostsNewestFirst(res.items.filter(isValidBlogPost))
     },
     [],
-    'Error fetching recent posts.',
+    'Error fetching recent posts',
   )
 }
