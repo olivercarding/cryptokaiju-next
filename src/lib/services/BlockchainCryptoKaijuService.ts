@@ -1,4 +1,4 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - ENHANCED WITH PERSISTENT CACHE
+// src/lib/services/BlockchainCryptoKaijuService.ts - ENHANCED WITH PERSISTENT CACHE - FIXED TYPES
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
@@ -122,6 +122,45 @@ export interface CollectionStats {
   owners?: number
 }
 
+// FIXED: Add proper type definitions for service metrics
+export interface PerformanceMetrics {
+  totalRequests: number
+  cacheHits: number
+  errors: number
+  averageResponseTime: number
+}
+
+export interface CacheStats {
+  size: number
+  keys: string[]
+  oldestEntry?: number
+  storageSize?: number
+  version: number
+}
+
+export interface CacheHealthMetrics {
+  totalItems: number
+  expiredItems: number
+  storageUsage: number
+  lastCleanup: number
+  version: number
+}
+
+export interface ServiceTimeouts {
+  CONTRACT: number
+  IPFS_RACE: number
+  OPENSEA: number
+  CACHE_TTL: number
+}
+
+export interface ServiceStats {
+  performance: PerformanceMetrics
+  cache: CacheStats
+  cacheHealth: CacheHealthMetrics
+  pendingRequests: number
+  config: ServiceTimeouts
+}
+
 // OpenSea Account NFTs Response Format
 interface OpenSeaAccountNFT {
   identifier: string
@@ -221,13 +260,7 @@ class PersistentLRUCache<T> {
     return this.cache.size
   }
 
-  getStats(): { 
-    size: number
-    keys: string[]
-    oldestEntry?: number
-    storageSize?: number
-    version: number
-  } {
+  getStats(): CacheStats {
     const keys = Array.from(this.cache.keys())
     let oldestTimestamp = Date.now()
     
@@ -446,13 +479,7 @@ class PersistentLRUCache<T> {
   /**
    * Get cache health metrics
    */
-  public getHealthMetrics(): {
-    totalItems: number
-    expiredItems: number
-    storageUsage: number
-    lastCleanup: number
-    version: number
-  } {
+  public getHealthMetrics(): CacheHealthMetrics {
     const now = Date.now()
     let expiredCount = 0
     
@@ -487,7 +514,7 @@ class BlockchainCryptoKaijuService {
   ]
   
   // Optimized timeouts
-  private readonly TIMEOUTS = {
+  private readonly TIMEOUTS: ServiceTimeouts = {
     CONTRACT: 8000,     // 8s for blockchain calls (increased)
     IPFS_RACE: 4000,    // 4s for each IPFS gateway
     OPENSEA: 10000,     // 10s for OpenSea API
@@ -498,8 +525,8 @@ class BlockchainCryptoKaijuService {
   private readonly DEBUG = process.env.NODE_ENV === 'development'
   private readonly VERBOSE = process.env.NEXT_PUBLIC_DEBUG === 'true'
 
-  // Performance tracking
-  private performanceMetrics = {
+  // FIXED: Performance tracking with proper typing
+  private performanceMetrics: PerformanceMetrics = {
     totalRequests: 0,
     cacheHits: 0,
     errors: 0,
@@ -1920,15 +1947,9 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Get detailed service statistics with enhanced cache metrics
+   * FIXED: Get detailed service statistics with proper typing
    */
-  getServiceStats(): {
-    performance: typeof this.performanceMetrics
-    cache: ReturnType<PersistentLRUCache<any>['getStats']>
-    cacheHealth: ReturnType<PersistentLRUCache<any>['getHealthMetrics']>
-    pendingRequests: number
-    config: typeof this.TIMEOUTS
-  } {
+  getServiceStats(): ServiceStats {
     return {
       performance: { ...this.performanceMetrics },
       cache: this.cache.getStats(),
