@@ -1,4 +1,4 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - COMPLETE REWRITE WITH ENHANCED ERROR HANDLING
+// src/lib/services/BlockchainCryptoKaijuService.ts - ENHANCED WITH PERSISTENT CACHE
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
@@ -150,13 +150,25 @@ interface OpenSeaAccountResponse {
   next?: string
 }
 
-// Enhanced LRU Cache implementation with error handling
-class EnhancedLRUCache<T> {
+// ENHANCED: Persistent LRU Cache with Browser Storage
+class PersistentLRUCache<T> {
   private cache = new Map<string, { data: T; timestamp: number; ttl: number }>()
   private readonly maxSize: number
+  private readonly storageKey: string
+  private readonly version: number = 2 // Increment to invalidate old cache formats
+  private readonly maxStorageSize: number = 5 * 1024 * 1024 // 5MB limit
+  private lastCleanup: number = 0
+  private readonly cleanupInterval: number = 60 * 60 * 1000 // 1 hour
 
-  constructor(maxSize: number = 200) {
+  constructor(maxSize: number = 200, storageKey: string = 'kaiju_cache') {
     this.maxSize = maxSize
+    this.storageKey = storageKey
+    
+    // Load existing cache from storage on initialization
+    this.hydrateFromStorage()
+    
+    // Set up periodic cleanup
+    this.scheduleCleanup()
   }
 
   get(key: string): T | null {
@@ -164,12 +176,14 @@ class EnhancedLRUCache<T> {
       const item = this.cache.get(key)
       if (!item) return null
       
+      // Check if expired
       if (Date.now() - item.timestamp > item.ttl) {
         this.cache.delete(key)
+        this.persistToStorage() // Update storage
         return null
       }
       
-      // Move to end (most recently used)
+      // Move to end (LRU behavior)
       this.cache.delete(key)
       this.cache.set(key, item)
       
@@ -182,13 +196,17 @@ class EnhancedLRUCache<T> {
 
   set(key: string, data: T, ttl: number): void {
     try {
-      // Remove oldest if at capacity
+      // Remove oldest items if at capacity
       if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
         const firstKey = this.cache.keys().next().value
         if (firstKey) this.cache.delete(firstKey)
       }
       
       this.cache.set(key, { data, timestamp: Date.now(), ttl })
+      
+      // Persist to storage (debounced)
+      this.debouncedPersist()
+      
     } catch (error) {
       console.warn('Cache storage error:', error)
     }
@@ -196,13 +214,20 @@ class EnhancedLRUCache<T> {
 
   clear(): void {
     this.cache.clear()
+    this.clearStorage()
   }
 
   get size(): number {
     return this.cache.size
   }
 
-  getStats(): { size: number; keys: string[]; oldestEntry?: number } {
+  getStats(): { 
+    size: number
+    keys: string[]
+    oldestEntry?: number
+    storageSize?: number
+    version: number
+  } {
     const keys = Array.from(this.cache.keys())
     let oldestTimestamp = Date.now()
     
@@ -215,14 +240,241 @@ class EnhancedLRUCache<T> {
     return {
       size: this.cache.size,
       keys,
-      oldestEntry: oldestTimestamp
+      oldestEntry: oldestTimestamp,
+      storageSize: this.getStorageSize(),
+      version: this.version
+    }
+  }
+
+  /**
+   * Load cache from localStorage on initialization
+   */
+  private hydrateFromStorage(): void {
+    if (typeof window === 'undefined') return // Server-side safety
+    
+    try {
+      const stored = localStorage.getItem(this.storageKey)
+      if (!stored) return
+
+      const parsed = JSON.parse(stored)
+      
+      // Check version compatibility
+      if (parsed.version !== this.version) {
+        console.log(`🔄 Cache version mismatch (${parsed.version} vs ${this.version}), clearing old cache`)
+        this.clearStorage()
+        return
+      }
+
+      // Restore cache entries with expiration check
+      const now = Date.now()
+      let restoredCount = 0
+      let expiredCount = 0
+
+      for (const [key, item] of Object.entries(parsed.cache || {})) {
+        const cacheItem = item as { data: T; timestamp: number; ttl: number }
+        
+        // Skip expired items
+        if (now - cacheItem.timestamp > cacheItem.ttl) {
+          expiredCount++
+          continue
+        }
+
+        this.cache.set(key, cacheItem)
+        restoredCount++
+      }
+
+      console.log(`💾 Cache hydrated: ${restoredCount} items restored, ${expiredCount} expired items skipped`)
+      
+      // Clean up if we skipped expired items
+      if (expiredCount > 0) {
+        this.persistToStorage()
+      }
+
+    } catch (error) {
+      console.warn('⚠️ Cache hydration failed, starting fresh:', error)
+      this.clearStorage()
+    }
+  }
+
+  /**
+   * Persist cache to localStorage
+   */
+  private persistToStorage(): void {
+    if (typeof window === 'undefined') return // Server-side safety
+    
+    try {
+      const cacheObject: any = {}
+      
+      // Convert Map to plain object
+      for (const [key, value] of this.cache.entries()) {
+        cacheObject[key] = value
+      }
+
+      const payload = {
+        version: this.version,
+        timestamp: Date.now(),
+        cache: cacheObject
+      }
+
+      const serialized = JSON.stringify(payload)
+      
+      // Check storage size limit
+      if (serialized.length > this.maxStorageSize) {
+        console.warn('⚠️ Cache too large for storage, trimming...')
+        this.trimCacheForStorage()
+        return // Retry after trimming
+      }
+
+      localStorage.setItem(this.storageKey, serialized)
+      
+    } catch (error) {
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.warn('⚠️ Storage quota exceeded, trimming cache...')
+        this.trimCacheForStorage()
+      } else {
+        console.warn('⚠️ Cache persistence failed:', error)
+      }
+    }
+  }
+
+  /**
+   * Debounced persistence to avoid excessive localStorage writes
+   */
+  private persistTimeout: NodeJS.Timeout | null = null
+  private debouncedPersist(): void {
+    if (this.persistTimeout) {
+      clearTimeout(this.persistTimeout)
+    }
+    
+    this.persistTimeout = setTimeout(() => {
+      this.persistToStorage()
+      this.persistTimeout = null
+    }, 1000) // 1 second debounce
+  }
+
+  /**
+   * Trim cache when storage is full
+   */
+  private trimCacheForStorage(): void {
+    const targetSize = Math.floor(this.maxSize * 0.7) // Trim to 70% capacity
+    
+    // Sort by timestamp (oldest first)
+    const entries = Array.from(this.cache.entries())
+    entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
+    
+    // Keep only the newest entries
+    const toKeep = entries.slice(-targetSize)
+    
+    this.cache.clear()
+    for (const [key, value] of toKeep) {
+      this.cache.set(key, value)
+    }
+    
+    console.log(`🗑️ Cache trimmed from ${entries.length} to ${targetSize} items`)
+    
+    // Try persisting again
+    this.persistToStorage()
+  }
+
+  /**
+   * Clear storage
+   */
+  private clearStorage(): void {
+    if (typeof window === 'undefined') return
+    
+    try {
+      localStorage.removeItem(this.storageKey)
+    } catch (error) {
+      console.warn('⚠️ Failed to clear cache storage:', error)
+    }
+  }
+
+  /**
+   * Get current storage size in bytes
+   */
+  private getStorageSize(): number {
+    if (typeof window === 'undefined') return 0
+    
+    try {
+      const stored = localStorage.getItem(this.storageKey)
+      return stored ? stored.length : 0
+    } catch (error) {
+      return 0
+    }
+  }
+
+  /**
+   * Schedule periodic cleanup of expired items
+   */
+  private scheduleCleanup(): void {
+    if (typeof window === 'undefined') return
+    
+    setInterval(() => {
+      this.cleanupExpiredItems()
+    }, this.cleanupInterval)
+  }
+
+  /**
+   * Remove expired items from cache
+   */
+  private cleanupExpiredItems(): void {
+    const now = Date.now()
+    let removedCount = 0
+    
+    for (const [key, item] of this.cache.entries()) {
+      if (now - item.timestamp > item.ttl) {
+        this.cache.delete(key)
+        removedCount++
+      }
+    }
+    
+    if (removedCount > 0) {
+      console.log(`🧹 Cleanup: Removed ${removedCount} expired cache items`)
+      this.persistToStorage()
+    }
+    
+    this.lastCleanup = now
+  }
+
+  /**
+   * Force cleanup (useful for debugging)
+   */
+  public forceCleanup(): void {
+    this.cleanupExpiredItems()
+  }
+
+  /**
+   * Get cache health metrics
+   */
+  public getHealthMetrics(): {
+    totalItems: number
+    expiredItems: number
+    storageUsage: number
+    lastCleanup: number
+    version: number
+  } {
+    const now = Date.now()
+    let expiredCount = 0
+    
+    for (const item of this.cache.values()) {
+      if (now - item.timestamp > item.ttl) {
+        expiredCount++
+      }
+    }
+    
+    return {
+      totalItems: this.cache.size,
+      expiredItems: expiredCount,
+      storageUsage: this.getStorageSize(),
+      lastCleanup: this.lastCleanup,
+      version: this.version
     }
   }
 }
 
 class BlockchainCryptoKaijuService {
   private contract: any
-  private cache = new EnhancedLRUCache<any>(200)
+  private cache = new PersistentLRUCache<any>(200, 'cryptokaiju_cache') // ENHANCED: Now persistent!
   private pendingRequests = new Map<string, Promise<any>>()
   
   // IPFS gateways for racing
@@ -263,8 +515,14 @@ class BlockchainCryptoKaijuService {
         abi: KAIJU_NFT_ABI,
       })
       
-      this.log('🚀 BlockchainCryptoKaijuService initialized')
+      this.log('🚀 BlockchainCryptoKaijuService initialized with persistent cache')
       this.log(`📊 Cache configured: ${this.cache.size}/${200} max entries`)
+      
+      // Log cache restoration stats
+      const cacheStats = this.cache.getStats()
+      if (cacheStats.size > 0) {
+        this.log(`💾 Restored ${cacheStats.size} items from persistent cache`)
+      }
     } catch (error) {
       throw ErrorFactory.securityError('Failed to initialize blockchain service')
     }
@@ -1585,11 +1843,15 @@ class BlockchainCryptoKaijuService {
       const initialMetrics = { ...this.performanceMetrics }
       this.log(`📊 Initial metrics: ${JSON.stringify(initialMetrics)}`)
       
-      // Test 2: Total supply (should always work)
+      // Test 2: Cache health check
+      const cacheHealth = this.cache.getHealthMetrics()
+      this.log(`💾 Cache health: ${JSON.stringify(cacheHealth)}`)
+      
+      // Test 3: Total supply (should always work)
       const totalSupply = await this.getTotalSupply()
       this.log(`✅ Total supply: ${totalSupply}`)
       
-      // Test 3: Token lookup with error handling
+      // Test 4: Token lookup with error handling
       try {
         const result = await this.getByTokenId('1')
         if (result.nft) {
@@ -1599,7 +1861,7 @@ class BlockchainCryptoKaijuService {
         this.log(`⚠️ Token lookup error (expected for testing):`, ErrorHandler.getUserMessage(error))
       }
       
-      // Test 4: NFC lookup with encoding detection
+      // Test 5: NFC lookup with encoding detection
       try {
         const nfcResult = await this.getByNFCId('042C0A8A9F6580')
         if (nfcResult.nft) {
@@ -1609,27 +1871,30 @@ class BlockchainCryptoKaijuService {
         this.log(`⚠️ NFC lookup error (expected for testing):`, ErrorHandler.getUserMessage(error))
       }
       
-      // Test 5: Error factory validation
+      // Test 6: Error factory validation
       try {
         throw ErrorFactory.validationError('test_field', 'test_value')
       } catch (error) {
         this.log(`✅ Error handling: ${ErrorHandler.getUserMessage(error)}`)
       }
       
-      // Test 6: Cache effectiveness
+      // Test 7: Cache effectiveness
       const cacheStart = Date.now()
       await this.getByTokenId('1') // Should be faster from cache
       const cacheTime = Date.now() - cacheStart
       this.log(`✅ Cached lookup: ${cacheTime}ms`)
       
-      // Test 7: Performance summary
+      // Test 8: Performance summary
       const finalMetrics = this.performanceMetrics
+      const finalCacheHealth = this.cache.getHealthMetrics()
       this.log(`📈 Performance Summary:`)
       this.log(`   Total requests: ${finalMetrics.totalRequests}`)
       this.log(`   Cache hits: ${finalMetrics.cacheHits}`)
       this.log(`   Errors: ${finalMetrics.errors}`)
       this.log(`   Avg response time: ${finalMetrics.averageResponseTime.toFixed(2)}ms`)
-      this.log(`   Cache size: ${this.cache.size} entries`)
+      this.log(`   Cache size: ${finalCacheHealth.totalItems} entries`)
+      this.log(`   Storage usage: ${finalCacheHealth.storageUsage} bytes`)
+      this.log(`   Cache version: v${finalCacheHealth.version}`)
       
       this.log('🎉 Enhanced service test completed successfully!')
       
@@ -1655,20 +1920,30 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * Get detailed service statistics
+   * Get detailed service statistics with enhanced cache metrics
    */
   getServiceStats(): {
     performance: typeof this.performanceMetrics
-    cache: ReturnType<EnhancedLRUCache<any>['getStats']>
+    cache: ReturnType<PersistentLRUCache<any>['getStats']>
+    cacheHealth: ReturnType<PersistentLRUCache<any>['getHealthMetrics']>
     pendingRequests: number
     config: typeof this.TIMEOUTS
   } {
     return {
       performance: { ...this.performanceMetrics },
       cache: this.cache.getStats(),
+      cacheHealth: this.cache.getHealthMetrics(),
       pendingRequests: this.pendingRequests.size,
       config: { ...this.TIMEOUTS }
     }
+  }
+
+  /**
+   * Force cache cleanup (for debugging/maintenance)
+   */
+  forceCleanupCache(): void {
+    this.cache.forceCleanup()
+    this.log('🧹 Forced cache cleanup completed')
   }
 }
 
