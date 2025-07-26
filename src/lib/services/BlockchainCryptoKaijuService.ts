@@ -1918,18 +1918,7 @@ class BlockchainCryptoKaijuService {
     }
     this.log('🗑️ Cache and metrics cleared')
   }
-
-  /**
-   * Get detailed service statistics with enhanced cache metrics
-   */
   getServiceStats() {
-    return {
-      performance: { ...this.performanceMetrics },
-      cache: this.cache.getStats(),
-      cacheHealth: this.cache.getHealthMetrics(),
-      pendingRequests: this.pendingRequests.size,
-      config: { ...this.TIMEOUTS },
-  } {
     return {
       performance: { ...this.performanceMetrics },
       cache: this.cache.getStats(),
@@ -1939,6 +1928,14 @@ class BlockchainCryptoKaijuService {
     };
   }
 
+  /**
+   * Force cache cleanup (for debugging/maintenance)
+   */
+  forceCleanupCache(): void {
+    this.cache.forceCleanup()
+    this.log('🧹 Forced cache cleanup completed')
+  }
+}
   /**
    * Force cache cleanup (for debugging/maintenance)
    */
