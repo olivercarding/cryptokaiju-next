@@ -1,4 +1,4 @@
-// src/lib/api.ts
+// src/lib/api.ts - SECURITY FIXED VERSION
 import axios from 'axios'
 
 // Types from the working app
@@ -28,9 +28,8 @@ export interface EthPriceResponse {
   }
 }
 
-// API endpoints
+// API endpoints - NO HARDCODED KEYS
 const CLAIM_ENDPOINT = 'https://us-central1-merkle-minter.cloudfunctions.net/claim'
-const OPENSEA_API_URL = 'https://api.opensea.io/api/v2/collections/cryptokaiju'
 const COINGECKO_ETH_PRICE_URL = 'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
 
 // Redirect URL for successful mint (from working app)
@@ -73,15 +72,13 @@ export const reserveNFT = async (): Promise<{
 }
 
 /**
- * Fetch the current minted count from OpenSea
+ * Fetch the current minted count from OpenSea via our secure API proxy
+ * SECURITY: Uses server-side API route instead of direct client calls
  */
 export const fetchMintedCount = async (): Promise<number> => {
   try {
-    const response = await axios.get<MintedCountResponse>(OPENSEA_API_URL, {
-      headers: {
-        "x-api-key": "a221b5fb89fb4ffeb5fbf4fa42cc6532", // This should be moved to environment variables
-      },
-    })
+    // Use our API proxy instead of direct OpenSea call
+    const response = await axios.get<MintedCountResponse>('/api/opensea/collections/cryptokaiju')
 
     return response.data.total_supply
   } catch (error) {
@@ -178,17 +175,22 @@ export const retryWithBackoff = async <T>(
 }
 
 /**
- * Error handling utilities
+ * Error handling utilities with enhanced security
  */
 export const handleAPIError = (error: any, context: string): void => {
   console.error(`Error in ${context}:`, error)
   
   if (axios.isAxiosError(error)) {
     if (error.response) {
-      console.error('Response data:', error.response.data)
-      console.error('Response status:', error.response.status)
+      // Don't log sensitive data in production
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Response data:', error.response.data)
+        console.error('Response status:', error.response.status)
+      } else {
+        console.error('Response status:', error.response.status)
+      }
     } else if (error.request) {
-      console.error('No response received:', error.request)
+      console.error('No response received')
     } else {
       console.error('Request setup error:', error.message)
     }
@@ -217,7 +219,7 @@ export const CONTRACT_CONSTANTS = {
 } as const
 
 /**
- * Notification messages
+ * Enhanced notification messages with better error categorization
  */
 export const MESSAGES = {
   SUCCESS: {
@@ -234,11 +236,14 @@ export const MESSAGES = {
     CONTRACT_ERROR: 'Contract interaction failed. Please try again.',
     NO_NFTS_AVAILABLE: 'No more NFTs available at the moment',
     RESERVATION_FAILED: 'Failed to reserve NFT. Please try again.',
+    API_ERROR: 'Service temporarily unavailable. Please try again.',
+    SECURITY_ERROR: 'Security validation failed. Please refresh and try again.',
   },
   INFO: {
     CONNECTING: 'Connecting wallet...',
     MINTING: 'Minting in progress...',
     RESERVING: 'Reserving NFT...',
     CONFIRMING: 'Waiting for confirmation...',
+    LOADING: 'Loading data from blockchain...',
   }
 } as const
