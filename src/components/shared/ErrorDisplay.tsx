@@ -1,5 +1,5 @@
 // src/components/shared/ErrorDisplay.tsx - Enhanced Error Display Component
-'use client'
+"use client"
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { AlertTriangle, RefreshCw, ExternalLink, MessageCircle, X } from 'lucide-react'
@@ -7,7 +7,9 @@ import { useState } from 'react'
 import { ErrorHandler, CryptoKaijuError, ErrorSeverity, ErrorType } from '@/lib/utils/errorHandling'
 
 interface ErrorDisplayProps {
-  error: any
+  // The error to display.  Made optional so that the component can safely render
+  // nothing when no error is provided.
+  error?: any
   onRetry?: () => void
   onDismiss?: () => void
   context?: Record<string, any>
@@ -15,10 +17,10 @@ interface ErrorDisplayProps {
   className?: string
 }
 
-export default function ErrorDisplay({ 
-  error, 
-  onRetry, 
-  onDismiss, 
+export default function ErrorDisplay({
+  error,
+  onRetry,
+  onDismiss,
   context,
   showTechnicalDetails = false,
   className = ''
@@ -26,13 +28,14 @@ export default function ErrorDisplay({
   const [showDetails, setShowDetails] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
 
+  // If no error exists, render nothing
   if (!error) return null
 
   const normalizedError = ErrorHandler.normalize(error, context)
-  
+
   const handleRetry = async () => {
     if (!onRetry || !normalizedError.retryable) return
-    
+
     setIsRetrying(true)
     try {
       await onRetry()
@@ -128,7 +131,7 @@ export default function ErrorDisplay({
                   {normalizedError.severity} severity • {normalizedError.retryable ? 'Retryable' : 'Non-retryable'}
                 </p>
               </div>
-              
+
               {onDismiss && (
                 <button
                   onClick={onDismiss}
@@ -176,7 +179,6 @@ export default function ErrorDisplay({
                     ▼
                   </motion.div>
                 </button>
-                
                 <AnimatePresence>
                   {showDetails && (
                     <motion.div
@@ -217,7 +219,7 @@ export default function ErrorDisplay({
                 >
                   <motion.div
                     animate={{ rotate: isRetrying ? 360 : 0 }}
-                    transition={{ duration: 1, repeat: isRetrying ? Infinity : 0, ease: "linear" }}
+                    transition={{ duration: 1, repeat: isRetrying ? Infinity : 0, ease: 'linear' }}
                   >
                     <RefreshCw className="w-4 h-4" />
                   </motion.div>
@@ -239,7 +241,7 @@ export default function ErrorDisplay({
               {/* Context-specific Action */}
               {normalizedError.type === ErrorType.NOT_FOUND && (
                 <motion.button
-                  onClick={() => window.location.href = '/kaijudex'}
+                  onClick={() => (window.location.href = '/kaijudex')}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="px-4 py-2 rounded-lg font-medium text-sm bg-white/20 hover:bg-white/30 transition-all duration-200 flex items-center gap-2"
