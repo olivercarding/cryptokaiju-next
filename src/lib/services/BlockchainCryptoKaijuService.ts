@@ -1922,20 +1922,20 @@ class BlockchainCryptoKaijuService {
   /**
    * Get detailed service statistics with enhanced cache metrics
    */
-  getServiceStats(): {
-    performance: typeof this.performanceMetrics
-    cache: ReturnType<PersistentLRUCache<any>['getStats']>
-    cacheHealth: ReturnType<PersistentLRUCache<any>['getHealthMetrics']>
-    pendingRequests: number
-    config: typeof this.TIMEOUTS
+  getServiceStats(this: BlockchainCryptoKaijuService): {
+    performance: typeof this.performanceMetrics;
+    cache: ReturnType<PersistentLRUCache<any>['getStats']>;
+    cacheHealth: ReturnType<PersistentLRUCache<any>['getHealthMetrics']>;
+    pendingRequests: number;
+    config: typeof this.TIMEOUTS;
   } {
     return {
       performance: { ...this.performanceMetrics },
       cache: this.cache.getStats(),
       cacheHealth: this.cache.getHealthMetrics(),
       pendingRequests: this.pendingRequests.size,
-      config: { ...this.TIMEOUTS }
-    }
+      config: { ...this.TIMEOUTS },
+    };
   }
 
   /**
