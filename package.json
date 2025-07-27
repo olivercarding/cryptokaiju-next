@@ -16,10 +16,12 @@
     "@types/react-is": "^19.0.0",
     "@vercel/analytics": "^1.5.0",
     "@vercel/speed-insights": "^1.2.0",
-    "axios": "^1.10.0",
+    "axios": "^1.11.0",
     "contentful": "^10.15.1",
     "contentful-management": "^11.54.3",
+    "csv-stringify": "^6.6.0",
     "dotenv": "^17.2.1",
+    "ethers": "^6.15.0",
     "framer-motion": "^11.9.0",
     "lucide-react": "^0.513.0",
     "next": "14.2.15",
@@ -40,5 +42,19 @@
     "@types/react-dom": "^18.3.1",
     "tailwindcss": "^4.1.7",
     "typescript": "^5.7.2"
-  }
+  },
+  "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",
+  "main": "next.config.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/olivercarding/cryptokaiju-next.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/olivercarding/cryptokaiju-next/issues"
+  },
+  "homepage": "https://github.com/olivercarding/cryptokaiju-next#readme"
 }

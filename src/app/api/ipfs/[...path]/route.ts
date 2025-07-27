@@ -1,4 +1,4 @@
-// src/app/api/ipfs/[...path]/route.ts - IMPROVED VERSION WITH BETTER ERROR HANDLING AND FALLBACKS
+// src/app/api/ipfs/[...path]/route.ts - FIXED VERSION WITH CORRECTED SCOPING
 import { NextRequest, NextResponse } from 'next/server'
 
 const IPFS_GATEWAYS = [
@@ -73,7 +73,7 @@ export async function GET(
 
   if (problematicHashes.includes(ipfsPath)) {
     console.log(`⚠️ Known problematic IPFS hash: ${ipfsPath}, returning fallback`)
-    return createFallbackResponse(ipfsPath)
+    return createFallbackResponse(request, ipfsPath)
   }
 
   let lastError: any = null
@@ -183,10 +183,10 @@ export async function GET(
   console.error(`❌ Last error:`, lastError)
   
   // Return a more helpful fallback response
-  return createFallbackResponse(ipfsPath, lastError)
+  return createFallbackResponse(request, ipfsPath, lastError)
 }
 
-function createFallbackResponse(ipfsPath: string, lastError?: any) {
+function createFallbackResponse(request: NextRequest, ipfsPath: string, lastError?: any) {
   // Check if this looks like it should be metadata vs an image
   const isMetadata = !ipfsPath.match(/\.(png|jpg|jpeg|gif|svg|webp)$/i)
   
