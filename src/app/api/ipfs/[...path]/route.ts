@@ -57,6 +57,13 @@ const gatewayUsage = {
   failed: 0
 }
 
+// Helper function to safely extract error messages
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Unknown error'
+}
+
 // BigInt-safe JSON serialization
 function safeParse(text: string): any {
   try {
@@ -139,7 +146,7 @@ async function fetchFromPrimaryGateway(ipfsPath: string, retryCount = 0): Promis
       return fetchFromPrimaryGateway(ipfsPath, retryCount + 1)
     }
     
-    console.warn(`❌ API: Primary gateway failed after ${retryCount + 1} attempts: ${error.message}`)
+    console.warn(`❌ API: Primary gateway failed after ${retryCount + 1} attempts: ${error instanceof Error ? error.message : String(error)}`)
     return null
   }
 }
@@ -180,7 +187,7 @@ async function fetchFromFallbackGateways(ipfsPath: string): Promise<Response | n
     } catch (error) {
       const responseTime = Date.now() - startTime
       trackGatewayFailure(gateway.url)
-      console.warn(`⚠️ API: Fallback failed: ${gateway.url} - ${error.message}`)
+      console.warn(`⚠️ API: Fallback failed: ${gateway.url} - ${error instanceof Error ? error.message : String(error)}`)
       // Continue to next gateway
     }
   }
@@ -386,7 +393,7 @@ function createFallbackResponse(request: NextRequest, ipfsPath: string, lastErro
         _originalHash: ipfsPath
       },
       gateways_tried: IPFS_GATEWAYS.map(g => g.url),
-      last_error: lastError?.message || 'Unknown error',
+      last_error: lastError instanceof Error ? lastError.message : (lastError ? String(lastError) : 'Unknown error'),
       timestamp: new Date().toISOString(),
       troubleshooting: {
         suggestions: [
