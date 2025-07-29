@@ -1,4 +1,4 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - ENHANCED WITH PERSISTENT CACHE - FIXED TYPES
+// src/lib/services/BlockchainCryptoKaijuService.ts - ENHANCED WITH OPTIMIZED IPFS STRATEGY
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
@@ -122,7 +122,18 @@ export interface CollectionStats {
   owners?: number
 }
 
-// FIXED: Add proper type definitions for service metrics
+// ENHANCED: Gateway performance tracking interface
+export interface GatewayMetrics {
+  url: string
+  successCount: number
+  failureCount: number
+  avgResponseTime: number
+  lastSuccess: number
+  lastFailure: number
+  isPrimary: boolean
+}
+
+// Performance tracking interfaces
 export interface PerformanceMetrics {
   totalRequests: number
   cacheHits: number
@@ -148,7 +159,8 @@ export interface CacheHealthMetrics {
 
 export interface ServiceTimeouts {
   CONTRACT: number
-  IPFS_RACE: number
+  IPFS_PRIMARY: number
+  IPFS_FALLBACK: number
   OPENSEA: number
   CACHE_TTL: number
 }
@@ -159,6 +171,13 @@ export interface ServiceStats {
   cacheHealth: CacheHealthMetrics
   pendingRequests: number
   config: ServiceTimeouts
+  gatewayStats: { [url: string]: GatewayMetrics }
+  gatewayUsage: {
+    primary: number
+    fallback: number
+    apiProxy: number
+    failed: number
+  }
 }
 
 // OpenSea Account NFTs Response Format
@@ -501,36 +520,47 @@ class PersistentLRUCache<T> {
 
 class BlockchainCryptoKaijuService {
   private contract: any
-  private cache = new PersistentLRUCache<any>(200, 'cryptokaiju_cache') // ENHANCED: Now persistent!
+  private cache = new PersistentLRUCache<any>(200, 'cryptokaiju_cache')
   private pendingRequests = new Map<string, Promise<any>>()
   
-  // IPFS gateways for racing
-  private readonly IPFS_GATEWAYS = [
-    'https://cryptokaiju.mypinata.cloud/ipfs',
+  // OPTIMIZED: Primary gateway first, then fallbacks
+  private readonly PRIMARY_GATEWAY = 'https://cryptokaiju.mypinata.cloud/ipfs'
+  private readonly FALLBACK_GATEWAYS = [
     'https://gateway.pinata.cloud/ipfs',
     'https://cloudflare-ipfs.com/ipfs',
-    'https://ipfs.io/ipfs',
-    'https://dweb.link/ipfs'
+    'https://ipfs.io/ipfs'
   ]
   
-  // Optimized timeouts
+  // Updated timeouts for optimized strategy
   private readonly TIMEOUTS: ServiceTimeouts = {
-    CONTRACT: 8000,     // 8s for blockchain calls (increased)
-    IPFS_RACE: 4000,    // 4s for each IPFS gateway
-    OPENSEA: 10000,     // 10s for OpenSea API
-    CACHE_TTL: 300000   // 5 minutes cache
+    CONTRACT: 8000,         // 8s for blockchain calls
+    IPFS_PRIMARY: 5000,     // 5s for primary gateway (should be fast)
+    IPFS_FALLBACK: 8000,    // 8s for fallback gateways
+    OPENSEA: 10000,         // 10s for OpenSea API
+    CACHE_TTL: 300000       // 5 minutes cache
   }
 
   // Enhanced debug mode
   private readonly DEBUG = process.env.NODE_ENV === 'development'
   private readonly VERBOSE = process.env.NEXT_PUBLIC_DEBUG === 'true'
 
-  // FIXED: Performance tracking with proper typing
+  // Performance tracking with proper typing
   private performanceMetrics: PerformanceMetrics = {
     totalRequests: 0,
     cacheHits: 0,
     errors: 0,
     averageResponseTime: 0
+  }
+
+  // ENHANCED: Gateway performance tracking
+  private gatewayMetrics = new Map<string, GatewayMetrics>()
+  
+  // ENHANCED: Gateway usage statistics
+  private gatewayUsage = {
+    primary: 0,
+    fallback: 0,
+    apiProxy: 0,
+    failed: 0
   }
 
   constructor() {
@@ -542,8 +572,12 @@ class BlockchainCryptoKaijuService {
         abi: KAIJU_NFT_ABI,
       })
       
-      this.log('🚀 BlockchainCryptoKaijuService initialized with persistent cache')
+      this.log('🚀 BlockchainCryptoKaijuService initialized with optimized IPFS strategy')
       this.log(`📊 Cache configured: ${this.cache.size}/${200} max entries`)
+      this.log(`🎯 Primary IPFS gateway: ${this.PRIMARY_GATEWAY}`)
+      
+      // Initialize gateway metrics
+      this.initializeGatewayMetrics()
       
       // Log cache restoration stats
       const cacheStats = this.cache.getStats()
@@ -574,6 +608,60 @@ class BlockchainCryptoKaijuService {
   private verbose(...args: any[]): void {
     if (this.VERBOSE) {
       console.log('[BlockchainService][VERBOSE]', ...args)
+    }
+  }
+
+  /**
+   * Initialize gateway performance tracking
+   */
+  private initializeGatewayMetrics(): void {
+    // Initialize primary gateway
+    this.gatewayMetrics.set(this.PRIMARY_GATEWAY, {
+      url: this.PRIMARY_GATEWAY,
+      successCount: 0,
+      failureCount: 0,
+      avgResponseTime: 0,
+      lastSuccess: 0,
+      lastFailure: 0,
+      isPrimary: true
+    })
+
+    // Initialize fallback gateways
+    this.FALLBACK_GATEWAYS.forEach(gateway => {
+      this.gatewayMetrics.set(gateway, {
+        url: gateway,
+        successCount: 0,
+        failureCount: 0,
+        avgResponseTime: 0,
+        lastSuccess: 0,
+        lastFailure: 0,
+        isPrimary: false
+      })
+    })
+  }
+
+  /**
+   * Track gateway performance
+   */
+  private trackGatewaySuccess(gatewayUrl: string, responseTime: number): void {
+    const metrics = this.gatewayMetrics.get(gatewayUrl)
+    if (metrics) {
+      metrics.successCount++
+      metrics.lastSuccess = Date.now()
+      metrics.avgResponseTime = metrics.avgResponseTime > 0 ? 
+        (metrics.avgResponseTime + responseTime) / 2 : responseTime
+      
+      this.gatewayMetrics.set(gatewayUrl, metrics)
+    }
+  }
+
+  private trackGatewayFailure(gatewayUrl: string, error: any): void {
+    const metrics = this.gatewayMetrics.get(gatewayUrl)
+    if (metrics) {
+      metrics.failureCount++
+      metrics.lastFailure = Date.now()
+      
+      this.gatewayMetrics.set(gatewayUrl, metrics)
     }
   }
 
@@ -827,9 +915,9 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * ENHANCED: Race multiple IPFS gateways with sophisticated error handling
+   * OPTIMIZED: Primary-first IPFS fetching instead of racing all gateways
    */
-  private async fetchIpfsMetadataWithRacing(tokenURI: string): Promise<any> {
+  private async fetchIpfsMetadataWithOptimizedStrategy(tokenURI: string): Promise<any> {
     const cacheKey = `ipfs:${tokenURI}`
     const cached = this.cache.get(cacheKey)
     if (cached) {
@@ -841,92 +929,211 @@ class BlockchainCryptoKaijuService {
       try {
         this.log(`📁 Fetching IPFS metadata: ${tokenURI}`)
 
-        // First try the contract URL directly (often fastest)
-        const directPromise = fetch(tokenURI, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: AbortSignal.timeout(this.TIMEOUTS.IPFS_RACE)
-        }).then(res => {
-          if (!res.ok) throw new Error(`Direct fetch failed: ${res.status}`)
-          return res.json()
-        })
-
-        // Extract IPFS hash if present
-        let ipfsRacePromises: Promise<any>[] = [directPromise]
+        // Extract IPFS hash
         let ipfsHash = ''
-        
         if (tokenURI.includes('/ipfs/')) {
           ipfsHash = tokenURI.split('/ipfs/')[1].split('?')[0] // Remove query params
-          
-          // Race all IPFS gateways
-          const gatewayPromises = this.IPFS_GATEWAYS.map((gateway, index) => 
-            fetch(`${gateway}/${ipfsHash}`, {
-              method: 'GET',
-              headers: { 'Accept': 'application/json' },
-              signal: AbortSignal.timeout(this.TIMEOUTS.IPFS_RACE)
-            }).then(res => {
-              if (!res.ok) throw new Error(`${gateway} returned ${res.status}`)
-              this.verbose(`🏆 IPFS race winner: ${gateway}`)
-              return res.json()
-            }).catch(error => {
-              this.verbose(`🐌 IPFS gateway failed: ${gateway} - ${error.message}`)
-              throw error
-            })
-          )
-          
-          ipfsRacePromises = [...ipfsRacePromises, ...gatewayPromises]
+        } else if (tokenURI.startsWith('ipfs://')) {
+          ipfsHash = tokenURI.replace('ipfs://', '')
         }
 
-        // Race all requests
-        const data = await Promise.race(ipfsRacePromises)
-        
-        this.cache.set(cacheKey, data, 24 * 60 * 60 * 1000) // 24hr cache
-        this.log(`✅ IPFS metadata fetched successfully`)
-        return data
+        if (!ipfsHash) {
+          // Try direct URL first if not IPFS format
+          return await this.fetchFromDirectURL(tokenURI)
+        }
+
+        // STRATEGY 1: Try primary gateway first (should work 99% of time since content is pinned)
+        const primaryResult = await this.fetchFromPrimaryGateway(ipfsHash)
+        if (primaryResult) {
+          this.gatewayUsage.primary++
+          this.cache.set(cacheKey, primaryResult, 24 * 60 * 60 * 1000) // 24hr cache
+          this.log(`✅ Primary gateway success`)
+          return primaryResult
+        }
+
+        // STRATEGY 2: Sequential fallback through backup gateways (no racing)
+        const fallbackResult = await this.fetchFromFallbackGateways(ipfsHash)
+        if (fallbackResult) {
+          this.gatewayUsage.fallback++
+          this.cache.set(cacheKey, fallbackResult, 24 * 60 * 60 * 1000)
+          this.log(`✅ Fallback gateway success`)
+          return fallbackResult
+        }
+
+        // STRATEGY 3: Final fallback to API proxy
+        const proxyResult = await this.fetchFromAPIProxy(ipfsHash)
+        if (proxyResult) {
+          this.gatewayUsage.apiProxy++
+          this.cache.set(cacheKey, proxyResult, 6 * 60 * 60 * 1000) // Shorter cache for proxy
+          this.log(`✅ API proxy success`)
+          return proxyResult
+        }
+
+        // All strategies failed
+        this.gatewayUsage.failed++
+        throw ErrorFactory.ipfsError(ipfsHash)
         
       } catch (error) {
-        this.warn(`⚠️ IPFS fetch failed for ${tokenURI}`)
-        
-        // Final fallback: API proxy
-        if (tokenURI.includes('/ipfs/')) {
-          try {
-            const ipfsHash = tokenURI.split('/ipfs/')[1].split('?')[0]
-            const proxyUrl = `/api/ipfs/${ipfsHash}`
-            
-            this.verbose(`🔄 Trying IPFS proxy: ${proxyUrl}`)
-            
-            const proxyResponse = await fetch(proxyUrl, {
-              method: 'GET',
-              headers: { 'Accept': 'application/json' },
-              signal: AbortSignal.timeout(this.TIMEOUTS.IPFS_RACE)
-            })
-            
-            if (proxyResponse.ok) {
-              const proxyData = await proxyResponse.json()
-              
-              // Check if it's a fallback response
-              if (proxyData.fallback) {
-                this.warn(`📦 Using IPFS fallback data for ${ipfsHash}`)
-                this.cache.set(cacheKey, proxyData.fallback, 60 * 60 * 1000) // 1hr cache for fallbacks
-                return proxyData.fallback
-              }
-              
-              this.log(`✅ IPFS data fetched via proxy`)
-              this.cache.set(cacheKey, proxyData, 24 * 60 * 60 * 1000)
-              return proxyData
-            }
-          } catch (proxyError) {
-            this.verbose(`🚫 IPFS proxy also failed: ${proxyError}`)
-          }
-        }
-        
-        // Create specific IPFS error with helpful context
-        const ipfsHash = tokenURI.includes('/ipfs/') ? 
-          tokenURI.split('/ipfs/')[1].split('?')[0] : tokenURI
-          
-        throw ErrorFactory.ipfsError(ipfsHash)
+        this.warn(`⚠️ All IPFS strategies failed for ${tokenURI}`)
+        throw error
       }
     })
+  }
+
+  /**
+   * Fetch from direct URL (non-IPFS format)
+   */
+  private async fetchFromDirectURL(tokenURI: string): Promise<any> {
+    try {
+      this.verbose(`🔗 Trying direct URL: ${tokenURI}`)
+      
+      const response = await fetch(tokenURI, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(this.TIMEOUTS.IPFS_PRIMARY)
+      })
+      
+      if (response.ok) {
+        return await response.json()
+      }
+      
+      throw new Error(`Direct URL failed: ${response.status}`)
+    } catch (error) {
+      this.verbose(`❌ Direct URL failed: ${error.message}`)
+      throw error
+    }
+  }
+
+  /**
+   * Fast primary gateway fetch with retry logic
+   */
+  private async fetchFromPrimaryGateway(ipfsHash: string, retryCount = 0): Promise<any | null> {
+    const maxRetries = 2
+    const startTime = Date.now()
+
+    try {
+      this.verbose(`🎯 Trying primary gateway: ${this.PRIMARY_GATEWAY}/${ipfsHash}`)
+      
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUTS.IPFS_PRIMARY)
+      
+      const response = await fetch(`${this.PRIMARY_GATEWAY}/${ipfsHash}`, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'CryptoKaiju/1.0',
+        }
+      })
+      
+      clearTimeout(timeoutId)
+      
+      if (response.ok) {
+        const data = await response.json()
+        const duration = Date.now() - startTime
+        this.trackGatewaySuccess(this.PRIMARY_GATEWAY, duration)
+        this.verbose(`✅ Primary gateway success in ${duration}ms`)
+        return data
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+    } catch (error) {
+      const duration = Date.now() - startTime
+      this.trackGatewayFailure(this.PRIMARY_GATEWAY, error)
+      
+      // Retry primary gateway for transient issues
+      if (retryCount < maxRetries && !this.isAbortError(error)) {
+        this.verbose(`🔄 Retrying primary gateway (attempt ${retryCount + 1}/${maxRetries})`)
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))) // Exponential backoff
+        return this.fetchFromPrimaryGateway(ipfsHash, retryCount + 1)
+      }
+      
+      this.verbose(`❌ Primary gateway failed after ${retryCount + 1} attempts: ${error.message}`)
+      return null
+    }
+  }
+
+  /**
+   * Sequential fallback through backup gateways (no racing to save bandwidth)
+   */
+  private async fetchFromFallbackGateways(ipfsHash: string): Promise<any | null> {
+    this.log(`🔄 Primary failed, trying ${this.FALLBACK_GATEWAYS.length} fallback gateways sequentially`)
+    
+    for (const gateway of this.FALLBACK_GATEWAYS) {
+      const startTime = Date.now()
+      
+      try {
+        this.verbose(`🌐 Trying fallback: ${gateway}/${ipfsHash}`)
+        
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUTS.IPFS_FALLBACK)
+        
+        const response = await fetch(`${gateway}/${ipfsHash}`, {
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json',
+            'User-Agent': 'CryptoKaiju/1.0',
+          }
+        })
+        
+        clearTimeout(timeoutId)
+        
+        if (response.ok) {
+          const data = await response.json()
+          const duration = Date.now() - startTime
+          this.trackGatewaySuccess(gateway, duration)
+          this.verbose(`✅ Fallback success: ${gateway} in ${duration}ms`)
+          return data
+        }
+        
+      } catch (error) {
+        const duration = Date.now() - startTime
+        this.trackGatewayFailure(gateway, error)
+        this.verbose(`⚠️ Fallback failed: ${gateway} - ${error.message}`)
+        // Continue to next gateway
+      }
+    }
+    
+    this.warn(`❌ All fallback gateways failed for hash: ${ipfsHash}`)
+    return null
+  }
+
+  /**
+   * Final API proxy attempt
+   */
+  private async fetchFromAPIProxy(ipfsHash: string): Promise<any | null> {
+    try {
+      this.verbose(`🔄 Trying API proxy: /api/ipfs/${ipfsHash}`)
+      
+      const response = await fetch(`/api/ipfs/${ipfsHash}`, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(10000)
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        
+        // Check if it's a fallback response from the API
+        if (data.fallback) {
+          this.warn(`📦 Using API fallback data for ${ipfsHash}`)
+          return data.fallback
+        }
+        
+        this.verbose(`✅ API proxy success`)
+        return data
+      }
+      
+    } catch (error) {
+      this.warn(`❌ API proxy failed: ${error.message}`)
+    }
+    
+    return null
+  }
+
+  // Keep the old method name for backward compatibility
+  private async fetchIpfsMetadataWithRacing(tokenURI: string): Promise<any> {
+    return this.fetchIpfsMetadataWithOptimizedStrategy(tokenURI)
   }
 
   /**
@@ -1100,9 +1307,9 @@ class BlockchainCryptoKaijuService {
       this.verbose(`   Birth Date: ${birthDate}`)
       this.verbose(`   Token URI: ${tokenURI}`)
 
-      // Launch IPFS (with racing) and OpenSea in parallel
+      // Launch IPFS (optimized) and OpenSea in parallel
       const [ipfsResult, openSeaResult] = await Promise.allSettled([
-        tokenURI ? this.fetchIpfsMetadataWithRacing(tokenURI) : Promise.resolve(null),
+        tokenURI ? this.fetchIpfsMetadataWithOptimizedStrategy(tokenURI) : Promise.resolve(null),
         this.getOpenSeaDataOptimized(tokenId)
       ])
 
@@ -1261,7 +1468,7 @@ class BlockchainCryptoKaijuService {
       // Launch all parallel operations
       const [ownerResult, ipfsResult, openSeaResult] = await Promise.allSettled([
         this.callContractWithTimeout("ownerOf", [tokenId], `owner:${tokenId}`),
-        tokenUri ? this.fetchIpfsMetadataWithRacing(tokenUri) : Promise.resolve(null),
+        tokenUri ? this.fetchIpfsMetadataWithOptimizedStrategy(tokenUri) : Promise.resolve(null),
         this.getOpenSeaDataOptimized(tokenId.toString())
       ])
       
@@ -1874,11 +2081,15 @@ class BlockchainCryptoKaijuService {
       const cacheHealth = this.cache.getHealthMetrics()
       this.log(`💾 Cache health: ${JSON.stringify(cacheHealth)}`)
       
-      // Test 3: Total supply (should always work)
+      // Test 3: Gateway metrics
+      const gatewayStats = this.getGatewayPerformanceReport()
+      this.log(`🌐 Gateway stats: ${JSON.stringify(gatewayStats)}`)
+      
+      // Test 4: Total supply (should always work)
       const totalSupply = await this.getTotalSupply()
       this.log(`✅ Total supply: ${totalSupply}`)
       
-      // Test 4: Token lookup with error handling
+      // Test 5: Token lookup with error handling
       try {
         const result = await this.getByTokenId('1')
         if (result.nft) {
@@ -1888,7 +2099,7 @@ class BlockchainCryptoKaijuService {
         this.log(`⚠️ Token lookup error (expected for testing):`, ErrorHandler.getUserMessage(error))
       }
       
-      // Test 5: NFC lookup with encoding detection
+      // Test 6: NFC lookup with encoding detection
       try {
         const nfcResult = await this.getByNFCId('042C0A8A9F6580')
         if (nfcResult.nft) {
@@ -1898,20 +2109,23 @@ class BlockchainCryptoKaijuService {
         this.log(`⚠️ NFC lookup error (expected for testing):`, ErrorHandler.getUserMessage(error))
       }
       
-      // Test 6: Error factory validation
+      // Test 7: Error factory validation
       try {
         throw ErrorFactory.validationError('test_field', 'test_value')
       } catch (error) {
         this.log(`✅ Error handling: ${ErrorHandler.getUserMessage(error)}`)
       }
       
-      // Test 7: Cache effectiveness
+      // Test 8: Cache effectiveness
       const cacheStart = Date.now()
       await this.getByTokenId('1') // Should be faster from cache
       const cacheTime = Date.now() - cacheStart
       this.log(`✅ Cached lookup: ${cacheTime}ms`)
       
-      // Test 8: Performance summary
+      // Test 9: Gateway usage statistics
+      this.logGatewayUsageStats()
+      
+      // Test 10: Performance summary
       const finalMetrics = this.performanceMetrics
       const finalCacheHealth = this.cache.getHealthMetrics()
       this.log(`📈 Performance Summary:`)
@@ -1932,6 +2146,54 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
+   * Helper methods for utility functions
+   */
+  private isAbortError(error: any): boolean {
+    return error instanceof Error && error.name === 'AbortError'
+  }
+
+  /**
+   * Get gateway performance report
+   */
+  getGatewayPerformanceReport(): { [url: string]: any } {
+    const report: { [url: string]: any } = {}
+    
+    for (const [url, metrics] of this.gatewayMetrics) {
+      const total = metrics.successCount + metrics.failureCount
+      const successRate = total > 0 ? (metrics.successCount / total) * 100 : 0
+      
+      report[url] = {
+        isPrimary: metrics.isPrimary,
+        successRate: successRate.toFixed(1) + '%',
+        totalRequests: total,
+        avgResponseTime: metrics.avgResponseTime.toFixed(0) + 'ms',
+        lastSuccess: metrics.lastSuccess ? new Date(metrics.lastSuccess).toISOString() : 'Never',
+        lastFailure: metrics.lastFailure ? new Date(metrics.lastFailure).toISOString() : 'Never'
+      }
+    }
+    
+    return report
+  }
+
+  /**
+   * Log gateway usage statistics
+   */
+  logGatewayUsageStats(): void {
+    const total = Object.values(this.gatewayUsage).reduce((a, b) => a + b, 0)
+    if (total === 0) {
+      this.log('🏆 No IPFS requests yet')
+      return
+    }
+
+    this.log('🏆 IPFS Gateway Usage:', {
+      primary: `${((this.gatewayUsage.primary / total) * 100).toFixed(1)}% (${this.gatewayUsage.primary} requests)`,
+      fallback: `${((this.gatewayUsage.fallback / total) * 100).toFixed(1)}% (${this.gatewayUsage.fallback} requests)`,
+      apiProxy: `${((this.gatewayUsage.apiProxy / total) * 100).toFixed(1)}% (${this.gatewayUsage.apiProxy} requests)`,
+      failed: `${((this.gatewayUsage.failed / total) * 100).toFixed(1)}% (${this.gatewayUsage.failed} requests)`
+    })
+  }
+
+  /**
    * Clear cache and reset performance metrics
    */
   clearCache(): void {
@@ -1943,11 +2205,16 @@ class BlockchainCryptoKaijuService {
       errors: 0,
       averageResponseTime: 0
     }
+    
+    // Reset gateway metrics
+    this.initializeGatewayMetrics()
+    this.gatewayUsage = { primary: 0, fallback: 0, apiProxy: 0, failed: 0 }
+    
     this.log('🗑️ Cache and metrics cleared')
   }
 
   /**
-   * FIXED: Get detailed service statistics with proper typing
+   * Get detailed service statistics with proper typing
    */
   getServiceStats(): ServiceStats {
     return {
@@ -1955,7 +2222,9 @@ class BlockchainCryptoKaijuService {
       cache: this.cache.getStats(),
       cacheHealth: this.cache.getHealthMetrics(),
       pendingRequests: this.pendingRequests.size,
-      config: { ...this.TIMEOUTS }
+      config: { ...this.TIMEOUTS },
+      gatewayStats: Object.fromEntries(this.gatewayMetrics),
+      gatewayUsage: { ...this.gatewayUsage }
     }
   }
 
