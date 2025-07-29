@@ -4,6 +4,13 @@ import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
 import { ErrorHandler, ErrorFactory, CryptoKaijuError, ErrorType, ErrorSeverity } from '@/lib/utils/errorHandling'
 
+// Helper function to safely extract error messages
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Unknown error'
+}
+
 // CryptoKaiju NFT Contract ABI - OPTIMIZED with tokensOf
 export const KAIJU_NFT_ABI = [
   {
@@ -890,7 +897,7 @@ class BlockchainCryptoKaijuService {
         }
         
         // Network or contract-specific errors
-        const errorMessage = error instanceof Error ? error.message : String(error)
+        const errorMessage = getErrorMessage(error)
         
         if (errorMessage.includes('execution reverted') || errorMessage.includes('revert')) {
           throw new CryptoKaijuError({
@@ -999,7 +1006,7 @@ class BlockchainCryptoKaijuService {
       
       throw new Error(`Direct URL failed: ${response.status}`)
     } catch (error) {
-      this.verbose(`❌ Direct URL failed: ${error.message}`)
+      this.verbose(`❌ Direct URL failed: ${getErrorMessage(error)}`)
       throw error
     }
   }
@@ -1048,7 +1055,7 @@ class BlockchainCryptoKaijuService {
         return this.fetchFromPrimaryGateway(ipfsHash, retryCount + 1)
       }
       
-      this.verbose(`❌ Primary gateway failed after ${retryCount + 1} attempts: ${error.message}`)
+      this.verbose(`❌ Primary gateway failed after ${retryCount + 1} attempts: ${getErrorMessage(error)}`)
       return null
     }
   }
@@ -1089,7 +1096,7 @@ class BlockchainCryptoKaijuService {
       } catch (error) {
         const duration = Date.now() - startTime
         this.trackGatewayFailure(gateway, error)
-        this.verbose(`⚠️ Fallback failed: ${gateway} - ${error.message}`)
+        this.verbose(`⚠️ Fallback failed: ${gateway} - ${getErrorMessage(error)}`)
         // Continue to next gateway
       }
     }
@@ -1125,7 +1132,7 @@ class BlockchainCryptoKaijuService {
       }
       
     } catch (error) {
-      this.warn(`❌ API proxy failed: ${error.message}`)
+      this.warn(`❌ API proxy failed: ${getErrorMessage(error)}`)
     }
     
     return null
@@ -2034,7 +2041,7 @@ class BlockchainCryptoKaijuService {
         severity: ErrorSeverity.HIGH,
         message: 'All token fetching methods failed',
         userMessage: 'Unable to load your NFT collection at this time.',
-        technicalDetails: `Blockchain lookup failed: ${error}`,
+        technicalDetails: `Blockchain lookup failed: ${getErrorMessage(error)}`,
         suggestions: [
           'Check your internet connection',
           'Try again in a few minutes',
