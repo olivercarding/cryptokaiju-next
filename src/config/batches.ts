@@ -165,7 +165,7 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     rarity: 'Common',
     essence: 'Inspiration\'s Touch',
     availability: 'Secondary',
-    colors: ['White', 'Pink'],
+    colors: ['Cotton-candy pink', 'Cinderella blue'],
     
     characterDescription: 'Born from the collaboration between realms, Kitten purrs with the frequency of pure creativity. When artists feel stuck, her gentle kneading motions help shape new ideas from the air itself. Her whiskers twitch whenever imagination stirs nearby.',
     physicalDescription: 'A charming collaboration piece celebrating the bridge between CryptoKaiju and CryptoKitties. This adorable vinyl figure features the iconic kitty design reimagined in the CryptoKaiju aesthetic.',
@@ -182,14 +182,14 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     habitat: 'Kittyverse',
     
     materials: 'Premium vinyl with gradient color finish',
-    dimensions: '3.8" tall x 3.5" wide x 2.5" deep',
+    dimensions: '7.5" tall',
     features: ['Gradient coloring technique', 'Collaboration exclusive design'],
-    packagingStyle: 'Co-branded premium window box featuring both CryptoKaiju and CryptoKitties artwork',
+    packagingStyle: 'None',
     
-    estimatedSupply: 600,
+    estimatedSupply: 300,
     discoveredDate: '2025.04.05',
     
-    secondaryMarketUrl: 'https://opensea.io/collection/cryptokaiju?search[stringTraits][0][name]=CryptoKitty',
+    secondaryMarketUrl: 'https://opensea.io/collection/cryptokaiju?traits=[{%22traitType%22:%22batch%22,%22values%22:[%22kitty%22]}]',
     backgroundColor: 'bg-blue-100'
   },
 
@@ -202,10 +202,10 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     rarity: 'Common',
     essence: 'Infectious Cheer',
     availability: 'Secondary',
-    colors: ['Yellow'],
+    colors: ['Red Collar', 'Gold Collar'],
     
     characterDescription: 'Dogejira bounds through Komorebi with the eternal optimism of a Shiba spirit, his grin so genuine it spreads like sunshine after rain. His playful energy turns mundane moments into small celebrations, reminding everyone that joy shared is joy doubled.',
-    physicalDescription: 'Capturing the infectious joy of the beloved Dogecoin meme, Dogejira brings perpetual happiness to any collection. His bright yellow coloring and unmistakable grin embody the spirit of community and fun.',
+    physicalDescription: 'Capturing the infectious joy of the beloved Dogecoin meme, Dogejira brings perpetual happiness to any collection. His bright yellow coloring and unmistakable grin embody the spirit of community and fun. This toy was released in collaboration with the Sandbox community. Purchasing the figure allowed the buyer to redeem a beautiful Sandbox NFT asset designed by Alex Florez, meaning that your Kaiju can explore the Metaverse with you!',
     
     images: {
       physical: ['/images/dogejira-physical.png'],
@@ -218,15 +218,15 @@ export const KAIJU_BATCHES: KaijuBatch[] = [
     
     habitat: 'The flowering meadows around Sakuradani',
     
-    materials: 'Bright yellow vinyl with gloss finish',
-    dimensions: '4.1" tall x 3.7" wide x 2.9" deep',
+    materials: 'High quality vinyl with gloss finish',
+    dimensions: '6"',
     features: ['Signature Shiba Inu expression', 'High-gloss finish for vibrant color'],
     packagingStyle: 'Collector\'s window box with meme-inspired artwork and character story',
     
-    estimatedSupply: 800,
-    discoveredDate: '2025.05.12',
+    estimatedSupply: 177,
+    discoveredDate: '2020.03.07',
     
-    secondaryMarketUrl: 'https://opensea.io/collection/cryptokaiju?search[stringTraits][0][name]=Dogejira',
+    secondaryMarketUrl: 'https://opensea.io/collection/cryptokaiju?traits=[{%22traitType%22:%22batch%22,%22values%22:[%22dogejira%22]}]',
     backgroundColor: 'bg-yellow-100'
   },
 

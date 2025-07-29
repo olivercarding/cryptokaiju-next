@@ -31,6 +31,7 @@ export function batchNameToSlug(batchName: string): string {
     'Christmas Special': 'christmas-special',
     'Valentine Special': 'valentine-special',
     'Easter Special': 'easter-special',
+    'Diamond Hands': 'diamond-hands',
   }
   
   // Check if we have a direct mapping
