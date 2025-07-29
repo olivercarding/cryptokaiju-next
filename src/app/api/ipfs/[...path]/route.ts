@@ -146,7 +146,7 @@ async function fetchFromPrimaryGateway(ipfsPath: string, retryCount = 0): Promis
       return fetchFromPrimaryGateway(ipfsPath, retryCount + 1)
     }
     
-    console.warn(`❌ API: Primary gateway failed after ${retryCount + 1} attempts: ${error instanceof Error ? error.message : String(error)}`)
+    console.warn(`❌ API: Primary gateway failed after ${retryCount + 1} attempts: ${getErrorMessage(error)}`)
     return null
   }
 }
@@ -187,7 +187,7 @@ async function fetchFromFallbackGateways(ipfsPath: string): Promise<Response | n
     } catch (error) {
       const responseTime = Date.now() - startTime
       trackGatewayFailure(gateway.url)
-      console.warn(`⚠️ API: Fallback failed: ${gateway.url} - ${error instanceof Error ? error.message : String(error)}`)
+      console.warn(`⚠️ API: Fallback failed: ${gateway.url} - ${getErrorMessage(error)}`)
       // Continue to next gateway
     }
   }
@@ -393,7 +393,7 @@ function createFallbackResponse(request: NextRequest, ipfsPath: string, lastErro
         _originalHash: ipfsPath
       },
       gateways_tried: IPFS_GATEWAYS.map(g => g.url),
-      last_error: lastError instanceof Error ? lastError.message : (lastError ? String(lastError) : 'Unknown error'),
+      last_error: getErrorMessage(lastError),
       timestamp: new Date().toISOString(),
       troubleshooting: {
         suggestions: [

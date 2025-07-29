@@ -10,6 +10,13 @@ import BlockchainCryptoKaijuService, {
 } from '@/lib/services/BlockchainCryptoKaijuService'
 import { ErrorHandler, ErrorFactory, CryptoKaijuError } from '@/lib/utils/errorHandling'
 
+// Helper function to safely extract error messages
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Unknown error'
+}
+
 /* ======================================================================= */
 /*  ENHANCED MY-KAIJU HOOK WITH PERFORMANCE INSIGHTS                      */
 /* ======================================================================= */
@@ -736,7 +743,7 @@ export function useBlockchainTest() {
           log(`🔗 API Gateway usage: ${JSON.stringify(apiStats.gatewayUsage)}`)
         }
       } catch (error) {
-        log(`ℹ️ API stats not available: ${error.message}`)
+        log(`ℹ️ API stats not available: ${getErrorMessage(error)}`)
       }
 
       log('🎉 Comprehensive test with gateway performance analysis completed successfully!')
