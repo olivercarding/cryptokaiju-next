@@ -1,4 +1,4 @@
-// src/components/pages/KaijudexPageClient.tsx - UPDATED FOR ENHANCED STRUCTURE
+// src/components/pages/KaijudexPageClient.tsx - UPDATED FOR CONTENTFUL
 'use client'
 
 import { useState, useRef } from 'react'
@@ -7,9 +7,10 @@ import { Search, Database, Filter, Sparkles, Zap, Eye, Package } from 'lucide-re
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
-import { KAIJU_BATCHES, KaijuBatch, getBatchesByType, getBatchesByRarity } from '@/config/batches'
+import KaijuBatchService, { type KaijuBatch } from '@/lib/services/KaijuBatchService'
 
 interface KaijudexPageClientProps {
+  initialBatches: KaijuBatch[]
   initialStats: {
     totalBatches: number
     plushCount: number
@@ -20,11 +21,11 @@ interface KaijudexPageClientProps {
 
 // Helper functions for enhanced batch structure
 const getBatchPrimaryImage = (batch: KaijuBatch) => {
-  return batch.images?.physical?.[0] || '/images/placeholder-kaiju.png'
+  return KaijuBatchService.getBatchPrimaryImage(batch)
 }
 
 const getBatchNFTImage = (batch: KaijuBatch) => {
-  return batch.images?.nft
+  return KaijuBatchService.getBatchNFTImage(batch)
 }
 
 // Polaroid-style Character Card with flip interaction
@@ -185,7 +186,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
   )
 }
 
-// Filter Pills Component
+// Filter Pills Component (unchanged)
 const FilterPills = ({ 
   selectedType, 
   selectedRarity, 
@@ -258,7 +259,7 @@ const FilterPills = ({
   )
 }
 
-export default function KaijudexPageClient({ initialStats }: KaijudexPageClientProps) {
+export default function KaijudexPageClient({ initialBatches, initialStats }: KaijudexPageClientProps) {
   const [selectedType, setSelectedType] = useState('All')
   const [selectedRarity, setSelectedRarity] = useState('All')
   
@@ -266,7 +267,7 @@ export default function KaijudexPageClient({ initialStats }: KaijudexPageClientP
   const isInView = useInView(ref, { once: true, margin: "-100px" })
 
   // Filter batches based on selected filters
-  const filteredBatches = KAIJU_BATCHES.filter(batch => {
+  const filteredBatches = initialBatches.filter(batch => {
     const typeMatch = selectedType === 'All' || batch.type === selectedType
     const rarityMatch = selectedRarity === 'All' || batch.rarity === selectedRarity
     return typeMatch && rarityMatch

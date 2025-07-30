@@ -18,7 +18,7 @@
     "@vercel/speed-insights": "^1.2.0",
     "axios": "^1.11.0",
     "contentful": "^10.15.1",
-    "contentful-management": "^11.54.3",
+    "contentful-management": "^11.54.4",
     "csv-stringify": "^6.6.0",
     "dotenv": "^17.2.1",
     "ethers": "^6.15.0",
@@ -37,10 +37,11 @@
   "devDependencies": {
     "@sanity/types": "^3.99.0",
     "@tailwindcss/postcss": "^4.1.7",
-    "@types/node": "^20.17.9",
+    "@types/node": "^20.19.9",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "tailwindcss": "^4.1.7",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.2"
   },
   "description": "This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).",

@@ -127,6 +127,41 @@ export interface AuthorSkeleton extends EntrySkeletonType {
   }
 }
 
+// NEW: Kaiju Batch Content Model
+export interface KaijuBatchSkeleton extends EntrySkeletonType {
+  contentTypeId: 'kaijuBatch'
+  fields: {
+    batchId: EntryFieldTypes.Text
+    slug: EntryFieldTypes.Symbol
+    name: EntryFieldTypes.Text
+    type: EntryFieldTypes.Symbol // 'Plush' | 'Vinyl'
+    rarity: EntryFieldTypes.Symbol // 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'
+    essence: EntryFieldTypes.Text
+    availability: EntryFieldTypes.Symbol // 'Secondary' | 'Mintable'
+    colors?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
+    characterDescription: EntryFieldTypes.Text
+    physicalDescription: EntryFieldTypes.Text
+    habitat?: EntryFieldTypes.Text
+    materials?: EntryFieldTypes.Text
+    dimensions?: EntryFieldTypes.Text
+    features?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
+    packagingStyle?: EntryFieldTypes.Text
+    productionNotes?: EntryFieldTypes.Text
+    estimatedSupply: EntryFieldTypes.Number
+    discoveredDate: EntryFieldTypes.Symbol
+    secondaryMarketUrl?: EntryFieldTypes.Symbol
+    backgroundColor?: EntryFieldTypes.Symbol
+    
+    // Image fields
+    physicalImages: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    nftImage?: EntryFieldTypes.AssetLink | any
+    lifestyleImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    detailImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    conceptImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    packagingImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+  }
+}
+
 // Type exports
 export type ImageGallery = Entry<ImageGallerySkeleton, undefined, string>
 export type ProductShowcase = Entry<ProductShowcaseSkeleton, undefined, string>
@@ -134,6 +169,7 @@ export type VideoEmbed = Entry<VideoEmbedSkeleton, undefined, string>
 export type SocialEmbed = Entry<SocialEmbedSkeleton, undefined, string>
 export type BlogPost = Entry<BlogPostSkeleton, undefined, string>
 export type Author = Entry<AuthorSkeleton, undefined, string>
+export type KaijuBatch = Entry<KaijuBatchSkeleton, undefined, string>
 
 // Field types
 export type BlogPostFields = BlogPostSkeleton['fields']
@@ -142,6 +178,7 @@ export type ImageGalleryFields = ImageGallerySkeleton['fields']
 export type ProductShowcaseFields = ProductShowcaseSkeleton['fields']
 export type VideoEmbedFields = VideoEmbedSkeleton['fields']
 export type SocialEmbedFields = SocialEmbedSkeleton['fields']
+export type KaijuBatchFields = KaijuBatchSkeleton['fields']
 
 // Re-export Asset type for use in components
 export type { Asset } from 'contentful'
@@ -382,6 +419,101 @@ export function isValidDocument(content: any): content is Document {
   )
 }
 
+// NEW: Kaiju Batch type guard
+export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
+  return (
+    entry &&
+    typeof entry === 'object' &&
+    entry.fields &&
+    entry.fields.batchId &&
+    entry.fields.slug &&
+    entry.fields.name &&
+    entry.fields.type &&
+    entry.fields.rarity &&
+    entry.fields.characterDescription &&
+    entry.fields.physicalDescription &&
+    typeof entry.fields.estimatedSupply === 'number' &&
+    entry.fields.discoveredDate
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Local Kaiju Batch Interface (for backward compatibility)         */
+/* ------------------------------------------------------------------ */
+
+export interface LocalKaijuBatch {
+  id: string
+  slug: string
+  name: string
+  type: 'Plush' | 'Vinyl'
+  rarity: 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'
+  essence: string
+  availability: 'Secondary' | 'Mintable'
+  colors: string[]
+  characterDescription: string  
+  physicalDescription: string   
+  images: {
+    physical: string[]        
+    nft?: string             
+    lifestyle: string[]      
+    detail: string[]         
+    concept: string[]        
+    packaging: string[]      
+  }
+  habitat?: string
+  materials?: string           
+  dimensions?: string         
+  features?: string[]         
+  packagingStyle?: string     
+  productionNotes?: string   
+  estimatedSupply: number
+  discoveredDate: string
+  secondaryMarketUrl?: string
+  backgroundColor?: string
+}
+
+/**
+ * Convert Contentful KaijuBatch to your existing KaijuBatch interface
+ */
+export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatch {
+  const fields = batch.fields
+  
+  return {
+    id: toStringValue(fields.batchId),
+    slug: toStringValue(fields.slug),
+    name: toStringValue(fields.name),
+    type: toStringValue(fields.type) as 'Plush' | 'Vinyl',
+    rarity: toStringValue(fields.rarity) as 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary',
+    essence: toStringValue(fields.essence),
+    availability: toStringValue(fields.availability) as 'Secondary' | 'Mintable',
+    colors: toStringArray(fields.colors),
+    
+    characterDescription: toStringValue(fields.characterDescription),
+    physicalDescription: toStringValue(fields.physicalDescription),
+    
+    images: {
+      physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      nft: fields.nftImage ? getAssetUrl(fields.nftImage) : undefined,
+      lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      packaging: toAssetArray(fields.packagingImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+    },
+    
+    habitat: toStringValue(fields.habitat),
+    materials: toStringValue(fields.materials),
+    dimensions: toStringValue(fields.dimensions),
+    features: toStringArray(fields.features),
+    packagingStyle: toStringValue(fields.packagingStyle),
+    productionNotes: toStringValue(fields.productionNotes),
+    
+    estimatedSupply: Number(fields.estimatedSupply) || 0,
+    discoveredDate: toStringValue(fields.discoveredDate),
+    secondaryMarketUrl: toStringValue(fields.secondaryMarketUrl),
+    backgroundColor: toStringValue(fields.backgroundColor),
+  }
+}
+
 /* ------------------------------------------------------------------ */
 /*  Internal helper                                                   */
 /* ------------------------------------------------------------------ */
@@ -423,7 +555,7 @@ async function safeContentfulCall<T>(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API                                                        */
+/*  Public API - Blog Posts                                          */
 /* ------------------------------------------------------------------ */
 
 export async function getBlogPosts(
@@ -622,5 +754,118 @@ export async function getRecentBlogPosts(
     },
     [],
     'Error fetching recent posts',
+  )
+}
+
+/* ------------------------------------------------------------------ */
+/*  Public API - Kaiju Batches                                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Get all Kaiju batches
+ */
+export async function getAllKaijuBatches(): Promise<KaijuBatch[]> {
+  return safeContentfulCall(
+    async (client) => {
+      const res = await client.getEntries({
+        content_type: 'kaijuBatch',
+        limit: 1000,
+        include: 2,
+        order: ['fields.batchId']
+      })
+      return res.items.filter(isValidKaijuBatch)
+    },
+    [],
+    'Error fetching Kaiju batches',
+  )
+}
+
+/**
+ * Get Kaiju batch by slug
+ */
+export async function getKaijuBatchBySlug(slug: string): Promise<KaijuBatch | null> {
+  if (!slug) {
+    console.error('Invalid slug for getKaijuBatchBySlug:', slug)
+    return null
+  }
+
+  return safeContentfulCall(
+    async (client) => {
+      const res = await client.getEntries({
+        content_type: 'kaijuBatch',
+        'fields.slug': slug,
+        limit: 1,
+        include: 2,
+      })
+      const entry = res.items[0]
+      return isValidKaijuBatch(entry) ? entry : null
+    },
+    null,
+    `Error fetching Kaiju batch with slug: ${slug}`,
+  )
+}
+
+/**
+ * Get Kaiju batch by ID
+ */
+export async function getKaijuBatchById(batchId: string): Promise<KaijuBatch | null> {
+  if (!batchId) {
+    console.error('Invalid batchId for getKaijuBatchById:', batchId)
+    return null
+  }
+
+  return safeContentfulCall(
+    async (client) => {
+      const res = await client.getEntries({
+        content_type: 'kaijuBatch',
+        'fields.batchId': batchId,
+        limit: 1,
+        include: 2,
+      })
+      const entry = res.items[0]
+      return isValidKaijuBatch(entry) ? entry : null
+    },
+    null,
+    `Error fetching Kaiju batch with ID: ${batchId}`,
+  )
+}
+
+/**
+ * Get Kaiju batches by type
+ */
+export async function getKaijuBatchesByType(type: 'Plush' | 'Vinyl'): Promise<KaijuBatch[]> {
+  return safeContentfulCall(
+    async (client) => {
+      const res = await client.getEntries({
+        content_type: 'kaijuBatch',
+        'fields.type': type,
+        limit: 1000,
+        include: 2,
+        order: ['fields.batchId']
+      })
+      return res.items.filter(isValidKaijuBatch)
+    },
+    [],
+    `Error fetching Kaiju batches by type: ${type}`,
+  )
+}
+
+/**
+ * Get Kaiju batches by rarity
+ */
+export async function getKaijuBatchesByRarity(rarity: 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'): Promise<KaijuBatch[]> {
+  return safeContentfulCall(
+    async (client) => {
+      const res = await client.getEntries({
+        content_type: 'kaijuBatch',
+        'fields.rarity': rarity,
+        limit: 1000,
+        include: 2,
+        order: ['fields.batchId']
+      })
+      return res.items.filter(isValidKaijuBatch)
+    },
+    [],
+    `Error fetching Kaiju batches by rarity: ${rarity}`,
   )
 }
