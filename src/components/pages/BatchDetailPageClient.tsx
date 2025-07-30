@@ -126,6 +126,30 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
+  // Format discovery date to "27 November 2018" format
+  const formatDiscoveryDate = (dateString: string): string => {
+    if (!dateString) return 'Unknown'
+    
+    try {
+      // Handle various date formats from Contentful
+      const date = new Date(dateString)
+      
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        return dateString // Return original if can't parse
+      }
+      
+      return date.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      })
+    } catch (error) {
+      console.warn('Error formatting discovery date:', error)
+      return dateString // Return original on error
+    }
+  }
+
   // Handle both mint and secondary market redirects
   const handleActionClick = () => {
     if (batch.availability === 'Mintable') {
@@ -251,7 +275,7 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                     <div className="text-white/70 text-sm">Est. Supply</div>
                   </div>
                   <div className="bg-white/10 rounded-lg p-4 text-center backdrop-blur-sm">
-                    <div className="text-2xl font-bold text-white mb-1">{batch.discoveredDate}</div>
+                    <div className="text-2xl font-bold text-white mb-1">{formatDiscoveryDate(batch.discoveredDate)}</div>
                     <div className="text-white/70 text-sm">Discovered</div>
                   </div>
                 </div>
