@@ -493,7 +493,7 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     
     images: {
       physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset) || '').filter(Boolean),
-      nft: fields.nftImage ? getAssetUrl(fields.nftImage) : undefined,
+      nft: fields.nftImage ? getAssetUrl(fields.nftImage) ?? undefined : undefined,
       lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
