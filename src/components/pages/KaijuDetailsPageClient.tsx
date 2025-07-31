@@ -389,7 +389,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                         Batch: {batchPageExistsSync(kaiju.batch) ? (
                           <Link 
                             href={getBatchPageUrl(kaiju.batch)}
-                            className="text-kaiju-pink hover:text-white transition-colors underline decoration-dotted underline-offset-2 ml-1"
+                            className="text-white hover:text-white transition-colors underline decoration-dotted underline-offset-2 ml-1"
                             title={`View ${kaiju.batch} collection page`}
                           >
                             {kaiju.batch}
