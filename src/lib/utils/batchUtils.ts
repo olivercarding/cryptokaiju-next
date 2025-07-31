@@ -17,6 +17,7 @@ export function batchNameToSlug(batchName: string): string {
     'Spooky Halloween Special': 'spooky',
     'Genesis Kaiju': 'genesis',
     'Genesis': 'genesis',
+    'genesis': 'genesis',
     'Mr. Wasabi': 'mr-wasabi',
     'Mr Wasabi': 'mr-wasabi',
     'Dogejira': 'dogejira',
