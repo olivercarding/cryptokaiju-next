@@ -303,7 +303,7 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                 transition={{ duration: 0.8 }}
               >
                 <div className="flex items-center gap-4 mb-6">
-                  <span className="text-kaiju-pink font-mono text-xl font-bold">#{batch.id}</span>
+                  <span className="text-white font-mono text-xl font-bold">#{batch.id}</span>
                   <div className={`px-3 py-1 rounded-full text-sm font-bold ${rarityColors[batch.rarity]}`}>
                     {batch.rarity}
                   </div>
@@ -317,8 +317,8 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                 </h1>
                 
                 <div className="flex items-center gap-3 mb-6">
-                  <Package className="w-5 h-5 text-kaiju-pink" />
-                  <span className="text-xl text-kaiju-pink font-bold">{batch.type} Collectible</span>
+                  <Package className="w-5 h-5 text-white/80" />
+                  <span className="text-xl text-white font-bold">{batch.type} Collectible</span>
                 </div>
                 
                 <div className="flex items-center gap-2 mb-8">
