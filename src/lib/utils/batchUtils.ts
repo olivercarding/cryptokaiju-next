@@ -1,5 +1,5 @@
-// src/lib/utils/batchUtils.ts - Utility functions for batch handling
-import { KAIJU_BATCHES } from '@/config/batches'
+// src/lib/utils/batchUtils.ts - UPDATED for Contentful integration
+import KaijuBatchService, { type KaijuBatch } from '@/lib/services/KaijuBatchService'
 
 /**
  * Convert batch name to URL slug
@@ -51,13 +51,51 @@ export function batchNameToSlug(batchName: string): string {
 }
 
 /**
- * Check if a batch page exists for the given batch name
+ * Check if a batch page exists for the given batch name (async - uses Contentful)
  */
-export function batchPageExists(batchName: string): boolean {
+export async function batchPageExists(batchName: string): Promise<boolean> {
   if (!batchName) return false
   
-  const slug = batchNameToSlug(batchName)
-  return KAIJU_BATCHES.some(batch => batch.slug === slug)
+  try {
+    const slug = batchNameToSlug(batchName)
+    return await KaijuBatchService.batchExists(slug)
+  } catch (error) {
+    console.error('Error checking if batch exists:', error)
+    return false
+  }
+}
+
+/**
+ * Check if a batch page exists (synchronous version using known mappings)
+ * Use this for immediate checks without async calls
+ */
+export function batchPageExistsSync(batchName: string): boolean {
+  if (!batchName) return false
+  
+  // List of known batches that we're confident exist
+  const knownBatches = [
+    'Halloween Celebration',
+    'Spooky Halloween Special', 
+    'Genesis Kaiju',
+    'Genesis',
+    'Mr. Wasabi',
+    'Mr Wasabi',
+    'Dogejira',
+    'CryptoKitty',
+    'CryptoKitties',
+    'Sushi',
+    'SushiSwap',
+    'Pretty Fine Plushies',
+    'Jaiantokoin',
+    'URI',
+    'Spangle',
+    'Christmas Special',
+    'Valentine Special',
+    'Easter Special',
+    'Diamond Hands',
+  ]
+  
+  return knownBatches.includes(batchName)
 }
 
 /**
@@ -69,11 +107,88 @@ export function getBatchPageUrl(batchName: string): string {
 }
 
 /**
- * Get batch info by name (for additional context)
+ * Get batch info by name (async - uses Contentful)
  */
-export function getBatchByName(batchName: string) {
+export async function getBatchByName(batchName: string): Promise<KaijuBatch | null> {
   if (!batchName) return null
   
-  const slug = batchNameToSlug(batchName)
-  return KAIJU_BATCHES.find(batch => batch.slug === slug) || null
+  try {
+    const slug = batchNameToSlug(batchName)
+    const batch = await KaijuBatchService.getBatchBySlug(slug)
+    return batch || null
+  } catch (error) {
+    console.error('Error fetching batch by name:', error)
+    return null
+  }
+}
+
+/**
+ * Get batch info by ID (async - uses Contentful)
+ */
+export async function getBatchById(batchId: string): Promise<KaijuBatch | null> {
+  if (!batchId) return null
+  
+  try {
+    const batch = await KaijuBatchService.getBatchById(batchId)
+    return batch || null
+  } catch (error) {
+    console.error('Error fetching batch by ID:', error)
+    return null
+  }
+}
+
+/**
+ * Get all available batches (async - uses Contentful)
+ */
+export async function getAllBatches(): Promise<KaijuBatch[]> {
+  try {
+    return await KaijuBatchService.getAllBatches()
+  } catch (error) {
+    console.error('Error fetching all batches:', error)
+    return []
+  }
+}
+
+/**
+ * Cache for quick batch lookups (populated on first use)
+ */
+let batchCache: KaijuBatch[] | null = null
+
+/**
+ * Get all batches with caching for better performance
+ */
+export async function getAllBatchesCached(): Promise<KaijuBatch[]> {
+  if (batchCache === null) {
+    batchCache = await getAllBatches()
+  }
+  return batchCache
+}
+
+/**
+ * Clear the batch cache (useful for testing or when data updates)
+ */
+export function clearBatchCache(): void {
+  batchCache = null
+  KaijuBatchService.clearCache()
+}
+
+/**
+ * Search batches by name (fuzzy search)
+ */
+export async function searchBatches(searchTerm: string): Promise<KaijuBatch[]> {
+  if (!searchTerm.trim()) return []
+  
+  try {
+    const allBatches = await getAllBatchesCached()
+    const term = searchTerm.toLowerCase().trim()
+    
+    return allBatches.filter(batch => 
+      batch.name.toLowerCase().includes(term) ||
+      batch.essence.toLowerCase().includes(term) ||
+      batch.characterDescription.toLowerCase().includes(term)
+    )
+  } catch (error) {
+    console.error('Error searching batches:', error)
+    return []
+  }
 }
