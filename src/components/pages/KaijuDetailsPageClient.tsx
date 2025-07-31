@@ -1,4 +1,4 @@
-// src/components/pages/KaijuDetailsPageClient.tsx - SIMPLE BATCH LINK FIX
+// src/components/pages/KaijuDetailsPageClient.tsx - FIXED BATCH LINKING
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,6 +8,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
 import { useBlockchainKaiju } from '@/lib/hooks/useBlockchainCryptoKaiju'
+import { batchPageExistsSync, batchNameToSlug, getBatchPageUrl } from '@/lib/utils/batchUtils'
 
 interface KaijuDetailsPageClientProps {
   tokenId: string
@@ -28,68 +29,6 @@ interface IPFSAttribute {
   trait_type?: string
   value?: any
   [key: string]: any
-}
-
-// Simple batch name to slug conversion
-const batchNameToSlug = (batchName: string): string => {
-  if (!batchName) return ''
-  
-  // Common batch mappings
-  const mappings: Record<string, string> = {
-    'Halloween Celebration': 'halloween-celebration',
-    'Spooky Halloween Special': 'spooky',
-    'Genesis Kaiju': 'genesis',
-    'Genesis': 'genesis',
-    'Mr. Wasabi': 'mr-wasabi',
-    'Mr Wasabi': 'mr-wasabi',
-    'Dogejira': 'dogejira',
-    'CryptoKitty': 'cryptokitty',
-    'CryptoKitties': 'cryptokitty',
-    'Sushi': 'sushi',
-    'SushiSwap': 'sushi',
-    'Pretty Fine Plushies': 'pretty-fine-plushies',
-    'Jaiantokoin': 'jaiantokoin',
-    'URI': 'uri',
-    'Spangle': 'spangle',
-  }
-  
-  if (mappings[batchName]) {
-    return mappings[batchName]
-  }
-  
-  // Convert to slug format
-  return batchName
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
-// Simple batch page existence check (we'll assume common ones exist)
-const batchPageExists = (batchName: string): boolean => {
-  if (!batchName) return false
-  
-  const knownBatches = [
-    'Halloween Celebration',
-    'Spooky Halloween Special', 
-    'Genesis Kaiju',
-    'Genesis',
-    'Mr. Wasabi',
-    'Mr Wasabi',
-    'Dogejira',
-    'CryptoKitty',
-    'CryptoKitties',
-    'Sushi',
-    'SushiSwap',
-    'Pretty Fine Plushies',
-    'Jaiantokoin',
-    'URI',
-    'Spangle'
-  ]
-  
-  return knownBatches.includes(batchName)
 }
 
 const TraitCard = ({ traitType, value, rarity }: { 
@@ -444,12 +383,12 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                     {kaiju.nfcId && (
                       <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">NFC: {kaiju.nfcId}</span>
                     )}
-                    {/* UPDATED: Simple batch linking */}
+                    {/* FIXED: Updated batch linking with new utils */}
                     {kaiju.batch && (
                       <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">
-                        Batch: {batchPageExists(kaiju.batch) ? (
+                        Batch: {batchPageExistsSync(kaiju.batch) ? (
                           <Link 
-                            href={`/kaijudex/${batchNameToSlug(kaiju.batch)}`}
+                            href={getBatchPageUrl(kaiju.batch)}
                             className="text-kaiju-pink hover:text-white transition-colors underline decoration-dotted underline-offset-2 ml-1"
                             title={`View ${kaiju.batch} collection page`}
                           >
@@ -463,7 +402,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                     {/* Debug batch info */}
                     {process.env.NODE_ENV === 'development' && kaiju.batch && (
                       <span className="text-yellow-400 text-xs bg-black/50 px-2 py-1 rounded">
-                        Batch: "{kaiju.batch}" → Exists: {batchPageExists(kaiju.batch) ? 'YES' : 'NO'}
+                        Batch: "{kaiju.batch}" → Exists: {batchPageExistsSync(kaiju.batch) ? 'YES' : 'NO'}
                       </span>
                     )}
                   </div>
@@ -505,7 +444,7 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                       <Hash className="w-4 h-4" />
                       TOKEN ID
                     </div>
-                    <div className="text-kaiju-pink font-bold">
+                    <div className="text-white font-bold">
                       #{kaiju.tokenId}
                     </div>
                   </div>
