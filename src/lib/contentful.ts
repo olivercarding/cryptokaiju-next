@@ -127,7 +127,7 @@ export interface AuthorSkeleton extends EntrySkeletonType {
   }
 }
 
-// NEW: Kaiju Batch Content Model
+// NEW: Enhanced Kaiju Batch Content Model with multiple NFT support
 export interface KaijuBatchSkeleton extends EntrySkeletonType {
   contentTypeId: 'kaijuBatch'
   fields: {
@@ -152,9 +152,15 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     secondaryMarketUrl?: EntryFieldTypes.Symbol
     backgroundColor?: EntryFieldTypes.Symbol
     
-    // Image fields
+    // Image fields - Updated to support multiple NFT images
     physicalImages: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    
+    // NEW: Multiple NFT images support
+    nftImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    
+    // DEPRECATED: Single NFT image (kept for backward compatibility)
     nftImage?: EntryFieldTypes.AssetLink | any
+    
     lifestyleImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     detailImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     conceptImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
@@ -419,7 +425,7 @@ export function isValidDocument(content: any): content is Document {
   )
 }
 
-// NEW: Kaiju Batch type guard
+// Enhanced Kaiju Batch type guard
 export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
   return (
     entry &&
@@ -438,7 +444,7 @@ export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Local Kaiju Batch Interface (for backward compatibility)         */
+/*  Local Kaiju Batch Interface (Enhanced for multiple NFT support)  */
 /* ------------------------------------------------------------------ */
 
 export interface LocalKaijuBatch {
@@ -454,7 +460,7 @@ export interface LocalKaijuBatch {
   physicalDescription: string   
   images: {
     physical: string[]        
-    nft?: string             
+    nft?: string | string[]  // 🎯 Enhanced to support both single and multiple NFT images
     lifestyle: string[]      
     detail: string[]         
     concept: string[]        
@@ -474,9 +480,32 @@ export interface LocalKaijuBatch {
 
 /**
  * Convert Contentful KaijuBatch to your existing KaijuBatch interface
+ * Enhanced to handle both single and multiple NFT images
  */
 export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatch {
   const fields = batch.fields
+  
+  // Enhanced NFT image handling with backward compatibility
+  const getNftImages = (): string | string[] | undefined => {
+    // Priority: use new nftImages array if available
+    if (fields.nftImages) {
+      const nftImageUrls = toAssetArray(fields.nftImages)
+        .map(asset => getAssetUrl(asset) || '')
+        .filter(Boolean)
+      
+      if (nftImageUrls.length > 0) {
+        return nftImageUrls.length === 1 ? nftImageUrls[0] : nftImageUrls
+      }
+    }
+    
+    // Fallback: use legacy single nftImage field
+    if (fields.nftImage) {
+      const singleNftUrl = getAssetUrl(fields.nftImage)
+      return singleNftUrl || undefined
+    }
+    
+    return undefined
+  }
   
   return {
     id: toStringValue(fields.batchId),
@@ -493,7 +522,7 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     
     images: {
       physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset) || '').filter(Boolean),
-      nft: fields.nftImage ? getAssetUrl(fields.nftImage) ?? undefined : undefined,
+      nft: getNftImages(), // 🎯 Enhanced with backward compatibility
       lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
@@ -548,7 +577,7 @@ async function safeContentfulCall<T>(
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
       })
-    }
+    )
 
     return fallback
   }

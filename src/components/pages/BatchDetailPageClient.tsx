@@ -36,7 +36,14 @@ const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
     if (batch.images) {
       // Add all images from each category if they exist
       if (batch.images.physical) images.push(...batch.images.physical)
-      if (batch.images.nft) images.push(batch.images.nft)
+      
+      // Handle both single NFT image (backward compatibility) and array of NFT images
+      if (Array.isArray(batch.images.nft)) {
+        images.push(...batch.images.nft)
+      } else if (batch.images.nft) {
+        images.push(batch.images.nft)
+      }
+      
       if (batch.images.lifestyle) images.push(...batch.images.lifestyle)
       if (batch.images.detail) images.push(...batch.images.detail)
       if (batch.images.concept) images.push(...batch.images.concept)
@@ -123,6 +130,7 @@ const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
 
 export default function BatchDetailPageClient({ batch }: BatchDetailPageClientProps) {
   const [activeTab, setActiveTab] = useState<'story' | 'collectible' | 'gallery'>('story')
+  const [heroImageIndex, setHeroImageIndex] = useState(0)
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: '-100px' })
 
@@ -150,6 +158,38 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
     }
   }
 
+  // Get hero images (up to 3 for carousel)
+  const getHeroImages = (): string[] => {
+    const images: string[] = []
+    
+    if (batch.images) {
+      // Priority order for hero images
+      if (Array.isArray(batch.images.nft)) {
+        images.push(...batch.images.nft.slice(0, 2)) // Up to 2 NFT images
+      } else if (batch.images.nft) {
+        images.push(batch.images.nft) // Single NFT image (backward compatibility)
+      }
+      
+      if (batch.images.physical && images.length < 3) {
+        const remaining = 3 - images.length
+        images.push(...batch.images.physical.slice(0, remaining))
+      }
+      
+      // Fill remaining slots with concept/detail images if needed
+      if (batch.images.concept && images.length < 3) {
+        const remaining = 3 - images.length  
+        images.push(...batch.images.concept.slice(0, remaining))
+      }
+      
+      if (batch.images.detail && images.length < 3) {
+        const remaining = 3 - images.length
+        images.push(...batch.images.detail.slice(0, remaining))
+      }
+    }
+    
+    return images.filter(img => img && img.length > 0).slice(0, 3)
+  }
+
   // Handle both mint and secondary market redirects
   const handleActionClick = () => {
     if (batch.availability === 'Mintable') {
@@ -166,9 +206,27 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
     }
   }
 
-  // Get primary image using KaijuBatchService
+  // Get primary image using KaijuBatchService (with fallback for multiple NFT structure)
   const getPrimaryImage = () => {
-    return KaijuBatchService.getBatchPrimaryImage(batch)
+    // Try the service first
+    const serviceImage = KaijuBatchService.getBatchPrimaryImage(batch)
+    if (serviceImage && serviceImage !== '/images/placeholder-kaiju.png') {
+      return serviceImage
+    }
+    
+    // Fallback logic for multiple NFT structure
+    if (batch.images) {
+      if (Array.isArray(batch.images.nft) && batch.images.nft.length > 0) {
+        return batch.images.nft[0]
+      } else if (batch.images.nft) {
+        return batch.images.nft
+      }
+      if (batch.images.physical && batch.images.physical.length > 0) {
+        return batch.images.physical[0]
+      }
+    }
+    
+    return '/images/placeholder-kaiju.png'
   }
 
   return (
@@ -307,24 +365,103 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                 </motion.button>
               </motion.div>
 
-              {/* Right: Character Image */}
+              {/* Right: Character Image Carousel */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
                 className="relative"
               >
-                <div className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20">
-                  <Image
-                    src={getPrimaryImage()}
-                    alt={batch.name}
-                    fill
-                    className="object-contain p-8"
-                  />
+                {(() => {
+                  const heroImages = getHeroImages()
                   
-                  {/* Glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/20 to-kaiju-purple-light/20 mix-blend-overlay"></div>
-                </div>
+                  if (heroImages.length === 0) {
+                    return (
+                      <div className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20">
+                        <Image
+                          src="/images/placeholder-kaiju.png"
+                          alt={batch.name}
+                          fill
+                          className="object-contain p-8"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/20 to-kaiju-purple-light/20 mix-blend-overlay"></div>
+                      </div>
+                    )
+                  }
+                  
+                  return (
+                    <div className="space-y-4">
+                      {/* Main Hero Image */}
+                      <motion.div
+                        key={heroImageIndex}
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.5 }}
+                        className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20"
+                      >
+                        <Image
+                          src={heroImages[heroImageIndex]}
+                          alt={`${batch.name} - Image ${heroImageIndex + 1}`}
+                          fill
+                          className="object-contain p-8"
+                        />
+                        
+                        {/* Glow effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/20 to-kaiju-purple-light/20 mix-blend-overlay"></div>
+                        
+                        {/* Image counter */}
+                        <div className="absolute bottom-4 left-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm font-mono">
+                          {heroImageIndex + 1} of {heroImages.length}
+                        </div>
+                        
+                        {/* Navigation arrows */}
+                        {heroImages.length > 1 && (
+                          <>
+                            <button
+                              onClick={() => setHeroImageIndex(prev => prev === 0 ? heroImages.length - 1 : prev - 1)}
+                              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+                            >
+                              <ArrowLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => setHeroImageIndex(prev => prev === heroImages.length - 1 ? 0 : prev + 1)}
+                              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors rotate-180"
+                            >
+                              <ArrowLeft className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </motion.div>
+                      
+                      {/* Thumbnail Navigation */}
+                      {heroImages.length > 1 && (
+                        <div className="flex justify-center gap-3">
+                          {heroImages.map((image, index) => (
+                            <motion.button
+                              key={index}
+                              onClick={() => setHeroImageIndex(index)}
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                                index === heroImageIndex 
+                                  ? 'border-kaiju-pink shadow-lg shadow-kaiju-pink/25' 
+                                  : 'border-white/30 hover:border-white/50'
+                              }`}
+                            >
+                              <Image
+                                src={image}
+                                alt={`${batch.name} thumbnail ${index + 1}`}
+                                fill
+                                className="object-contain p-2"
+                              />
+                              <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
+                            </motion.button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
               </motion.div>
             </div>
           </div>
