@@ -37,8 +37,8 @@ const getBatchNFTImage = (batch: KaijuBatch): string | null => {
     }
   }
   
-  // Fallback to service method for backward compatibility
-  return KaijuBatchService.getBatchNFTImage(batch)
+  // Fallback to service method for backward compatibility (convert undefined to null)
+  return KaijuBatchService.getBatchNFTImage(batch) || null
 }
 
 // Polaroid-style Character Card with flip interaction
