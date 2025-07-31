@@ -1,4 +1,4 @@
-// src/lib/contentful.ts
+// src/lib/contentful.ts - COMPLETE AND CORRECTED
 import type {
   Asset,
   AssetFile,
@@ -577,7 +577,7 @@ async function safeContentfulCall<T>(
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
       })
-    )
+    }
 
     return fallback
   }

@@ -1,4 +1,4 @@
-// src/lib/services/KaijuBatchService.ts
+// src/lib/services/KaijuBatchService.ts - FIXED FOR MULTIPLE NFT SUPPORT
 import { 
     getAllKaijuBatches, 
     getKaijuBatchBySlug, 
@@ -243,10 +243,37 @@ import {
     }
   
     /**
-     * Get the NFT image for a batch
+     * Get the NFT image for a batch - UPDATED for multiple NFT support
+     * @param batch - The batch to get NFT image for
+     * @returns The first NFT image URL or undefined if none exists
      */
     getBatchNFTImage(batch: LocalKaijuBatch): string | undefined {
-      return batch.images?.nft
+      if (!batch.images?.nft) return undefined
+      
+      // Handle both single and multiple NFT images
+      if (Array.isArray(batch.images.nft)) {
+        // If it's an array, return the first NFT image
+        return batch.images.nft[0] || undefined
+      } else {
+        // If it's a single string, return it
+        return batch.images.nft
+      }
+    }
+  
+    /**
+     * Get all NFT images for a batch - NEW method for multiple NFT support
+     * @param batch - The batch to get NFT images for
+     * @returns Array of NFT image URLs
+     */
+    getBatchAllNFTImages(batch: LocalKaijuBatch): string[] {
+      if (!batch.images?.nft) return []
+      
+      // Handle both single and multiple NFT images
+      if (Array.isArray(batch.images.nft)) {
+        return batch.images.nft.filter(Boolean) // Filter out empty strings
+      } else {
+        return batch.images.nft ? [batch.images.nft] : []
+      }
     }
   
     /**

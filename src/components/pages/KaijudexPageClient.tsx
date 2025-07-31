@@ -1,4 +1,4 @@
-// src/components/pages/KaijudexPageClient.tsx - UPDATED FOR CONTENTFUL
+// src/components/pages/KaijudexPageClient.tsx - FIXED NFT IMAGE DISPLAY
 'use client'
 
 import { useState, useRef } from 'react'
@@ -24,8 +24,21 @@ const getBatchPrimaryImage = (batch: KaijuBatch) => {
   return KaijuBatchService.getBatchPrimaryImage(batch)
 }
 
-const getBatchNFTImage = (batch: KaijuBatch) => {
-  return KaijuBatchService.getBatchNFTImage(batch)
+// FIXED: Enhanced NFT image getter that handles multiple NFT images
+const getBatchNFTImage = (batch: KaijuBatch): string | null => {
+  // First, try the enhanced multiple NFT images structure
+  if (batch.images?.nft) {
+    if (Array.isArray(batch.images.nft)) {
+      // If it's an array, return the first NFT image
+      return batch.images.nft[0] || null
+    } else {
+      // If it's a single string, return it
+      return batch.images.nft
+    }
+  }
+  
+  // Fallback to service method for backward compatibility (convert undefined to null)
+  return KaijuBatchService.getBatchNFTImage(batch) || null
 }
 
 // Polaroid-style Character Card with flip interaction
@@ -46,6 +59,16 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
   // Get images using helper functions
   const primaryImage = getBatchPrimaryImage(batch)
   const nftImage = getBatchNFTImage(batch)
+
+  // Debug logging for NFT images
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🎨 Batch ${batch.name}:`, {
+      primaryImage,
+      nftImage,
+      hasNftArray: Array.isArray(batch.images?.nft),
+      nftStructure: batch.images?.nft
+    })
+  }
 
   return (
     <motion.div
@@ -81,7 +104,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
             <motion.div
               className="absolute inset-0"
               style={{
-                transform: isHovered ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                transform: isHovered && nftImage ? 'rotateY(180deg)' : 'rotateY(0deg)',
                 backfaceVisibility: 'hidden'
               }}
               transition={{ duration: 0.6, ease: "easeInOut" }}
