@@ -1,4 +1,4 @@
-// src/components/pages/BatchDetailPageClient.tsx - BEAUTIFUL DESIGN WITH CONTENTFUL DATA
+ // src/components/pages/BatchDetailPageClient.tsx - BEAUTIFUL DESIGN WITH CONTENTFUL DATA
 'use client'
 
 import { useState, useRef } from 'react'
