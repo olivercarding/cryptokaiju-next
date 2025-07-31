@@ -1,4 +1,4 @@
- // src/components/pages/BatchDetailPageClient.tsx - BEAUTIFUL DESIGN WITH CONTENTFUL DATA
+// src/components/pages/BatchDetailPageClient.tsx - BEAUTIFUL DESIGN WITH CONTENTFUL DATA
 'use client'
 
 import { useState, useRef } from 'react'
@@ -25,8 +25,8 @@ const availabilityColors = {
   'Secondary': 'text-blue-600 bg-blue-50 border-blue-200'
 }
 
-// Enhanced Photo Gallery - Show All Available Images with Polaroid Style
-const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
+// Clean Photo Gallery - Minimal design with lightbox
+const CleanPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
   const [activeImage, setActiveImage] = useState(0)
   const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   
@@ -52,7 +52,6 @@ const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
   }
 
   const allImages = getAllImages()
-  const polaroidRotations = ['-8deg', '4deg', '-3deg', '6deg', '-2deg', '5deg', '-4deg', '3deg']
 
   if (allImages.length === 0) {
     return (
@@ -63,142 +62,80 @@ const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
     )
   }
 
-  const imageTypes = [
-    'Physical Product', 'Digital NFT', 'Lifestyle Shot', 'Detail View', 
-    'Concept Art', 'Packaging', 'Collection'
-  ]
-
   return (
     <>
-      <div className="space-y-12">
-        {/* Main Featured Polaroid */}
-        <motion.div
-          className="relative max-w-2xl mx-auto"
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <motion.div
-            key={activeImage}
-            initial={{ opacity: 0, scale: 0.9, rotateY: 180 }}
-            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
-            exit={{ opacity: 0, scale: 1.1, rotateY: -180 }}
-            transition={{ duration: 0.6, ease: "easeInOut" }}
-            className="bg-white p-6 rounded-2xl shadow-2xl border-4 border-gray-100 transform hover:rotate-0 hover:scale-105 transition-all duration-500 cursor-pointer group"
-            style={{ 
-              transform: `rotate(${polaroidRotations[activeImage % polaroidRotations.length]})`,
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
-            }}
+      <div className="space-y-8">
+        {/* Main Featured Image */}
+        <div className="relative max-w-2xl mx-auto">
+          <div 
+            className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden cursor-pointer hover:shadow-2xl transition-shadow duration-300 group"
             onClick={() => setIsLightboxOpen(true)}
           >
-            <div className="relative h-80 lg:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
+            <div className="relative h-96 bg-gray-50">
               <Image
                 src={allImages[activeImage]}
                 alt={`${batch.name} image ${activeImage + 1}`}
                 fill
-                className="object-contain p-4 hover:scale-110 transition-transform duration-500"
+                className="object-contain p-6"
               />
               
-              {/* Photo corner tabs */}
-              <div className="absolute top-2 left-2 w-6 h-6 bg-white/80 transform rotate-45 -translate-x-3 -translate-y-3 border border-gray-200"></div>
-              <div className="absolute top-2 right-2 w-6 h-6 bg-white/80 transform rotate-45 translate-x-3 -translate-y-3 border border-gray-200"></div>
-              <div className="absolute bottom-2 left-2 w-6 h-6 bg-white/80 transform rotate-45 -translate-x-3 translate-y-3 border border-gray-200"></div>
-              <div className="absolute bottom-2 right-2 w-6 h-6 bg-white/80 transform rotate-45 translate-x-3 translate-y-3 border border-gray-200"></div>
-
-              {/* Image counter with vintage style */}
-              <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full font-mono">
-                {activeImage + 1}/{allImages.length}
+              {/* Image counter */}
+              <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white text-sm px-3 py-2 rounded-lg font-mono">
+                {activeImage + 1} of {allImages.length}
               </div>
 
               {/* Click to expand hint */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300 flex items-center justify-center"
-              >
-                <motion.div
-                  className="bg-white/90 backdrop-blur-sm rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  whileHover={{ scale: 1.1 }}
-                >
-                  <Eye className="w-6 h-6 text-kaiju-navy" />
-                </motion.div>
-              </motion.div>
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 flex items-center justify-center">
+                <div className="bg-white/90 backdrop-blur-sm rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 shadow-lg">
+                  <Eye className="w-5 h-5 text-kaiju-navy" />
+                </div>
+              </div>
             </div>
 
-            {/* Polaroid caption */}
-            <div className="pt-4 text-center">
-              <div className="text-kaiju-navy font-bold text-xl handwritten mb-1">{batch.name}</div>
-              <div className="text-kaiju-navy/60 text-sm">{imageTypes[activeImage % imageTypes.length]}</div>
-              <div className="text-kaiju-navy/40 text-xs mt-1 font-mono">{batch.essence}</div>
+            {/* Simple caption */}
+            <div className="p-4 text-center border-t border-gray-100">
+              <h3 className="font-bold text-kaiju-navy text-lg">{batch.name}</h3>
+              <p className="text-kaiju-navy/60 text-sm">{batch.essence}</p>
             </div>
-          </motion.div>
-        </motion.div>
+          </div>
+        </div>
 
-        {/* Scattered Thumbnail Polaroids */}
+        {/* Clean Thumbnail Grid */}
         {allImages.length > 1 && (
-          <div className="relative">
-            <h4 className="text-center text-kaiju-navy font-bold mb-8 text-lg">Gallery Collection</h4>
-            <div className="flex justify-center flex-wrap gap-4 max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-3">
               {allImages.map((image, index) => (
-                <motion.button
-                  key={`polaroid-${index}`}
+                <button
+                  key={`thumb-${index}`}
                   onClick={() => setActiveImage(index)}
-                  initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  transition={{ delay: index * 0.1, duration: 0.5 }}
-                  whileHover={{ 
-                    y: -12, 
-                    rotate: '0deg', 
-                    scale: 1.05,
-                    zIndex: 10
-                  }}
-                  className={`relative bg-white p-3 rounded-lg shadow-xl border-2 transition-all duration-300 hover:shadow-2xl group ${
+                  className={`relative aspect-square bg-white rounded-lg border-2 overflow-hidden transition-all duration-200 hover:scale-105 ${
                     activeImage === index 
-                      ? 'border-kaiju-pink shadow-kaiju-pink/25 ring-2 ring-kaiju-pink/50' 
-                      : 'border-gray-200'
+                      ? 'border-kaiju-pink shadow-lg shadow-kaiju-pink/25' 
+                      : 'border-gray-200 hover:border-gray-300'
                   }`}
-                  style={{ 
-                    transform: `rotate(${polaroidRotations[index % polaroidRotations.length]})`,
-                    zIndex: index
-                  }}
                 >
-                  <div className="relative w-20 h-20 bg-gray-50 rounded overflow-hidden">
-                    <Image 
-                      src={image} 
-                      alt={`${batch.name} thumbnail ${index + 1}`} 
-                      fill 
-                      className="object-contain p-1 group-hover:scale-110 transition-transform duration-300" 
-                    />
-                  </div>
+                  <Image 
+                    src={image} 
+                    alt={`${batch.name} thumbnail ${index + 1}`} 
+                    fill 
+                    className="object-contain p-2" 
+                  />
                   
                   {/* Active indicator */}
                   {activeImage === index && (
-                    <motion.div
-                      layoutId="activeIndicator"
-                      className="absolute -top-1 -right-1 w-6 h-6 bg-kaiju-pink rounded-full flex items-center justify-center"
-                    >
-                      <div className="w-2 h-2 bg-white rounded-full"></div>
-                    </motion.div>
+                    <div className="absolute top-1 right-1 w-3 h-3 bg-kaiju-pink rounded-full"></div>
                   )}
-
-                  {/* Vintage label */}
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-white px-2 py-0.5 text-xs text-kaiju-navy/60 font-mono rounded shadow">
-                    {index + 1}
-                  </div>
-                </motion.button>
+                </button>
               ))}
             </div>
           </div>
         )}
         
-        {/* Gallery Stats with vintage styling */}
+        {/* Simple Gallery Stats */}
         <div className="text-center">
-          <div className="inline-block bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-gray-200">
-            <p className="text-kaiju-navy font-mono text-sm">
-              📸 {allImages.length} photograph{allImages.length === 1 ? '' : 's'} • 
-              Collected {batch.discoveredDate}
-            </p>
-          </div>
+          <p className="text-kaiju-navy/60 text-sm">
+            {allImages.length} image{allImages.length === 1 ? '' : 's'} available
+          </p>
         </div>
       </div>
 
@@ -212,19 +149,20 @@ const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
           onClick={() => setIsLightboxOpen(false)}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
+            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            className="relative max-w-5xl w-full max-h-full"
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            className="relative max-w-6xl w-full max-h-full"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="relative bg-white rounded-2xl p-6 shadow-2xl">
-              <div className="relative h-[60vh] lg:h-[70vh] rounded-xl overflow-hidden bg-gray-50">
+            <div className="relative bg-white rounded-2xl overflow-hidden shadow-2xl">
+              <div className="relative h-[70vh] bg-gray-50">
                 <Image
                   src={allImages[activeImage]}
                   alt={`${batch.name} - Full size`}
                   fill
-                  className="object-contain"
+                  className="object-contain p-8"
                 />
               </div>
               
@@ -236,30 +174,35 @@ const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
                 ✕
               </button>
 
-              {/* Navigation */}
+              {/* Navigation arrows */}
               {allImages.length > 1 && (
                 <>
                   <button
                     onClick={() => setActiveImage(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
                     className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
                   >
-                    ←
+                    <ArrowLeft className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => setActiveImage(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transform rotate-180"
                   >
-                    →
+                    <ArrowLeft className="w-5 h-5" />
                   </button>
                 </>
               )}
 
-              {/* Caption */}
-              <div className="mt-4 text-center">
-                <h3 className="text-xl font-bold text-kaiju-navy">{batch.name}</h3>
-                <p className="text-kaiju-navy/60">
-                  {imageTypes[activeImage % imageTypes.length]} • {activeImage + 1} of {allImages.length}
-                </p>
+              {/* Bottom info bar */}
+              <div className="bg-white border-t border-gray-200 p-4">
+                <div className="flex justify-between items-center">
+                  <div>
+                    <h3 className="font-bold text-kaiju-navy">{batch.name}</h3>
+                    <p className="text-kaiju-navy/60 text-sm">{batch.essence}</p>
+                  </div>
+                  <div className="text-kaiju-navy/60 text-sm font-mono">
+                    {activeImage + 1} of {allImages.length}
+                  </div>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -820,7 +763,7 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                   className="text-center"
                 >
                   <h3 className="text-2xl font-bold text-kaiju-navy mb-8">Visual Collection</h3>
-                  <EnhancedPhotoGallery batch={batch} />
+                  <CleanPhotoGallery batch={batch} />
                   <div className="mt-8 text-kaiju-navy/60">
                     <p>Product and NFT images for {batch.name}</p>
                   </div>
