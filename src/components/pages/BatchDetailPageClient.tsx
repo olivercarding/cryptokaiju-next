@@ -3,7 +3,7 @@
 
 import { useState, useRef } from 'react'
 import { motion, useInView, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, ExternalLink, Package, Sparkles, Zap, Star, Database, Camera, Info, Palette, Image as ImageIcon } from 'lucide-react'
+import { ArrowLeft, ExternalLink, Package, Sparkles, Zap, Star, Database, Camera, Info, Palette, Image as ImageIcon, Eye } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
@@ -25,9 +25,10 @@ const availabilityColors = {
   'Secondary': 'text-blue-600 bg-blue-50 border-blue-200'
 }
 
-// Simplified Photo Gallery - Show All Available Images
-const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
+// Enhanced Photo Gallery - Show All Available Images with Polaroid Style
+const EnhancedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
   const [activeImage, setActiveImage] = useState(0)
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false)
   
   // Collect all available images from enhanced structure
   const getAllImages = (): string[] => {
@@ -36,14 +37,11 @@ const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
     if (batch.images) {
       // Add all images from each category if they exist
       if (batch.images.physical) images.push(...batch.images.physical)
-      
-      // Handle both single NFT image (backward compatibility) and array of NFT images
       if (Array.isArray(batch.images.nft)) {
         images.push(...batch.images.nft)
       } else if (batch.images.nft) {
         images.push(batch.images.nft)
       }
-      
       if (batch.images.lifestyle) images.push(...batch.images.lifestyle)
       if (batch.images.detail) images.push(...batch.images.detail)
       if (batch.images.concept) images.push(...batch.images.concept)
@@ -54,7 +52,7 @@ const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
   }
 
   const allImages = getAllImages()
-  const rotations = ['-3deg', '2deg', '-1deg', '1.5deg', '-2deg']
+  const polaroidRotations = ['-8deg', '4deg', '-3deg', '6deg', '-2deg', '5deg', '-4deg', '3deg']
 
   if (allImages.length === 0) {
     return (
@@ -65,66 +63,209 @@ const SimplifiedPhotoGallery = ({ batch }: { batch: KaijuBatch }) => {
     )
   }
 
-  return (
-    <div className="space-y-8">
-      {/* Main Featured Image */}
-      <motion.div
-        key={activeImage}
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="relative max-w-lg mx-auto"
-      >
-        <div className="bg-white p-4 rounded-xl shadow-2xl border-4 border-gray-100 transform hover:rotate-0 transition-transform duration-300"
-             style={{ transform: 'rotate(-1deg)' }}>
-          <div className="relative h-80 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg overflow-hidden">
-            <Image
-              src={allImages[activeImage]}
-              alt={`${batch.name} image ${activeImage + 1}`}
-              fill
-              className="object-contain p-4"
-            />
+  const imageTypes = [
+    'Physical Product', 'Digital NFT', 'Lifestyle Shot', 'Detail View', 
+    'Concept Art', 'Packaging', 'Collection'
+  ]
 
-            <div className="absolute bottom-2 left-2 bg-kaiju-navy/80 text-white text-xs px-2 py-1 rounded">
-              {activeImage + 1} of {allImages.length}
+  return (
+    <>
+      <div className="space-y-12">
+        {/* Main Featured Polaroid */}
+        <motion.div
+          className="relative max-w-2xl mx-auto"
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div
+            key={activeImage}
+            initial={{ opacity: 0, scale: 0.9, rotateY: 180 }}
+            animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+            exit={{ opacity: 0, scale: 1.1, rotateY: -180 }}
+            transition={{ duration: 0.6, ease: "easeInOut" }}
+            className="bg-white p-6 rounded-2xl shadow-2xl border-4 border-gray-100 transform hover:rotate-0 hover:scale-105 transition-all duration-500 cursor-pointer group"
+            style={{ 
+              transform: `rotate(${polaroidRotations[activeImage % polaroidRotations.length]})`,
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05)'
+            }}
+            onClick={() => setIsLightboxOpen(true)}
+          >
+            <div className="relative h-80 lg:h-96 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden">
+              <Image
+                src={allImages[activeImage]}
+                alt={`${batch.name} image ${activeImage + 1}`}
+                fill
+                className="object-contain p-4 hover:scale-110 transition-transform duration-500"
+              />
+              
+              {/* Photo corner tabs */}
+              <div className="absolute top-2 left-2 w-6 h-6 bg-white/80 transform rotate-45 -translate-x-3 -translate-y-3 border border-gray-200"></div>
+              <div className="absolute top-2 right-2 w-6 h-6 bg-white/80 transform rotate-45 translate-x-3 -translate-y-3 border border-gray-200"></div>
+              <div className="absolute bottom-2 left-2 w-6 h-6 bg-white/80 transform rotate-45 -translate-x-3 translate-y-3 border border-gray-200"></div>
+              <div className="absolute bottom-2 right-2 w-6 h-6 bg-white/80 transform rotate-45 translate-x-3 translate-y-3 border border-gray-200"></div>
+
+              {/* Image counter with vintage style */}
+              <div className="absolute bottom-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full font-mono">
+                {activeImage + 1}/{allImages.length}
+              </div>
+
+              {/* Click to expand hint */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors duration-300 flex items-center justify-center"
+              >
+                <motion.div
+                  className="bg-white/90 backdrop-blur-sm rounded-full p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                  whileHover={{ scale: 1.1 }}
+                >
+                  <Eye className="w-6 h-6 text-kaiju-navy" />
+                </motion.div>
+              </motion.div>
+            </div>
+
+            {/* Polaroid caption */}
+            <div className="pt-4 text-center">
+              <div className="text-kaiju-navy font-bold text-xl handwritten mb-1">{batch.name}</div>
+              <div className="text-kaiju-navy/60 text-sm">{imageTypes[activeImage % imageTypes.length]}</div>
+              <div className="text-kaiju-navy/40 text-xs mt-1 font-mono">{batch.essence}</div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Scattered Thumbnail Polaroids */}
+        {allImages.length > 1 && (
+          <div className="relative">
+            <h4 className="text-center text-kaiju-navy font-bold mb-8 text-lg">Gallery Collection</h4>
+            <div className="flex justify-center flex-wrap gap-4 max-w-4xl mx-auto">
+              {allImages.map((image, index) => (
+                <motion.button
+                  key={`polaroid-${index}`}
+                  onClick={() => setActiveImage(index)}
+                  initial={{ opacity: 0, scale: 0.8, y: 50 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  transition={{ delay: index * 0.1, duration: 0.5 }}
+                  whileHover={{ 
+                    y: -12, 
+                    rotate: '0deg', 
+                    scale: 1.05,
+                    zIndex: 10
+                  }}
+                  className={`relative bg-white p-3 rounded-lg shadow-xl border-2 transition-all duration-300 hover:shadow-2xl group ${
+                    activeImage === index 
+                      ? 'border-kaiju-pink shadow-kaiju-pink/25 ring-2 ring-kaiju-pink/50' 
+                      : 'border-gray-200'
+                  }`}
+                  style={{ 
+                    transform: `rotate(${polaroidRotations[index % polaroidRotations.length]})`,
+                    zIndex: index
+                  }}
+                >
+                  <div className="relative w-20 h-20 bg-gray-50 rounded overflow-hidden">
+                    <Image 
+                      src={image} 
+                      alt={`${batch.name} thumbnail ${index + 1}`} 
+                      fill 
+                      className="object-contain p-1 group-hover:scale-110 transition-transform duration-300" 
+                    />
+                  </div>
+                  
+                  {/* Active indicator */}
+                  {activeImage === index && (
+                    <motion.div
+                      layoutId="activeIndicator"
+                      className="absolute -top-1 -right-1 w-6 h-6 bg-kaiju-pink rounded-full flex items-center justify-center"
+                    >
+                      <div className="w-2 h-2 bg-white rounded-full"></div>
+                    </motion.div>
+                  )}
+
+                  {/* Vintage label */}
+                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 bg-white px-2 py-0.5 text-xs text-kaiju-navy/60 font-mono rounded shadow">
+                    {index + 1}
+                  </div>
+                </motion.button>
+              ))}
             </div>
           </div>
-
-          <div className="pt-3 text-center">
-            <div className="text-kaiju-navy font-bold text-lg handwritten">{batch.name}</div>
-            <div className="text-kaiju-navy/60 text-sm">{batch.essence} • {batch.rarity}</div>
+        )}
+        
+        {/* Gallery Stats with vintage styling */}
+        <div className="text-center">
+          <div className="inline-block bg-white/80 backdrop-blur-sm rounded-full px-6 py-3 shadow-lg border border-gray-200">
+            <p className="text-kaiju-navy font-mono text-sm">
+              📸 {allImages.length} photograph{allImages.length === 1 ? '' : 's'} • 
+              Collected {batch.discoveredDate}
+            </p>
           </div>
         </div>
-      </motion.div>
-
-      {/* Thumbnail Gallery - Only show if there are multiple images */}
-      {allImages.length > 1 && (
-        <div className="flex justify-center gap-3 flex-wrap max-w-2xl mx-auto">
-          {allImages.map((image, index) => (
-            <motion.button
-              key={`thumb-${index}`}
-              onClick={() => setActiveImage(index)}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: index * 0.1 }}
-              whileHover={{ y: -4, rotate: '0deg', scale: 1.05 }}
-              className={`bg-white p-2 rounded-lg shadow-lg border-2 transition-all duration-300 ${
-                activeImage === index ? 'border-kaiju-pink shadow-kaiju-pink/25' : 'border-gray-200'
-              }`}
-              style={{ transform: `rotate(${rotations[index % rotations.length]})` }}
-            >
-              <div className="relative w-16 h-16 bg-gray-50 rounded overflow-hidden">
-                <Image src={image} alt={`${batch.name} thumbnail ${index + 1}`} fill className="object-contain p-1" />
-              </div>
-            </motion.button>
-          ))}
-        </div>
-      )}
-      
-      {/* Gallery Stats */}
-      <div className="text-center text-gray-500 text-sm">
-        <p>{allImages.length} image{allImages.length === 1 ? '' : 's'} available</p>
       </div>
-    </div>
+
+      {/* Lightbox Modal */}
+      {isLightboxOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setIsLightboxOpen(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            className="relative max-w-5xl w-full max-h-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative bg-white rounded-2xl p-6 shadow-2xl">
+              <div className="relative h-[60vh] lg:h-[70vh] rounded-xl overflow-hidden bg-gray-50">
+                <Image
+                  src={allImages[activeImage]}
+                  alt={`${batch.name} - Full size`}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              
+              {/* Close button */}
+              <button
+                onClick={() => setIsLightboxOpen(false)}
+                className="absolute top-4 right-4 w-10 h-10 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
+              >
+                ✕
+              </button>
+
+              {/* Navigation */}
+              {allImages.length > 1 && (
+                <>
+                  <button
+                    onClick={() => setActiveImage(prev => prev === 0 ? allImages.length - 1 : prev - 1)}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
+                  >
+                    ←
+                  </button>
+                  <button
+                    onClick={() => setActiveImage(prev => prev === allImages.length - 1 ? 0 : prev + 1)}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-black/50 hover:bg-black/70 text-white rounded-full flex items-center justify-center transition-colors"
+                  >
+                    →
+                  </button>
+                </>
+              )}
+
+              {/* Caption */}
+              <div className="mt-4 text-center">
+                <h3 className="text-xl font-bold text-kaiju-navy">{batch.name}</h3>
+                <p className="text-kaiju-navy/60">
+                  {imageTypes[activeImage % imageTypes.length]} • {activeImage + 1} of {allImages.length}
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </>
   )
 }
 
@@ -303,7 +444,7 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                 transition={{ duration: 0.8 }}
               >
                 <div className="flex items-center gap-4 mb-6">
-                  <span className="text-kaiju-pink font-mono text-xl font-bold">#{batch.id}</span>
+                  <span className="text-white font-mono text-xl font-bold">#{batch.id}</span>
                   <div className={`px-3 py-1 rounded-full text-sm font-bold ${rarityColors[batch.rarity]}`}>
                     {batch.rarity}
                   </div>
@@ -317,8 +458,8 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                 </h1>
                 
                 <div className="flex items-center gap-3 mb-6">
-                  <Package className="w-5 h-5 text-kaiju-pink" />
-                  <span className="text-xl text-kaiju-pink font-bold">{batch.type} Collectible</span>
+                  <Package className="w-5 h-5 text-white" />
+                  <span className="text-xl text-white font-bold">{batch.type} Collectible</span>
                 </div>
                 
                 <div className="flex items-center gap-2 mb-8">
@@ -391,20 +532,20 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                   
                   return (
                     <div className="space-y-4">
-                      {/* Main Hero Image */}
-                      <motion.div
-                        key={heroImageIndex}
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.5 }}
-                        className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20"
-                      >
-                        <Image
-                          src={heroImages[heroImageIndex]}
-                          alt={`${batch.name} - Image ${heroImageIndex + 1}`}
-                          fill
-                          className="object-contain p-8"
-                        />
+                      {/* Main Hero Image - FIXED: Removed key prop and motion wrapper */}
+                      <div className="relative h-96 lg:h-[500px] rounded-2xl overflow-hidden bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/20">
+                        <div 
+                          className="absolute inset-0 transition-opacity duration-500 ease-in-out"
+                          style={{ opacity: 1 }}
+                        >
+                          <Image
+                            src={heroImages[heroImageIndex]}
+                            alt={`${batch.name} - Image ${heroImageIndex + 1}`}
+                            fill
+                            className="object-contain p-8 transition-opacity duration-300"
+                            key={`hero-${heroImageIndex}`}
+                          />
+                        </div>
                         
                         {/* Glow effect */}
                         <div className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/20 to-kaiju-purple-light/20 mix-blend-overlay"></div>
@@ -414,35 +555,41 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                           {heroImageIndex + 1} of {heroImages.length}
                         </div>
                         
-                        {/* Navigation arrows */}
+                        {/* Navigation arrows - FIXED: Added debouncing */}
                         {heroImages.length > 1 && (
                           <>
                             <button
-                              onClick={() => setHeroImageIndex(prev => prev === 0 ? heroImages.length - 1 : prev - 1)}
-                              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors"
+                              onClick={() => {
+                                const newIndex = heroImageIndex === 0 ? heroImages.length - 1 : heroImageIndex - 1
+                                setHeroImageIndex(newIndex)
+                              }}
+                              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors disabled:opacity-50"
+                              disabled={heroImages.length <= 1}
                             >
                               <ArrowLeft className="w-4 h-4" />
                             </button>
                             <button
-                              onClick={() => setHeroImageIndex(prev => prev === heroImages.length - 1 ? 0 : prev + 1)}
-                              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors rotate-180"
+                              onClick={() => {
+                                const newIndex = heroImageIndex === heroImages.length - 1 ? 0 : heroImageIndex + 1
+                                setHeroImageIndex(newIndex)
+                              }}
+                              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 backdrop-blur-sm text-white rounded-full flex items-center justify-center hover:bg-black/70 transition-colors rotate-180 disabled:opacity-50"
+                              disabled={heroImages.length <= 1}
                             >
                               <ArrowLeft className="w-4 h-4" />
                             </button>
                           </>
                         )}
-                      </motion.div>
+                      </div>
                       
-                      {/* Thumbnail Navigation */}
+                      {/* Thumbnail Navigation - FIXED: Simplified animations */}
                       {heroImages.length > 1 && (
                         <div className="flex justify-center gap-3">
                           {heroImages.map((image, index) => (
-                            <motion.button
-                              key={index}
+                            <button
+                              key={`thumb-${index}`}
                               onClick={() => setHeroImageIndex(index)}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                              className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
                                 index === heroImageIndex 
                                   ? 'border-kaiju-pink shadow-lg shadow-kaiju-pink/25' 
                                   : 'border-white/30 hover:border-white/50'
@@ -455,7 +602,7 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                                 className="object-contain p-2"
                               />
                               <div className="absolute inset-0 bg-black/20 backdrop-blur-sm"></div>
-                            </motion.button>
+                            </button>
                           ))}
                         </div>
                       )}
@@ -673,7 +820,7 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                   className="text-center"
                 >
                   <h3 className="text-2xl font-bold text-kaiju-navy mb-8">Visual Collection</h3>
-                  <SimplifiedPhotoGallery batch={batch} />
+                  <EnhancedPhotoGallery batch={batch} />
                   <div className="mt-8 text-kaiju-navy/60">
                     <p>Product and NFT images for {batch.name}</p>
                   </div>
