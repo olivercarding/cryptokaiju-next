@@ -60,10 +60,10 @@ const footerSections = [
   {
     title: 'Community',
     links: [
-      { label: 'Join Discord', href: 'https://discord.gg/cryptokaiju', external: true },
-      { label: 'Follow on X', href: 'https://twitter.com/cryptokaiju', external: true },
-      { label: 'Instagram', href: 'https://instagram.com/cryptokaiju', external: true },
-      { label: 'Telegram Group', href: 'https://t.me/cryptokaiju', external: true }
+      { label: 'Join Discord', href: 'https://discord.gg/yMZtRgTps8', external: true },
+      { label: 'Follow on X', href: 'https://x.com/CryptoKaijuIO', external: true },
+      { label: 'Instagram', href: 'https://www.instagram.com/cryptokaiju/', external: true },
+      { label: 'Telegram Group', href: 'https://t.me/Crypto_Kaiju', external: true }
     ]
   }
 ]
