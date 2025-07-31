@@ -1,18 +1,15 @@
-// src/lib/utils/batchUtils.ts - UPDATED for Contentful integration
+// src/lib/utils/batchUtils.ts - FIXED for dynamic Contentful integration
 import KaijuBatchService, { type KaijuBatch } from '@/lib/services/KaijuBatchService'
 
 /**
- * Convert batch name to URL slug
- * Examples:
- * "Halloween Celebration" -> "halloween-celebration"
- * "Genesis Kaiju" -> "genesis"
- * "Mr. Wasabi" -> "mr-wasabi"
+ * Enhanced batch name to slug conversion with comprehensive mappings
  */
 export function batchNameToSlug(batchName: string): string {
   if (!batchName) return ''
   
-  // Common mappings for known batches
+  // Comprehensive mappings for blockchain -> Contentful slug conversion
   const batchMappings: Record<string, string> = {
+    // Exact matches from blockchain/OpenSea
     'Halloween Celebration': 'halloween-celebration',
     'Spooky Halloween Special': 'spooky',
     'Genesis Kaiju': 'genesis',
@@ -33,11 +30,37 @@ export function batchNameToSlug(batchName: string): string {
     'Valentine Special': 'valentine-special',
     'Easter Special': 'easter-special',
     'Diamond Hands': 'diamond-hands',
+    
+    // Common variations that might appear in NFT metadata
+    'Genesis Kaiju Collection': 'genesis',
+    'Original Genesis': 'genesis',
+    'Genesis Series': 'genesis',
+    'Halloween': 'halloween-celebration',
+    'Spooky': 'spooky',
+    'Halloween 2023': 'halloween-celebration',
+    'Mr Wasabi Edition': 'mr-wasabi',
+    'Wasabi': 'mr-wasabi',
+    'Doge': 'dogejira',
+    'CryptoKitties Collaboration': 'cryptokitty',
+    'Kitty': 'cryptokitty',
+    'SushiSwap Collaboration': 'sushi',
+    'Sushi Edition': 'sushi',
+    'Plushies': 'pretty-fine-plushies',
+    'Fine Plushies': 'pretty-fine-plushies',
   }
   
-  // Check if we have a direct mapping
-  if (batchMappings[batchName]) {
-    return batchMappings[batchName]
+  // Check if we have a direct mapping (case insensitive)
+  const exactMatch = batchMappings[batchName]
+  if (exactMatch) {
+    return exactMatch
+  }
+  
+  // Check case-insensitive matches
+  const lowerCaseMatch = Object.keys(batchMappings).find(
+    key => key.toLowerCase() === batchName.toLowerCase()
+  )
+  if (lowerCaseMatch) {
+    return batchMappings[lowerCaseMatch]
   }
   
   // Otherwise, convert to slug format
@@ -51,14 +74,22 @@ export function batchNameToSlug(batchName: string): string {
 }
 
 /**
- * Check if a batch page exists for the given batch name (async - uses Contentful)
+ * UPDATED: Check if a batch page exists using Contentful (async)
+ * This is the preferred method for accurate checking
  */
 export async function batchPageExists(batchName: string): Promise<boolean> {
   if (!batchName) return false
   
   try {
     const slug = batchNameToSlug(batchName)
-    return await KaijuBatchService.batchExists(slug)
+    const exists = await KaijuBatchService.batchExists(slug)
+    
+    // Debug logging in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 Batch check: "${batchName}" -> "${slug}" -> exists: ${exists}`)
+    }
+    
+    return exists
   } catch (error) {
     console.error('Error checking if batch exists:', error)
     return false
@@ -66,36 +97,56 @@ export async function batchPageExists(batchName: string): Promise<boolean> {
 }
 
 /**
- * Check if a batch page exists (synchronous version using known mappings)
- * Use this for immediate checks without async calls
+ * ENHANCED: Check if batch exists (sync version with fallback to Contentful cache)
+ * This checks the service cache first, then falls back to known mappings
  */
 export function batchPageExistsSync(batchName: string): boolean {
   if (!batchName) return false
   
-  // List of known batches that we're confident exist
-  const knownBatches = [
-    'Halloween Celebration',
-    'Spooky Halloween Special', 
-    'Genesis Kaiju',
-    'Genesis',
-    'Mr. Wasabi',
-    'Mr Wasabi',
-    'Dogejira',
-    'CryptoKitty',
-    'CryptoKitties',
-    'Sushi',
-    'SushiSwap',
-    'Pretty Fine Plushies',
-    'Jaiantokoin',
-    'URI',
-    'Spangle',
-    'Christmas Special',
-    'Valentine Special',
-    'Easter Special',
-    'Diamond Hands',
-  ]
+  // Try to check the service cache first (if batches have been loaded)
+  try {
+    // Get cached batches from the service (synchronous if already loaded)
+    const cachedBatches = KaijuBatchService['cache']?.get('all-batches')
+    if (cachedBatches && Array.isArray(cachedBatches)) {
+      const slug = batchNameToSlug(batchName)
+      const found = cachedBatches.some((batch: any) => batch.slug === slug)
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`💾 Sync batch check (cached): "${batchName}" -> "${slug}" -> exists: ${found}`)
+      }
+      
+      return found
+    }
+  } catch (error) {
+    // Cache not available, fall through to static check
+  }
   
-  return knownBatches.includes(batchName)
+  // Fallback to known mappings (less accurate but immediate)
+  const hasKnownMapping = Object.keys({
+    'Halloween Celebration': 'halloween-celebration',
+    'Spooky Halloween Special': 'spooky',
+    'Genesis Kaiju': 'genesis',
+    'Genesis': 'genesis',
+    'Mr. Wasabi': 'mr-wasabi',
+    'Mr Wasabi': 'mr-wasabi',
+    'Dogejira': 'dogejira',
+    'CryptoKitty': 'cryptokitty',
+    'CryptoKitties': 'cryptokitty',
+    'Sushi': 'sushi',
+    'SushiSwap': 'sushi',
+    'Pretty Fine Plushies': 'pretty-fine-plushies',
+    'Jaiantokoin': 'jaiantokoin',
+    'URI': 'uri',
+    'Spangle': 'spangle',
+  }).some(knownBatch => 
+    knownBatch.toLowerCase() === batchName.toLowerCase()
+  )
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔧 Sync batch check (fallback): "${batchName}" -> known mapping: ${hasKnownMapping}`)
+  }
+  
+  return hasKnownMapping
 }
 
 /**
@@ -107,15 +158,36 @@ export function getBatchPageUrl(batchName: string): string {
 }
 
 /**
- * Get batch info by name (async - uses Contentful)
+ * ENHANCED: Get batch info by name with fuzzy matching
  */
 export async function getBatchByName(batchName: string): Promise<KaijuBatch | null> {
   if (!batchName) return null
   
   try {
+    // First try exact slug match
     const slug = batchNameToSlug(batchName)
-    const batch = await KaijuBatchService.getBatchBySlug(slug)
-    return batch || null
+    let batch = await KaijuBatchService.getBatchBySlug(slug)
+    
+    if (batch) {
+      return batch
+    }
+    
+    // If no exact match, try fuzzy search through all batches
+    const allBatches = await KaijuBatchService.getAllBatches()
+    const normalizedName = batchName.toLowerCase().trim()
+    
+    // Try exact name match
+    batch = allBatches.find(b => b.name.toLowerCase() === normalizedName)
+    if (batch) return batch
+    
+    // Try partial name match
+    batch = allBatches.find(b => 
+      b.name.toLowerCase().includes(normalizedName) ||
+      normalizedName.includes(b.name.toLowerCase())
+    )
+    if (batch) return batch
+    
+    return null
   } catch (error) {
     console.error('Error fetching batch by name:', error)
     return null
@@ -191,4 +263,66 @@ export async function searchBatches(searchTerm: string): Promise<KaijuBatch[]> {
     console.error('Error searching batches:', error)
     return []
   }
+}
+
+/**
+ * NEW: Preload batches into cache for better sync performance
+ * Call this early in the app lifecycle
+ */
+export async function preloadBatchCache(): Promise<void> {
+  try {
+    await getAllBatchesCached()
+    // Also preload into the service cache
+    await KaijuBatchService.preloadBatches()
+    console.log('🚀 Batch cache preloaded successfully')
+  } catch (error) {
+    console.error('⚠️ Failed to preload batch cache:', error)
+  }
+}
+
+/**
+ * NEW: Normalize batch name for better matching
+ * Handles common variations in NFT metadata
+ */
+export function normalizeBatchName(batchName: string): string {
+  if (!batchName) return ''
+  
+  return batchName
+    .trim()
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .replace(/collection$/i, '') // Remove "Collection" suffix
+    .replace(/series$/i, '') // Remove "Series" suffix
+    .replace(/edition$/i, '') // Remove "Edition" suffix
+    .replace(/\s+$/, '') // Trim trailing space
+}
+
+/**
+ * NEW: Debug function to help troubleshoot batch linking issues
+ */
+export async function debugBatchLinking(batchName: string): Promise<void> {
+  if (process.env.NODE_ENV !== 'development') return
+  
+  console.group(`🐛 Debug batch linking: "${batchName}"`)
+  
+  const normalized = normalizeBatchName(batchName)
+  const slug = batchNameToSlug(normalized)
+  const existsAsync = await batchPageExists(normalized)
+  const existsSync = batchPageExistsSync(normalized)
+  const url = getBatchPageUrl(normalized)
+  
+  console.log(`Original: "${batchName}"`)
+  console.log(`Normalized: "${normalized}"`)
+  console.log(`Slug: "${slug}"`)
+  console.log(`Exists (async): ${existsAsync}`)
+  console.log(`Exists (sync): ${existsSync}`)
+  console.log(`URL: ${url}`)
+  
+  try {
+    const batch = await getBatchByName(normalized)
+    console.log(`Found batch:`, batch ? batch.name : 'Not found')
+  } catch (error) {
+    console.log(`Error finding batch:`, error)
+  }
+  
+  console.groupEnd()
 }
