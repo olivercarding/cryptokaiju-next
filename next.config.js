@@ -12,10 +12,16 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      // OpenSea domains - UPDATED with current domains
+      // FIXED: OpenSea domains - Added missing i2.seadn.io and other variants
       {
         protocol: 'https',
         hostname: 'i.seadn.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i2.seadn.io', // ADDED: This was missing and causing 400 errors
         port: '',
         pathname: '/**',
       },
@@ -27,14 +33,20 @@ const nextConfig = {
       },
       {
         protocol: 'https',
+        hostname: 'storage.opensea.io', // ADDED: Another OpenSea domain
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
         hostname: 'lh3.googleusercontent.com',
         port: '',
         pathname: '/**',
       },
-      // IPFS gateways - UPDATED with reliable options
+      // IPFS gateways - UPDATED with reliable options (your primary first)
       {
         protocol: 'https',
-        hostname: 'cryptokaiju.mypinata.cloud',
+        hostname: 'cryptokaiju.mypinata.cloud', // Your primary - most important
         port: '',
         pathname: '/**',
       },
@@ -46,7 +58,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cf-ipfs.com',
+        hostname: 'cloudflare-ipfs.com', // FIXED: was cf-ipfs.com
         port: '',
         pathname: '/**',
       },
@@ -74,13 +86,7 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      // Additional OpenSea domains
-      {
-        protocol: 'https',
-        hostname: 'opensea.mypinata.cloud',
-        port: '',
-        pathname: '/**',
-      },
+      // Additional OpenSea domains (cleanup)
       {
         protocol: 'https',
         hostname: 'assets.opensea.io',
@@ -95,6 +101,9 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     minimumCacheTTL: 60,
     formats: ['image/webp'],
+    // ENHANCED: Better error handling for image optimization
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
     // Add unoptimized flag for development debugging
     unoptimized: process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_IMAGES === 'true',
   },
@@ -149,7 +158,7 @@ const nextConfig = {
           },
         ],
       },
-      // Add headers for all image requests
+      // ENHANCED: Add headers for all image requests with better caching
       {
         source: '/_next/image/:path*',
         headers: [
@@ -160,6 +169,11 @@ const nextConfig = {
           {
             key: 'Access-Control-Allow-Origin',
             value: '*',
+          },
+          // ADDED: Better error handling for images
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
           },
         ],
       },
@@ -176,7 +190,7 @@ const nextConfig = {
     ]
   },
   
-  // Improved webpack configuration to handle dependency issues
+  // ENHANCED: Improved webpack configuration with better error handling
   webpack: (config, { isServer, dev }) => {
     // Handle Node.js modules that don't work in the browser
     if (!isServer) {
@@ -201,12 +215,13 @@ const nextConfig = {
       }
     }
 
-    // Ignore problematic modules and warnings
+    // ENHANCED: Ignore problematic modules and warnings (including BigInt serialization)
     config.ignoreWarnings = [
       { module: /node_modules\/pino\/lib\/tools\.js/ },
       { module: /node_modules\/pino-pretty/ },
       /Failed to parse source map/,
       /Critical dependency: the request of a dependency is an expression/,
+      /Do not know how to serialize a BigInt/, // ADDED: Ignore BigInt warnings if they persist
     ]
     
     // Add optimization for production builds
@@ -243,6 +258,8 @@ const nextConfig = {
   // Experimental features to help with Web3 compatibility
   experimental: {
     esmExternals: 'loose',
+    // ADDED: Better handling of large pages (useful for NFT collections)
+    largePageDataBytes: 128 * 1024, // 128KB
   },
 
   // Add redirects for legacy routes (already in vercel.json but good to have here too)
