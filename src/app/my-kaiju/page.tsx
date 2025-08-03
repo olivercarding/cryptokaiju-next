@@ -1,4 +1,4 @@
-// src/app/my-kaiju/page.tsx – UPDATED VERSION WITH CLICKABLE BATCH LINKS
+// src/app/my-kaiju/page.tsx – OPTIMIZED WITH SIMPLIFIED CARDS
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,9 +8,7 @@ import {
   Wallet,
   Package,
   ExternalLink,
-  Heart,
   Sparkles,
-  Filter,
   Zap,
   Database,
   ArrowLeft,
@@ -29,117 +27,11 @@ import BlockchainCryptoKaijuService, {
   type KaijuNFT,
 } from '@/lib/services/BlockchainCryptoKaijuService'
 
-// Simple batch name to slug conversion (same as other pages)
-const batchNameToSlug = (batchName: string): string => {
-  if (!batchName) return ''
-  
-  const mappings: Record<string, string> = {
-    'Halloween Celebration': 'halloween-celebration',
-    'Spooky Halloween Special': 'spooky',
-    'Genesis Kaiju': 'genesis',
-    'Genesis': 'genesis',
-    'Mr. Wasabi': 'mr-wasabi',
-    'Mr Wasabi': 'mr-wasabi',
-    'Dogejira': 'dogejira',
-    'CryptoKitty': 'cryptokitty',
-    'CryptoKitties': 'cryptokitty',
-    'Sushi': 'sushi',
-    'SushiSwap': 'sushi',
-    'Pretty Fine Plushies': 'pretty-fine-plushies',
-    'Jaiantokoin': 'jaiantokoin',
-    'URI': 'uri',
-    'Spangle': 'spangle',
-  }
-  
-  if (mappings[batchName]) {
-    return mappings[batchName]
-  }
-  
-  return batchName
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '')
-}
-
-const batchPageExists = (batchName: string): boolean => {
-  if (!batchName) return false
-  
-  const knownBatches = [
-    'Halloween Celebration',
-    'Spooky Halloween Special', 
-    'Genesis Kaiju',
-    'Genesis',
-    'Mr. Wasabi',
-    'Mr Wasabi',
-    'Dogejira',
-    'CryptoKitty',
-    'CryptoKitties',
-    'Sushi',
-    'SushiSwap',
-    'Pretty Fine Plushies',
-    'Jaiantokoin',
-    'URI',
-    'Spangle',
-  ]
-  
-  return knownBatches.includes(batchName)
-}
-
-const getBatchPageUrl = (batchName: string): string => {
-  const slug = batchNameToSlug(batchName)
-  return `/kaijudex/${slug}`
-}
-
 /* ------------------------------------------------------------------ */
-/* -----------------------  helper functions  ----------------------- */
+/* ---------------------  SIMPLIFIED KAIJU CARD  ------------------- */
 /* ------------------------------------------------------------------ */
-const renderAttributeValue = (v: any): string => {
-  if (v === null || v === undefined) return 'Unknown'
-  if (typeof v === 'object' && v.trait_type && v.value !== undefined) return String(v.value)
-  if (typeof v === 'object' && v.value !== undefined) return String(v.value)
-  if (typeof v === 'object') {
-    try {
-      return JSON.stringify(v)
-    } catch {
-      return '[Object]'
-    }
-  }
-  return String(v)
-}
-
-const extractAttributes = (ipfsData: any): Array<{ key: string; value: string }> => {
-  if (!ipfsData?.attributes) return []
-  const out: Array<{ key: string; value: string }> = []
-
-  try {
-    if (Array.isArray(ipfsData.attributes)) {
-      ipfsData.attributes.forEach((a: any) => {
-        const key = a?.trait_type || a?.key || 'Unknown'
-        const value = renderAttributeValue(a?.value ?? a)
-        if (key && value && !['dob', 'nfc', 'birth_date'].includes(key.toLowerCase())) out.push({ key, value })
-      })
-    } else if (typeof ipfsData.attributes === 'object') {
-      Object.entries(ipfsData.attributes).forEach(([k, v]) => {
-        if (k && v && !['dob', 'nfc', 'birth_date'].includes(k.toLowerCase()))
-          out.push({ key: k, value: renderAttributeValue(v) })
-      })
-    }
-  } catch (e) {
-    console.warn('extractAttributes error:', e)
-  }
-
-  return out.slice(0, 6)
-}
-
-/* ------------------------------------------------------------------ */
-/* ---------------------------  UI pieces  -------------------------- */
-/* ------------------------------------------------------------------ */
-const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
+const SimplifiedKaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
   const [imgErr, setImgErr] = useState(false)
-  const [hover, setHover] = useState(false)
 
   const getSrc = () => {
     if (imgErr) return '/images/placeholder-kaiju.png'
@@ -150,124 +42,81 @@ const KaijuCard = ({ kaiju, index }: { kaiju: KaijuNFT; index: number }) => {
       : raw
   }
 
-  const attrs = extractAttributes(kaiju.ipfsData)
-  const date = kaiju.birthDate ? new Date(kaiju.birthDate * 1000).toLocaleDateString() : null
+  // Truncate description to 100 characters
+  const truncatedDescription = kaiju.ipfsData?.description 
+    ? kaiju.ipfsData.description.length > 100
+      ? kaiju.ipfsData.description.substring(0, 100) + '...'
+      : kaiju.ipfsData.description
+    : 'A mysterious and powerful Kaiju from the blockchain realm.'
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      whileHover={{ y: -8, scale: 1.02 }}
-      onHoverStart={() => setHover(true)}
-      onHoverEnd={() => setHover(false)}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
+      whileHover={{ y: -4, scale: 1.02 }}
       className="group relative"
     >
-      <div className="bg-white rounded-2xl p-6 shadow-xl border-2 border-gray-100 hover:border-kaiju-pink/50 transition-all duration-300 overflow-hidden">
-        {/* glow */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-kaiju-pink/10 to-kaiju-purple-light/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-          animate={hover ? { scale: [1, 1.05, 1] } : {}}
-          transition={{ duration: 2, repeat: Infinity }}
-        />
-
-        {/* badges */}
-        <div className="absolute top-4 left-4 bg-green-500/90 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 z-10">
-          <Database className="w-3 h-3" />
-          ON-CHAIN
-        </div>
-        <div className="absolute top-4 right-4 bg-kaiju-pink text-white px-3 py-1 rounded-full text-sm font-bold z-10">
-          #{kaiju.tokenId}
-        </div>
-
-        {/* image */}
-        <div className="relative h-64 mb-6 rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100 mt-8">
-          <Image
-            src={getSrc()}
-            alt={kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
-            fill
-            className="object-contain p-4 group-hover:scale-105 transition-transform duration-300"
-            onError={() => setImgErr(true)}
-          />
-          <motion.div
-            className="absolute inset-0 bg-kaiju-pink/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
-            initial={false}
-            animate={hover ? { scale: [1, 1.1, 1] } : {}}
-            transition={{ duration: 1.5, repeat: Infinity }}
-          >
-            <div className="text-white font-bold text-lg flex items-center gap-2">
-              <Sparkles className="w-5 h-5" /> View Details <Sparkles className="w-5 h-5" />
-            </div>
-          </motion.div>
-        </div>
-
-        {/* info */}
-        <div className="relative z-10">
-          <h3 className="text-xl font-black text-kaiju-navy mb-2 group-hover:text-kaiju-pink transition-colors">
-            {kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
-          </h3>
-          <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-            {kaiju.ipfsData?.description || 'A mysterious and powerful Kaiju from the blockchain realm.'}
-          </p>
-
-          {kaiju.nfcId && (
-            <div className="mb-4 p-2 bg-blue-50 rounded-lg border border-blue-200">
-              <div className="text-xs text-blue-600 font-medium">NFC CHIP ID</div>
-              <div className="text-sm font-mono font-bold text-blue-800">{kaiju.nfcId}</div>
-            </div>
-          )}
+      {/* WHOLE CARD IS CLICKABLE */}
+      <Link href={`/kaiju/${kaiju.tokenId}`} className="block">
+        <div className="bg-white rounded-xl p-4 shadow-lg border border-gray-200 hover:border-kaiju-pink/50 hover:shadow-xl transition-all duration-300 cursor-pointer">
           
-          {/* UPDATED: Clickable batch link with better contrast */}
-          {kaiju.batch && (
-            <div className="mb-4 p-2 bg-purple-50 rounded-lg border border-purple-200">
-              <div className="text-xs text-purple-600 font-medium">BATCH</div>
-              <div className="text-sm font-bold text-purple-800">
-                {batchPageExists(kaiju.batch) ? (
-                  <Link 
-                    href={getBatchPageUrl(kaiju.batch)}
-                    className="hover:text-kaiju-pink transition-colors underline decoration-dotted underline-offset-2"
-                    title={`View ${kaiju.batch} collection page`}
-                  >
-                    {kaiju.batch}
-                  </Link>
-                ) : (
-                  kaiju.batch
-                )}
+          {/* Simple badges */}
+          <div className="flex justify-between items-start mb-3">
+            <div className="bg-green-500/90 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+              <Database className="w-3 h-3" />
+              ON-CHAIN
+            </div>
+            <div className="bg-kaiju-pink text-white px-2 py-1 rounded-full text-sm font-bold">
+              #{kaiju.tokenId}
+            </div>
+          </div>
+
+          {/* Image */}
+          <div className="relative h-48 mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100">
+            <Image
+              src={getSrc()}
+              alt={kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
+              fill
+              className="object-contain p-3 group-hover:scale-105 transition-transform duration-300"
+              onError={() => setImgErr(true)}
+            />
+            
+            {/* Hover overlay */}
+            <div className="absolute inset-0 bg-kaiju-pink/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+              <div className="text-kaiju-pink font-bold text-sm flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                View Details
+                <Sparkles className="w-4 h-4" />
               </div>
             </div>
-          )}
+          </div>
 
-          {attrs.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {attrs.map(({ key, value }, i) => (
-                <div key={`${key}-${i}`} className="bg-gray-50 rounded-lg p-2 text-center">
-                  <div className="text-xs text-gray-500 font-medium capitalize">{key.replace(/_/g, ' ')}</div>
-                  <div className="text-sm font-bold text-kaiju-navy capitalize truncate">{value}</div>
-                </div>
-              ))}
+          {/* Simplified info */}
+          <div>
+            <h3 className="text-lg font-bold text-kaiju-navy mb-2 group-hover:text-kaiju-pink transition-colors">
+              {kaiju.ipfsData?.name || `Kaiju #${kaiju.tokenId}`}
+            </h3>
+            
+            <p className="text-gray-600 text-sm mb-3 leading-relaxed">
+              {truncatedDescription}
+            </p>
+
+            {/* Simple external link - only shows on hover */}
+            <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div 
+                className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium p-2 rounded-lg transition-colors text-sm flex items-center justify-center"
+                onClick={(e) => {
+                  e.preventDefault() // Prevent Link navigation
+                  window.open(`https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${kaiju.tokenId}`, '_blank')
+                }}
+              >
+                <ExternalLink className="w-4 h-4" />
+              </div>
             </div>
-          )}
-
-          {date && <div className="text-xs text-gray-500 mb-4">Born: {date}</div>}
-
-          <div className="flex gap-2">
-            <Link
-              href={`/kaiju/${kaiju.tokenId}`}
-              className="flex-1 bg-gradient-to-r from-kaiju-pink to-kaiju-red text-white font-bold py-2 px-4 rounded-lg hover:shadow-lg transition-all duration-300 text-center text-sm"
-            >
-              View Details
-            </Link>
-            <a
-              href={`https://opensea.io/assets/ethereum/0x102c527714ab7e652630cac7a30abb482b041fd0/${kaiju.tokenId}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-3 rounded-lg transition-colors text-sm flex items-center justify-center"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </a>
           </div>
         </div>
-      </div>
+      </Link>
     </motion.div>
   )
 }
@@ -327,7 +176,7 @@ const SearchSection = ({ connected }: { connected: boolean }) => {
             {results.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {results.slice(0, 6).map((k, i) => (
-                  <KaijuCard key={k.nft.tokenId} kaiju={k.nft} index={i} />
+                  <SimplifiedKaijuCard key={k.nft.tokenId} kaiju={k.nft} index={i} />
                 ))}
               </div>
             ) : (
@@ -340,7 +189,7 @@ const SearchSection = ({ connected }: { connected: boolean }) => {
   )
 }
 
-/* --------------------- debug panel (unchanged) --------------------- */
+/* --------------------- debug panel (simplified) --------------------- */
 const DebugPanel = ({
   kaijus,
   loading,
@@ -417,8 +266,10 @@ function useManualKaijuFetch() {
     setLoading(true)
     setError(null)
     try {
+      console.log('🚀 OPTIMIZED: Fetching simplified collection data...')
       const data = await BlockchainCryptoKaijuService.getTokensForAddress(addr)
       setKaijus(data)
+      console.log(`✅ OPTIMIZED: Loaded ${data.length} NFTs with simplified data processing`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Unknown error')
       setKaijus([])
@@ -571,7 +422,7 @@ export default function MyKaijuPage() {
                   className="w-16 h-16 border-4 border-kaiju-pink border-t-transparent rounded-full mx-auto mb-4"
                 />
                 <div className="text-kaiju-navy text-xl font-bold">Loading from blockchain…</div>
-                <div className="text-gray-600 mt-2">Fetching your NFTs directly from smart contract</div>
+                <div className="text-gray-600 mt-2">Fetching your NFTs with optimized processing</div>
               </div>
             ) : error ? (
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="text-center py-20">
@@ -600,10 +451,13 @@ export default function MyKaijuPage() {
                     🎉 Found {kaijus.length} CryptoKaiju NFT{kaijus.length === 1 ? '' : 's'}!
                   </h2>
                   <p className="text-gray-600">Your collection verified directly from the Ethereum blockchain</p>
+                  <p className="text-gray-500 text-sm mt-1">✨ Optimized for fast loading • Click any card to view details</p>
                 </motion.div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                
+                {/* OPTIMIZED GRID WITH SIMPLIFIED CARDS */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                   {kaijus.map((k, i) => (
-                    <KaijuCard key={k.tokenId} kaiju={k} index={i} />
+                    <SimplifiedKaijuCard key={k.tokenId} kaiju={k} index={i} />
                   ))}
                 </div>
               </>
