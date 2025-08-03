@@ -222,7 +222,14 @@ class SimpleLRUCache<T> {
       for (const [key, value] of this.cache.entries()) {
         cacheObject[key] = value
       }
-      localStorage.setItem('kaiju_simple_cache', JSON.stringify(cacheObject))
+      // Use safe stringify to handle BigInt values
+      const serialized = JSON.stringify(cacheObject, (key, value) => {
+        if (typeof value === 'bigint') {
+          return value.toString()
+        }
+        return value
+      })
+      localStorage.setItem('kaiju_simple_cache', serialized)
     } catch (error) {
       console.warn('Failed to save cache to storage:', error)
     }
@@ -735,6 +742,48 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
+   * ENHANCED: Get image URL with fallback chain for better reliability
+   */
+  private getReliableImageUrl(originalUrl: string): string {
+    if (!originalUrl) return '/images/placeholder-kaiju.png'
+    
+    // If it's already a reliable source, return as-is
+    if (originalUrl.includes(this.PRIMARY_IPFS_GATEWAY) || 
+        originalUrl.startsWith('/images/') ||
+        originalUrl.startsWith('/api/ipfs/')) {
+      return originalUrl
+    }
+    
+    // Convert IPFS URLs to our reliable gateway
+    if (originalUrl.startsWith('ipfs://')) {
+      const hash = originalUrl.replace('ipfs://', '')
+      return `${this.PRIMARY_IPFS_GATEWAY}/${hash}`
+    }
+    
+    if (originalUrl.includes('/ipfs/')) {
+      const hash = originalUrl.split('/ipfs/')[1].split('?')[0] // Remove query params
+      return `${this.PRIMARY_IPFS_GATEWAY}/${hash}`
+    }
+    
+    // For OpenSea images that might have CORS issues, try to extract IPFS hash
+    if (originalUrl.includes('seadn.io')) {
+      // Pattern: https://i2.seadn.io/ethereum/0x.../[hash].png
+      const hashMatch = originalUrl.match(/ethereum\/[^\/]+\/([a-f0-9]{32,})/);
+      if (hashMatch && hashMatch[1]) {
+        return `${this.PRIMARY_IPFS_GATEWAY}/${hashMatch[1]}`
+      }
+      
+      // If we can't extract hash, try API proxy
+      const urlHash = originalUrl.split('/').pop()?.split('.')[0]
+      if (urlHash && urlHash.length > 10) {
+        return `/api/ipfs/${urlHash}`
+      }
+    }
+    
+    // As last resort, return original URL
+    return originalUrl
+  }
+  /**
    * Helper methods for OpenSea trait conversion
    */
   private convertOpenSeaTraitsToAttributes(traits: any[]): { [key: string]: any } {
@@ -941,11 +990,36 @@ class BlockchainCryptoKaijuService {
       
       if (!data.nfts || !Array.isArray(data.nfts)) break
       
-      // Filter for CryptoKaiju NFTs
+      // Filter for CryptoKaiju NFTs and enhance with IPFS data
       const pageKaijus: KaijuNFT[] = []
       for (const nft of data.nfts) {
         if (nft.contract?.toLowerCase() === KAIJU_NFT_ADDRESS.toLowerCase()) {
-          pageKaijus.push(this.convertOpenSeaNFTToKaiju(nft, address))
+          const convertedKaiju = this.convertOpenSeaNFTToKaiju(nft, address)
+          
+          // ENHANCED: Try to get better image from IPFS if metadata_url is available
+          if (convertedKaiju.tokenURI && convertedKaiju.tokenURI.includes('ipfs')) {
+            try {
+              const ipfsData = await this.fetchIpfsMetadata(convertedKaiju.tokenURI)
+              if (ipfsData && ipfsData.image) {
+                // Update with reliable IPFS image
+                const reliableImageUrl = this.getReliableImageUrl(ipfsData.image)
+                
+                // Update the kaiju with IPFS data
+                convertedKaiju.ipfsData = {
+                  ...convertedKaiju.ipfsData,
+                  ...ipfsData,
+                  image: reliableImageUrl
+                }
+                
+                this.log(`✅ Enhanced ${convertedKaiju.tokenId} with IPFS metadata`)
+              }
+            } catch (ipfsError) {
+              // Ignore IPFS errors for collection loading - OpenSea data is still usable
+              this.warn(`⚠️ Could not enhance token ${convertedKaiju.tokenId} with IPFS data`)
+            }
+          }
+          
+          pageKaijus.push(convertedKaiju)
         }
       }
       
@@ -982,6 +1056,9 @@ class BlockchainCryptoKaijuService {
       t.trait_type?.toLowerCase() === 'batch'
     )
 
+    // FIXED: Use reliable image URL helper
+    const imageUrl = this.getReliableImageUrl(osNft.display_image_url || osNft.image_url || '')
+
     return {
       tokenId: osNft.identifier || 'unknown',
       nfcId: nfcTrait?.value ? String(nfcTrait.value).trim().toUpperCase() : undefined,
@@ -991,7 +1068,7 @@ class BlockchainCryptoKaijuService {
       ipfsData: {
         name: osNft.name || `CryptoKaiju #${osNft.identifier}`,
         description: osNft.description || 'A unique CryptoKaiju NFT with physical collectible counterpart.',
-        image: osNft.display_image_url || osNft.image_url || '',
+        image: imageUrl,
         attributes
       }
     }
