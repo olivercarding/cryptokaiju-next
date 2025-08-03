@@ -1,4 +1,4 @@
-// src/lib/hooks/useBlockchainCryptoKaiju.ts - ENHANCED WITH PERFORMANCE TRACKING
+// src/lib/hooks/useBlockchainCryptoKaiju.ts - OPTIMIZED WITH SIMPLIFIED TRACKING
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -18,7 +18,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 /* ======================================================================= */
-/*  ENHANCED MY-KAIJU HOOK WITH PERFORMANCE INSIGHTS                      */
+/*  OPTIMIZED MY-KAIJU HOOK                                               */
 /* ======================================================================= */
 
 export function useBlockchainMyKaiju() {
@@ -29,24 +29,12 @@ export function useBlockchainMyKaiju() {
   const [error, setError] = useState<CryptoKaijuError | null>(null)
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
   const [retryCount, setRetryCount] = useState(0)
-  
-  // ENHANCED: Performance tracking
-  const [performanceStats, setPerformanceStats] = useState<{
-    fetchDuration?: number
-    ipfsPerformance?: {
-      primaryUsage: number
-      fallbackUsage: number
-      failedRequests: number
-    }
-  }>({})
 
-  /* Enhanced fetching with performance tracking */
   const fetchKaijus = useCallback(async () => {
     const address = account?.address
     if (!address) {
       setKaijus([])
       setError(null)
-      setPerformanceStats({})
       return
     }
 
@@ -65,17 +53,6 @@ export function useBlockchainMyKaiju() {
       setLastFetchTime(Date.now())
       setRetryCount(0)
       
-      // ENHANCED: Get performance stats
-      const serviceStats = BlockchainCryptoKaijuService.getServiceStats()
-      setPerformanceStats({
-        fetchDuration,
-        ipfsPerformance: {
-          primaryUsage: serviceStats.gatewayUsage.primary,
-          fallbackUsage: serviceStats.gatewayUsage.fallback,
-          failedRequests: serviceStats.gatewayUsage.failed
-        }
-      })
-      
     } catch (err) {
       console.error('❌ fetchKaijus error:', err)
       const fetchDuration = Date.now() - startTime
@@ -89,12 +66,11 @@ export function useBlockchainMyKaiju() {
       
       setError(enhancedError as CryptoKaijuError)
       setKaijus([])
-      setPerformanceStats({ fetchDuration })
       
-      // Auto-retry for retryable errors (with exponential backoff)
-      if (enhancedError.retryable && retryCount < 3) {
-        const retryDelay = Math.pow(2, retryCount) * 1000 // 1s, 2s, 4s
-        console.log(`🔄 Auto-retrying in ${retryDelay}ms (attempt ${retryCount + 1}/3)`)
+      // Auto-retry for retryable errors (simplified logic)
+      if (enhancedError.retryable && retryCount < 2) {
+        const retryDelay = Math.pow(2, retryCount) * 1000 // 1s, 2s
+        console.log(`🔄 Auto-retrying in ${retryDelay}ms (attempt ${retryCount + 1}/2)`)
         
         setTimeout(() => {
           setRetryCount(prev => prev + 1)
@@ -106,38 +82,29 @@ export function useBlockchainMyKaiju() {
     }
   }, [account?.address, retryCount])
 
-  /* Refetch every time the wallet address changes */
   useEffect(() => {
     fetchKaijus()
   }, [fetchKaijus])
 
-  /* Manual retry function */
   const retry = useCallback(() => {
     setRetryCount(0)
     fetchKaijus()
   }, [fetchKaijus])
 
-  /* Clear data function */
   const clearData = useCallback(() => {
     setKaijus([])
     setError(null)
     setIsLoading(false)
     setLastFetchTime(null)
     setRetryCount(0)
-    setPerformanceStats({})
   }, [])
 
-  /* ENHANCED: Get detailed service statistics */
+  // Simplified service stats (for backward compatibility)
   const getServiceStats = useCallback((): ServiceStats => {
     return BlockchainCryptoKaijuService.getServiceStats()
   }, [])
 
-  /* ENHANCED: Get gateway performance report */
-  const getGatewayReport = useCallback(() => {
-    return BlockchainCryptoKaijuService.getGatewayPerformanceReport()
-  }, [])
-
-  /* Check if data is stale (older than 5 minutes) */
+  // Check if data is stale (older than 5 minutes)
   const isStale = lastFetchTime ? (Date.now() - lastFetchTime) > 5 * 60 * 1000 : false
 
   return {
@@ -150,22 +117,18 @@ export function useBlockchainMyKaiju() {
     retryCount,
     canRetry: error?.retryable || false,
     
-    // ENHANCED: Performance data
-    performanceStats,
-    
     // Methods
     refetch: fetchKaijus,
     retry,
     clearData,
     
-    // ENHANCED: Diagnostic methods
+    // Simplified stats (for backward compatibility)
     getServiceStats,
-    getGatewayReport,
   }
 }
 
 /* ======================================================================= */
-/*  ENHANCED SEARCH HOOK WITH PERFORMANCE INSIGHTS                        */
+/*  OPTIMIZED SEARCH HOOK                                                 */
 /* ======================================================================= */
 
 export function useBlockchainKaijuSearch() {
@@ -175,14 +138,6 @@ export function useBlockchainKaijuSearch() {
   const [query, setQuery] = useState<string>('')
   const [searchHistory, setSearchHistory] = useState<string[]>([])
   const [lastSearchTime, setLastSearchTime] = useState<number | null>(null)
-  
-  // ENHANCED: Search performance tracking
-  const [searchStats, setSearchStats] = useState<{
-    searchDuration?: number
-    searchType?: 'tokenId' | 'nfcId'
-    cacheHit?: boolean
-    gatewayUsed?: string
-  }>({})
 
   const search = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -192,7 +147,7 @@ export function useBlockchainKaijuSearch() {
 
     const trimmedQuery = searchQuery.trim()
     
-    // Prevent duplicate searches
+    // Prevent duplicate searches within 30 seconds
     if (trimmedQuery === query && results.length > 0 && lastSearchTime && (Date.now() - lastSearchTime) < 30000) {
       console.log('🔄 Skipping duplicate search within 30 seconds')
       return
@@ -216,13 +171,6 @@ export function useBlockchainKaijuSearch() {
       setResults(data)
       setLastSearchTime(Date.now())
       
-      // ENHANCED: Track search performance
-      setSearchStats({
-        searchDuration,
-        searchType: isTokenId ? 'tokenId' : 'nfcId',
-        cacheHit: searchDuration < 100, // Heuristic: very fast = likely cache hit
-      })
-      
       // Add to search history (keep last 10)
       setSearchHistory(prev => {
         const newHistory = [trimmedQuery, ...prev.filter(q => q !== trimmedQuery)]
@@ -242,10 +190,6 @@ export function useBlockchainKaijuSearch() {
       
       setError(enhancedError as CryptoKaijuError)
       setResults([])
-      setSearchStats({ 
-        searchDuration, 
-        searchType: isTokenId ? 'tokenId' : 'nfcId' 
-      })
     } finally {
       setIsLoading(false)
     }
@@ -257,7 +201,6 @@ export function useBlockchainKaijuSearch() {
     setQuery('')
     setIsLoading(false)
     setLastSearchTime(null)
-    setSearchStats({})
   }, [])
 
   const retry = useCallback(() => {
@@ -265,21 +208,6 @@ export function useBlockchainKaijuSearch() {
       search(query)
     }
   }, [query, search])
-
-  /* ENHANCED: Get search analytics */
-  const getSearchAnalytics = useCallback(() => {
-    const serviceStats = BlockchainCryptoKaijuService.getServiceStats()
-    return {
-      currentSearch: searchStats,
-      searchHistory,
-      servicePerformance: {
-        totalRequests: serviceStats.performance.totalRequests,
-        cacheHitRate: serviceStats.performance.cacheHits / serviceStats.performance.totalRequests * 100,
-        avgResponseTime: serviceStats.performance.averageResponseTime
-      },
-      gatewayHealth: serviceStats.gatewayUsage
-    }
-  }, [searchStats, searchHistory])
 
   return { 
     results, 
@@ -290,16 +218,10 @@ export function useBlockchainKaijuSearch() {
     hasQuery: query.length > 0, 
     canRetry: error?.retryable || false,
     
-    // ENHANCED: Performance data
-    searchStats,
-    
     // Methods
     search, 
     clear,
     retry,
-    
-    // ENHANCED: Analytics
-    getSearchAnalytics
   }
 }
 
@@ -307,7 +229,7 @@ export function useBlockchainKaijuSearch() {
 export const useBlockchainNFTSearch = useBlockchainKaijuSearch
 
 /* ======================================================================= */
-/*  ENHANCED SINGLE KAIJU HOOK WITH DETAILED PERFORMANCE TRACKING         */
+/*  OPTIMIZED SINGLE KAIJU HOOK                                          */
 /* ======================================================================= */
 
 export function useBlockchainKaiju(tokenId: string | null) {
@@ -317,21 +239,6 @@ export function useBlockchainKaiju(tokenId: string | null) {
   const [error, setError] = useState<CryptoKaijuError | null>(null)
   const [lastFetchTime, setLastFetchTime] = useState<number | null>(null)
   const [retryCount, setRetryCount] = useState(0)
-  
-  // ENHANCED: Detailed performance tracking
-  const [fetchMetrics, setFetchMetrics] = useState<{
-    totalDuration?: number
-    blockchainDuration?: number
-    ipfsDuration?: number
-    openSeaDuration?: number
-    cacheHits?: number
-    gatewayUsed?: string
-    dataQuality?: {
-      hasBlockchainData: boolean
-      hasIpfsData: boolean
-      hasOpenSeaData: boolean
-    }
-  }>({})
 
   const fetchKaiju = useCallback(
     async (id: string) => {
@@ -355,18 +262,6 @@ export function useBlockchainKaiju(tokenId: string | null) {
         setLastFetchTime(Date.now())
         setRetryCount(0)
         
-        // ENHANCED: Detailed performance metrics
-        const serviceStats = BlockchainCryptoKaijuService.getServiceStats()
-        setFetchMetrics({
-          totalDuration,
-          cacheHits: serviceStats.performance.cacheHits,
-          dataQuality: {
-            hasBlockchainData: !!res.nft,
-            hasIpfsData: !!res.nft?.ipfsData,
-            hasOpenSeaData: !!res.openSeaData && Object.keys(res.openSeaData).length > 0
-          }
-        })
-        
       } catch (err) {
         const totalDuration = Date.now() - startTime
         console.error(`❌ Kaiju fetch failed after ${totalDuration}ms:`, err)
@@ -381,11 +276,10 @@ export function useBlockchainKaiju(tokenId: string | null) {
         setError(enhancedError as CryptoKaijuError)
         setKaiju(null)
         setOpenSeaData(null)
-        setFetchMetrics({ totalDuration })
         
-        // Auto-retry for network errors
-        if (enhancedError.retryable && retryCount < 2) {
-          const retryDelay = Math.pow(2, retryCount) * 1500 // 1.5s, 3s
+        // Auto-retry for network errors (simplified)
+        if (enhancedError.retryable && retryCount < 1) {
+          const retryDelay = 2000 // 2 seconds
           console.log(`🔄 Auto-retrying in ${retryDelay}ms`)
           
           setTimeout(() => {
@@ -409,7 +303,6 @@ export function useBlockchainKaiju(tokenId: string | null) {
       setError(null)
       setLastFetchTime(null)
       setRetryCount(0)
-      setFetchMetrics({})
     }
   }, [tokenId, fetchKaiju])
 
@@ -427,23 +320,7 @@ export function useBlockchainKaiju(tokenId: string | null) {
     }
   }, [tokenId, fetchKaiju])
 
-  /* ENHANCED: Get detailed fetch analytics */
-  const getFetchAnalytics = useCallback(() => {
-    const serviceStats = BlockchainCryptoKaijuService.getServiceStats()
-    return {
-      currentFetch: fetchMetrics,
-      serviceHealth: {
-        totalRequests: serviceStats.performance.totalRequests,
-        errorRate: serviceStats.performance.errors / serviceStats.performance.totalRequests * 100,
-        avgResponseTime: serviceStats.performance.averageResponseTime,
-        cacheEfficiency: serviceStats.performance.cacheHits / serviceStats.performance.totalRequests * 100
-      },
-      gatewayPerformance: serviceStats.gatewayUsage,
-      cacheHealth: serviceStats.cacheHealth
-    }
-  }, [fetchMetrics])
-
-  /* Check if data is stale */
+  // Check if data is stale
   const isStale = lastFetchTime ? (Date.now() - lastFetchTime) > 10 * 60 * 1000 : false
 
   return { 
@@ -456,20 +333,14 @@ export function useBlockchainKaiju(tokenId: string | null) {
     retryCount,
     canRetry: error?.retryable || false,
     
-    // ENHANCED: Performance data
-    fetchMetrics,
-    
     // Methods
     refresh,
     retry,
-    
-    // ENHANCED: Analytics
-    getFetchAnalytics
   }
 }
 
 /* ======================================================================= */
-/*  ENHANCED NFC KAIJU HOOK WITH ENCODING PERFORMANCE TRACKING            */
+/*  OPTIMIZED NFC KAIJU HOOK                                             */
 /* ======================================================================= */
 
 export function useBlockchainKaijuByNFC(nfcId: string | null) {
@@ -477,16 +348,6 @@ export function useBlockchainKaijuByNFC(nfcId: string | null) {
   const [openSeaData, setOpenSeaData] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<CryptoKaijuError | null>(null)
-  const [encodingUsed, setEncodingUsed] = useState<'ascii' | 'direct' | null>(null)
-  const [attemptsCount, setAttemptsCount] = useState(0)
-  
-  // ENHANCED: NFC-specific performance tracking
-  const [nfcMetrics, setNfcMetrics] = useState<{
-    totalDuration?: number
-    encodingAttempts?: number
-    successfulEncoding?: 'ascii' | 'direct'
-    fallbacksUsed?: number
-  }>({})
 
   const fetchKaiju = useCallback(
     async (id: string) => {
@@ -494,8 +355,6 @@ export function useBlockchainKaijuByNFC(nfcId: string | null) {
 
       setIsLoading(true)
       setError(null)
-      setEncodingUsed(null)
-      setAttemptsCount(0)
 
       const startTime = Date.now()
 
@@ -510,14 +369,6 @@ export function useBlockchainKaijuByNFC(nfcId: string | null) {
         setKaiju(res.nft)
         setOpenSeaData(res.openSeaData)
         
-        // ENHANCED: NFC-specific metrics
-        setNfcMetrics({
-          totalDuration,
-          encodingAttempts: 1, // Could be enhanced to track actual attempts
-          successfulEncoding: 'ascii', // This would need to be returned from service
-          fallbacksUsed: 0
-        })
-        
       } catch (err) {
         const totalDuration = Date.now() - startTime
         console.error(`❌ NFC Kaiju fetch failed after ${totalDuration}ms:`, err)
@@ -531,7 +382,6 @@ export function useBlockchainKaijuByNFC(nfcId: string | null) {
         setError(enhancedError as CryptoKaijuError)
         setKaiju(null)
         setOpenSeaData(null)
-        setNfcMetrics({ totalDuration })
       } finally {
         setIsLoading(false)
       }
@@ -546,9 +396,6 @@ export function useBlockchainKaijuByNFC(nfcId: string | null) {
       setKaiju(null)
       setOpenSeaData(null)
       setError(null)
-      setEncodingUsed(null)
-      setAttemptsCount(0)
-      setNfcMetrics({})
     }
   }, [nfcId, fetchKaiju])
 
@@ -565,12 +412,7 @@ export function useBlockchainKaijuByNFC(nfcId: string | null) {
     openSeaData, 
     isLoading, 
     error,
-    encodingUsed,
-    attemptsCount,
     canRetry: error?.retryable || false,
-    
-    // ENHANCED: NFC-specific performance data
-    nfcMetrics,
     
     // Methods
     refresh,
@@ -579,7 +421,7 @@ export function useBlockchainKaijuByNFC(nfcId: string | null) {
 }
 
 /* ======================================================================= */
-/*  ENHANCED COLLECTION STATS HOOK                                        */
+/*  OPTIMIZED COLLECTION STATS HOOK                                      */
 /* ======================================================================= */
 
 export function useBlockchainCollectionStats() {
@@ -624,7 +466,7 @@ export function useBlockchainCollectionStats() {
 
   const refresh = useCallback(() => fetchStats(), [fetchStats])
 
-  /* Check if data is stale (older than 30 minutes) */
+  // Check if data is stale (older than 30 minutes)
   const isStale = lastFetchTime ? (Date.now() - lastFetchTime) > 30 * 60 * 1000 : false
 
   return { 
@@ -640,7 +482,7 @@ export function useBlockchainCollectionStats() {
 }
 
 /* ======================================================================= */
-/*  ENHANCED TEST HOOK WITH GATEWAY PERFORMANCE TESTING                   */
+/*  SIMPLIFIED TEST HOOK                                                  */
 /* ======================================================================= */
 
 export function useBlockchainTest() {
@@ -667,86 +509,40 @@ export function useBlockchainTest() {
     setTestErrors([])
 
     try {
-      log('🚀 Starting comprehensive blockchain service test with gateway performance analysis')
+      log('🚀 Starting optimized blockchain service test')
 
-      // Test 1: Service initialization and gateway health
-      log('📋 Test 1: Service validation and gateway setup')
+      // Test 1: Service validation
+      log('📋 Test 1: Service validation')
       await BlockchainCryptoKaijuService.testService()
       log('✅ Service validation passed')
 
-      // Test 2: Gateway performance baseline
-      log('📋 Test 2: Gateway performance baseline')
-      const initialGatewayReport = BlockchainCryptoKaijuService.getGatewayPerformanceReport()
-      log(`🌐 Gateway status: ${Object.keys(initialGatewayReport).length} gateways configured`)
-
-      // Test 3: Error handling validation
-      log('📋 Test 3: Error handling validation')
-      try {
-        throw ErrorFactory.validationError('test', 'invalid')
-      } catch (error) {
-        const normalized = ErrorHandler.normalize(error)
-        log(`✅ Error handling: ${normalized.userMessage}`)
-      }
-
-      // Test 4: Token lookup with performance tracking
-      log('📋 Test 4: Token lookup with performance tracking')
-      const tokenStart = Date.now()
+      // Test 2: Token lookup
+      log('📋 Test 2: Token lookup test')
       try {
         const result = await BlockchainCryptoKaijuService.getByTokenId('1')
-        const tokenDuration = Date.now() - tokenStart
         if (result.nft) {
-          log(`✅ Token 1 (${tokenDuration}ms): ${result.nft.ipfsData?.name || 'Unnamed'}`)
+          log(`✅ Token 1: ${result.nft.ipfsData?.name || 'Unnamed'}`)
         }
       } catch (error) {
         logError(error)
       }
 
-      // Test 5: Invalid token lookup
-      log('📋 Test 5: Invalid token test')
+      // Test 3: Invalid token test
+      log('📋 Test 3: Invalid token test')
       try {
         await BlockchainCryptoKaijuService.getByTokenId('999999999')
       } catch (error) {
         log(`✅ Invalid token error handled: ${ErrorHandler.getUserMessage(error)}`)
       }
 
-      // Test 6: NFC lookup test
-      log('📋 Test 6: NFC lookup test')
-      try {
-        const nfcResult = await BlockchainCryptoKaijuService.getByNFCId('042C0A8A9F6580')
-        if (nfcResult.nft) {
-          log(`✅ NFC lookup: ${nfcResult.nft.ipfsData?.name || 'Unnamed'}`)
-        }
-      } catch (error) {
-        log(`ℹ️ NFC lookup result: ${ErrorHandler.getUserMessage(error)}`)
-      }
-
-      // Test 7: Service statistics and gateway performance
-      log('📋 Test 7: Service statistics and gateway performance')
+      // Test 4: Service statistics
+      log('📋 Test 4: Service statistics')
       const stats = BlockchainCryptoKaijuService.getServiceStats()
       log(`📊 Performance: ${stats.performance.totalRequests} requests, ${stats.performance.cacheHits} cache hits`)
-      log(`📦 Cache: ${stats.cache.size} entries`)
-      log(`🌐 Gateway usage: Primary=${stats.gatewayUsage.primary}, Fallback=${stats.gatewayUsage.fallback}, Failed=${stats.gatewayUsage.failed}`)
+      log(`📈 IPFS success rate: ${(stats.performance.ipfsSuccessRate * 100).toFixed(1)}%`)
+      log(`🔄 OpenSea fallbacks: ${stats.performance.openSeaFallbacks}`)
 
-      // Test 8: Gateway performance report
-      log('📋 Test 8: Gateway performance analysis')
-      const finalGatewayReport = BlockchainCryptoKaijuService.getGatewayPerformanceReport()
-      Object.entries(finalGatewayReport).forEach(([url, metrics]) => {
-        log(`🌐 ${url}: ${metrics.successRate} success rate, ${metrics.avgResponseTime} avg response`)
-      })
-
-      // Test 9: API route stats (if available)
-      log('📋 Test 9: API route performance check')
-      try {
-        const apiStatsResponse = await fetch('/api/ipfs/stats?stats=true')
-        if (apiStatsResponse.ok) {
-          const apiStats = await apiStatsResponse.json()
-          log(`🔗 API Gateway usage: ${JSON.stringify(apiStats.gatewayUsage)}`)
-        }
-      } catch (error) {
-        log(`ℹ️ API stats not available: ${getErrorMessage(error)}`)
-      }
-
-      log('🎉 Comprehensive test with gateway performance analysis completed successfully!')
+      log('🎉 Optimized test completed successfully!')
 
     } catch (err) {
       logError(err)
@@ -772,7 +568,7 @@ export function useBlockchainTest() {
 }
 
 /* ======================================================================= */
-/*  ENHANCED WALLET CONNECTION HOOK                                       */
+/*  SIMPLIFIED WALLET CONNECTION HOOK                                    */
 /* ======================================================================= */
 
 export function useManualWalletConnection() {

@@ -1,4 +1,4 @@
-// src/lib/services/BlockchainCryptoKaijuService.ts - ENHANCED WITH OPTIMIZED IPFS STRATEGY
+// src/lib/services/BlockchainCryptoKaijuService.ts - OPTIMIZED FOR RELIABLE PRIMARY IPFS
 import { getContract, readContract } from "thirdweb"
 import { ethereum } from "thirdweb/chains"
 import { thirdwebClient, KAIJU_NFT_ADDRESS } from '@/lib/thirdweb'
@@ -11,7 +11,7 @@ function getErrorMessage(error: unknown): string {
   return 'Unknown error'
 }
 
-// CryptoKaiju NFT Contract ABI - OPTIMIZED with tokensOf
+// CryptoKaiju NFT Contract ABI
 export const KAIJU_NFT_ABI = [
   {
     "inputs": [],
@@ -129,152 +129,59 @@ export interface CollectionStats {
   owners?: number
 }
 
-// ENHANCED: Gateway performance tracking interface
-export interface GatewayMetrics {
-  url: string
-  successCount: number
-  failureCount: number
-  avgResponseTime: number
-  lastSuccess: number
-  lastFailure: number
-  isPrimary: boolean
-}
-
-// Performance tracking interfaces
+// Simplified performance tracking
 export interface PerformanceMetrics {
   totalRequests: number
   cacheHits: number
   errors: number
   averageResponseTime: number
-}
-
-export interface CacheStats {
-  size: number
-  keys: string[]
-  oldestEntry?: number
-  storageSize?: number
-  version: number
-}
-
-export interface CacheHealthMetrics {
-  totalItems: number
-  expiredItems: number
-  storageUsage: number
-  lastCleanup: number
-  version: number
-}
-
-export interface ServiceTimeouts {
-  CONTRACT: number
-  IPFS_PRIMARY: number
-  IPFS_FALLBACK: number
-  OPENSEA: number
-  CACHE_TTL: number
+  ipfsSuccessRate: number
+  openSeaFallbacks: number
 }
 
 export interface ServiceStats {
   performance: PerformanceMetrics
-  cache: CacheStats
-  cacheHealth: CacheHealthMetrics
-  pendingRequests: number
-  config: ServiceTimeouts
-  gatewayStats: { [url: string]: GatewayMetrics }
-  gatewayUsage: {
-    primary: number
-    fallback: number
-    apiProxy: number
-    failed: number
+  cache: {
+    size: number
+    keys: string[]
   }
+  pendingRequests: number
 }
 
-// OpenSea Account NFTs Response Format
-interface OpenSeaAccountNFT {
-  identifier: string
-  collection: string
-  contract: string
-  token_standard: string
-  name: string
-  description: string
-  image_url: string
-  display_image_url: string
-  metadata_url: string
-  opensea_url: string
-  updated_at: string
-  is_disabled: boolean
-  is_nsfw: boolean
-  traits: Array<{
-    trait_type: string
-    display_type?: string
-    max_value?: number
-    value: any
-  }>
-}
-
-interface OpenSeaAccountResponse {
-  nfts: OpenSeaAccountNFT[]
-  next?: string
-}
-
-// ENHANCED: Persistent LRU Cache with Browser Storage
-class PersistentLRUCache<T> {
+// Simple LRU Cache
+class SimpleLRUCache<T> {
   private cache = new Map<string, { data: T; timestamp: number; ttl: number }>()
   private readonly maxSize: number
-  private readonly storageKey: string
-  private readonly version: number = 2 // Increment to invalidate old cache formats
-  private readonly maxStorageSize: number = 5 * 1024 * 1024 // 5MB limit
-  private lastCleanup: number = 0
-  private readonly cleanupInterval: number = 60 * 60 * 1000 // 1 hour
 
-  constructor(maxSize: number = 200, storageKey: string = 'kaiju_cache') {
+  constructor(maxSize: number = 500) {
     this.maxSize = maxSize
-    this.storageKey = storageKey
-    
-    // Load existing cache from storage on initialization
-    this.hydrateFromStorage()
-    
-    // Set up periodic cleanup
-    this.scheduleCleanup()
+    this.loadFromStorage()
   }
 
   get(key: string): T | null {
-    try {
-      const item = this.cache.get(key)
-      if (!item) return null
-      
-      // Check if expired
-      if (Date.now() - item.timestamp > item.ttl) {
-        this.cache.delete(key)
-        this.persistToStorage() // Update storage
-        return null
-      }
-      
-      // Move to end (LRU behavior)
+    const item = this.cache.get(key)
+    if (!item) return null
+    
+    if (Date.now() - item.timestamp > item.ttl) {
       this.cache.delete(key)
-      this.cache.set(key, item)
-      
-      return item.data
-    } catch (error) {
-      console.warn('Cache retrieval error:', error)
       return null
     }
+    
+    // Move to end (LRU behavior)
+    this.cache.delete(key)
+    this.cache.set(key, item)
+    return item.data
   }
 
   set(key: string, data: T, ttl: number): void {
-    try {
-      // Remove oldest items if at capacity
-      if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
-        const firstKey = this.cache.keys().next().value
-        if (firstKey) this.cache.delete(firstKey)
-      }
-      
-      this.cache.set(key, { data, timestamp: Date.now(), ttl })
-      
-      // Persist to storage (debounced)
-      this.debouncedPersist()
-      
-    } catch (error) {
-      console.warn('Cache storage error:', error)
+    // Remove oldest if at capacity
+    if (this.cache.size >= this.maxSize && !this.cache.has(key)) {
+      const firstKey = this.cache.keys().next().value
+      if (firstKey) this.cache.delete(firstKey)
     }
+    
+    this.cache.set(key, { data, timestamp: Date.now(), ttl })
+    this.saveToStorage()
   }
 
   clear(): void {
@@ -286,289 +193,83 @@ class PersistentLRUCache<T> {
     return this.cache.size
   }
 
-  getStats(): CacheStats {
-    const keys = Array.from(this.cache.keys())
-    let oldestTimestamp = Date.now()
-    
-    for (const item of this.cache.values()) {
-      if (item.timestamp < oldestTimestamp) {
-        oldestTimestamp = item.timestamp
-      }
-    }
-
-    return {
-      size: this.cache.size,
-      keys,
-      oldestEntry: oldestTimestamp,
-      storageSize: this.getStorageSize(),
-      version: this.version
-    }
-  }
-
-  /**
-   * Load cache from localStorage on initialization
-   */
-  private hydrateFromStorage(): void {
-    if (typeof window === 'undefined') return // Server-side safety
+  private loadFromStorage(): void {
+    if (typeof window === 'undefined') return
     
     try {
-      const stored = localStorage.getItem(this.storageKey)
-      if (!stored) return
-
-      const parsed = JSON.parse(stored)
-      
-      // Check version compatibility
-      if (parsed.version !== this.version) {
-        console.log(`🔄 Cache version mismatch (${parsed.version} vs ${this.version}), clearing old cache`)
-        this.clearStorage()
-        return
-      }
-
-      // Restore cache entries with expiration check
-      const now = Date.now()
-      let restoredCount = 0
-      let expiredCount = 0
-
-      for (const [key, item] of Object.entries(parsed.cache || {})) {
-        const cacheItem = item as { data: T; timestamp: number; ttl: number }
+      const stored = localStorage.getItem('kaiju_simple_cache')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        const now = Date.now()
         
-        // Skip expired items
-        if (now - cacheItem.timestamp > cacheItem.ttl) {
-          expiredCount++
-          continue
+        for (const [key, item] of Object.entries(parsed)) {
+          const cacheItem = item as { data: T; timestamp: number; ttl: number }
+          if (now - cacheItem.timestamp < cacheItem.ttl) {
+            this.cache.set(key, cacheItem)
+          }
         }
-
-        this.cache.set(key, cacheItem)
-        restoredCount++
       }
-
-      console.log(`💾 Cache hydrated: ${restoredCount} items restored, ${expiredCount} expired items skipped`)
-      
-      // Clean up if we skipped expired items
-      if (expiredCount > 0) {
-        this.persistToStorage()
-      }
-
     } catch (error) {
-      console.warn('⚠️ Cache hydration failed, starting fresh:', error)
-      this.clearStorage()
+      console.warn('Failed to load cache from storage:', error)
     }
   }
 
-  /**
-   * Persist cache to localStorage
-   */
-  private persistToStorage(): void {
-    if (typeof window === 'undefined') return // Server-side safety
+  private saveToStorage(): void {
+    if (typeof window === 'undefined') return
     
     try {
       const cacheObject: any = {}
-      
-      // Convert Map to plain object
       for (const [key, value] of this.cache.entries()) {
         cacheObject[key] = value
       }
-
-      const payload = {
-        version: this.version,
-        timestamp: Date.now(),
-        cache: cacheObject
-      }
-
-      const serialized = JSON.stringify(payload)
-      
-      // Check storage size limit
-      if (serialized.length > this.maxStorageSize) {
-        console.warn('⚠️ Cache too large for storage, trimming...')
-        this.trimCacheForStorage()
-        return // Retry after trimming
-      }
-
-      localStorage.setItem(this.storageKey, serialized)
-      
+      localStorage.setItem('kaiju_simple_cache', JSON.stringify(cacheObject))
     } catch (error) {
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.warn('⚠️ Storage quota exceeded, trimming cache...')
-        this.trimCacheForStorage()
-      } else {
-        console.warn('⚠️ Cache persistence failed:', error)
-      }
+      console.warn('Failed to save cache to storage:', error)
     }
   }
 
-  /**
-   * Debounced persistence to avoid excessive localStorage writes
-   */
-  private persistTimeout: NodeJS.Timeout | null = null
-  private debouncedPersist(): void {
-    if (this.persistTimeout) {
-      clearTimeout(this.persistTimeout)
-    }
-    
-    this.persistTimeout = setTimeout(() => {
-      this.persistToStorage()
-      this.persistTimeout = null
-    }, 1000) // 1 second debounce
-  }
-
-  /**
-   * Trim cache when storage is full
-   */
-  private trimCacheForStorage(): void {
-    const targetSize = Math.floor(this.maxSize * 0.7) // Trim to 70% capacity
-    
-    // Sort by timestamp (oldest first)
-    const entries = Array.from(this.cache.entries())
-    entries.sort((a, b) => a[1].timestamp - b[1].timestamp)
-    
-    // Keep only the newest entries
-    const toKeep = entries.slice(-targetSize)
-    
-    this.cache.clear()
-    for (const [key, value] of toKeep) {
-      this.cache.set(key, value)
-    }
-    
-    console.log(`🗑️ Cache trimmed from ${entries.length} to ${targetSize} items`)
-    
-    // Try persisting again
-    this.persistToStorage()
-  }
-
-  /**
-   * Clear storage
-   */
   private clearStorage(): void {
     if (typeof window === 'undefined') return
-    
     try {
-      localStorage.removeItem(this.storageKey)
+      localStorage.removeItem('kaiju_simple_cache')
     } catch (error) {
-      console.warn('⚠️ Failed to clear cache storage:', error)
-    }
-  }
-
-  /**
-   * Get current storage size in bytes
-   */
-  private getStorageSize(): number {
-    if (typeof window === 'undefined') return 0
-    
-    try {
-      const stored = localStorage.getItem(this.storageKey)
-      return stored ? stored.length : 0
-    } catch (error) {
-      return 0
-    }
-  }
-
-  /**
-   * Schedule periodic cleanup of expired items
-   */
-  private scheduleCleanup(): void {
-    if (typeof window === 'undefined') return
-    
-    setInterval(() => {
-      this.cleanupExpiredItems()
-    }, this.cleanupInterval)
-  }
-
-  /**
-   * Remove expired items from cache
-   */
-  private cleanupExpiredItems(): void {
-    const now = Date.now()
-    let removedCount = 0
-    
-    for (const [key, item] of this.cache.entries()) {
-      if (now - item.timestamp > item.ttl) {
-        this.cache.delete(key)
-        removedCount++
-      }
-    }
-    
-    if (removedCount > 0) {
-      console.log(`🧹 Cleanup: Removed ${removedCount} expired cache items`)
-      this.persistToStorage()
-    }
-    
-    this.lastCleanup = now
-  }
-
-  /**
-   * Force cleanup (useful for debugging)
-   */
-  public forceCleanup(): void {
-    this.cleanupExpiredItems()
-  }
-
-  /**
-   * Get cache health metrics
-   */
-  public getHealthMetrics(): CacheHealthMetrics {
-    const now = Date.now()
-    let expiredCount = 0
-    
-    for (const item of this.cache.values()) {
-      if (now - item.timestamp > item.ttl) {
-        expiredCount++
-      }
-    }
-    
-    return {
-      totalItems: this.cache.size,
-      expiredItems: expiredCount,
-      storageUsage: this.getStorageSize(),
-      lastCleanup: this.lastCleanup,
-      version: this.version
+      console.warn('Failed to clear cache storage:', error)
     }
   }
 }
 
 class BlockchainCryptoKaijuService {
   private contract: any
-  private cache = new PersistentLRUCache<any>(200, 'cryptokaiju_cache')
+  private cache = new SimpleLRUCache<any>(500)
   private pendingRequests = new Map<string, Promise<any>>()
   
-  // OPTIMIZED: Primary gateway first, then fallbacks
-  private readonly PRIMARY_GATEWAY = 'https://cryptokaiju.mypinata.cloud/ipfs'
+  // OPTIMIZED: Focus on primary gateway with simple fallbacks
+  private readonly PRIMARY_IPFS_GATEWAY = 'https://cryptokaiju.mypinata.cloud/ipfs'
   private readonly FALLBACK_GATEWAYS = [
     'https://gateway.pinata.cloud/ipfs',
-    'https://cloudflare-ipfs.com/ipfs',
-    'https://ipfs.io/ipfs'
+    'https://cloudflare-ipfs.com/ipfs'
   ]
   
-  // Updated timeouts for optimized strategy
-  private readonly TIMEOUTS: ServiceTimeouts = {
-    CONTRACT: 8000,         // 8s for blockchain calls
-    IPFS_PRIMARY: 5000,     // 5s for primary gateway (should be fast)
-    IPFS_FALLBACK: 8000,    // 8s for fallback gateways
-    OPENSEA: 10000,         // 10s for OpenSea API
-    CACHE_TTL: 300000       // 5 minutes cache
+  // Simplified timeouts
+  private readonly TIMEOUTS = {
+    CONTRACT: 8000,
+    IPFS_PRIMARY: 5000,
+    IPFS_FALLBACK: 8000,
+    OPENSEA: 10000,
+    CACHE_TTL: 300000  // 5 minutes
   }
 
-  // Enhanced debug mode
-  private readonly DEBUG = process.env.NODE_ENV === 'development'
-  private readonly VERBOSE = process.env.NEXT_PUBLIC_DEBUG === 'true'
-
-  // Performance tracking with proper typing
+  // Simplified performance tracking
   private performanceMetrics: PerformanceMetrics = {
     totalRequests: 0,
     cacheHits: 0,
     errors: 0,
-    averageResponseTime: 0
+    averageResponseTime: 0,
+    ipfsSuccessRate: 0,
+    openSeaFallbacks: 0
   }
 
-  // ENHANCED: Gateway performance tracking
-  private gatewayMetrics = new Map<string, GatewayMetrics>()
-  
-  // ENHANCED: Gateway usage statistics
-  private gatewayUsage = {
-    primary: 0,
-    fallback: 0,
-    apiProxy: 0,
-    failed: 0
-  }
+  private readonly DEBUG = process.env.NODE_ENV === 'development'
 
   constructor() {
     try {
@@ -579,18 +280,9 @@ class BlockchainCryptoKaijuService {
         abi: KAIJU_NFT_ABI,
       })
       
-      this.log('🚀 BlockchainCryptoKaijuService initialized with optimized IPFS strategy')
-      this.log(`📊 Cache configured: ${this.cache.size}/${200} max entries`)
-      this.log(`🎯 Primary IPFS gateway: ${this.PRIMARY_GATEWAY}`)
-      
-      // Initialize gateway metrics
-      this.initializeGatewayMetrics()
-      
-      // Log cache restoration stats
-      const cacheStats = this.cache.getStats()
-      if (cacheStats.size > 0) {
-        this.log(`💾 Restored ${cacheStats.size} items from persistent cache`)
-      }
+      this.log('🚀 Optimized BlockchainCryptoKaijuService initialized')
+      this.log(`🎯 Primary IPFS: ${this.PRIMARY_IPFS_GATEWAY}`)
+      this.log(`💾 Cache: ${this.cache.size} entries loaded`)
     } catch (error) {
       throw ErrorFactory.securityError('Failed to initialize blockchain service')
     }
@@ -612,78 +304,16 @@ class BlockchainCryptoKaijuService {
     console.error('[BlockchainService]', ...args)
   }
 
-  private verbose(...args: any[]): void {
-    if (this.VERBOSE) {
-      console.log('[BlockchainService][VERBOSE]', ...args)
-    }
-  }
-
   /**
-   * Initialize gateway performance tracking
-   */
-  private initializeGatewayMetrics(): void {
-    // Initialize primary gateway
-    this.gatewayMetrics.set(this.PRIMARY_GATEWAY, {
-      url: this.PRIMARY_GATEWAY,
-      successCount: 0,
-      failureCount: 0,
-      avgResponseTime: 0,
-      lastSuccess: 0,
-      lastFailure: 0,
-      isPrimary: true
-    })
-
-    // Initialize fallback gateways
-    this.FALLBACK_GATEWAYS.forEach(gateway => {
-      this.gatewayMetrics.set(gateway, {
-        url: gateway,
-        successCount: 0,
-        failureCount: 0,
-        avgResponseTime: 0,
-        lastSuccess: 0,
-        lastFailure: 0,
-        isPrimary: false
-      })
-    })
-  }
-
-  /**
-   * Track gateway performance
-   */
-  private trackGatewaySuccess(gatewayUrl: string, responseTime: number): void {
-    const metrics = this.gatewayMetrics.get(gatewayUrl)
-    if (metrics) {
-      metrics.successCount++
-      metrics.lastSuccess = Date.now()
-      metrics.avgResponseTime = metrics.avgResponseTime > 0 ? 
-        (metrics.avgResponseTime + responseTime) / 2 : responseTime
-      
-      this.gatewayMetrics.set(gatewayUrl, metrics)
-    }
-  }
-
-  private trackGatewayFailure(gatewayUrl: string, error: any): void {
-    const metrics = this.gatewayMetrics.get(gatewayUrl)
-    if (metrics) {
-      metrics.failureCount++
-      metrics.lastFailure = Date.now()
-      
-      this.gatewayMetrics.set(gatewayUrl, metrics)
-    }
-  }
-
-  /**
-   * Enhanced request deduplication with error handling
+   * Request deduplication
    */
   private async deduplicate<T>(key: string, request: () => Promise<T>): Promise<T> {
     if (this.pendingRequests.has(key)) {
-      this.verbose(`🔄 Deduplicating request: ${key}`)
       return this.pendingRequests.get(key)!
     }
 
     const promise = request()
       .catch(error => {
-        // Convert to enhanced error before throwing
         throw ErrorHandler.normalize(error, { requestKey: key })
       })
       .finally(() => {
@@ -695,78 +325,30 @@ class BlockchainCryptoKaijuService {
   }
 
   /**
-   * IMPROVED: Smart NFC encoding detection with comprehensive logic
+   * NFC encoding detection and conversion (simplified but still robust)
    */
   private detectNFCEncoding(nfcId: string): 'direct' | 'ascii' {
     if (!nfcId) return 'ascii'
     
     const cleanNfc = nfcId.replace(/^0x/, '').toUpperCase()
-    
-    // Check if it looks like direct hex encoding:
-    // - Only contains hex characters (0-9, A-F)
-    // - Has reasonable length (8+ characters, even number)
-    // - Doesn't contain obvious ASCII patterns
     const isHexPattern = /^[0-9A-F]+$/.test(cleanNfc)
     const hasEvenLength = cleanNfc.length % 2 === 0
     const isReasonableLength = cleanNfc.length >= 8 && cleanNfc.length <= 32
     
-    this.verbose(`🧠 NFC Analysis: ${cleanNfc}`)
-    this.verbose(`   Hex pattern: ${isHexPattern}`)
-    this.verbose(`   Even length: ${hasEvenLength}`)
-    this.verbose(`   Reasonable length: ${isReasonableLength}`)
-    
     if (isHexPattern && hasEvenLength && isReasonableLength) {
-      // Additional check: if it doesn't look like ASCII-encoded text
-      // ASCII encoding would have patterns like 30-39 (0-9) and 41-46 (A-F)
-      try {
-        let hasNonHexAscii = false
-        let asciiChars = ''
-        
-        for (let i = 0; i < Math.min(cleanNfc.length - 1, 16); i += 2) {
-          const hexPair = cleanNfc.substr(i, 2)
-          const charCode = parseInt(hexPair, 16)
-          
-          // Check if this looks like encoded ASCII
-          if (charCode >= 32 && charCode <= 126) {
-            asciiChars += String.fromCharCode(charCode)
-            // Check if it's outside of typical hex range
-            if (!(charCode >= 48 && charCode <= 70)) {
-              hasNonHexAscii = true
-            }
-          }
-        }
-        
-        this.verbose(`   ASCII interpretation: "${asciiChars}"`)
-        this.verbose(`   Has non-hex ASCII: ${hasNonHexAscii}`)
-        
-        // If we found clear ASCII patterns, likely ASCII encoding
-        if (hasNonHexAscii && asciiChars.length >= 4) {
-          return 'ascii'
-        }
-        
-        // If no ASCII patterns detected, likely direct hex
-        return 'direct'
-        
-      } catch (e) {
-        this.verbose(`   ASCII analysis failed: ${e}`)
-        // If parsing fails, fall back to ASCII as it's more common
-        return 'ascii'
-      }
+      // Simple heuristic: if it looks like pure hex data, use direct
+      return 'direct'
     }
     
-    this.verbose(`   Defaulting to ASCII encoding`)
     return 'ascii'
   }
 
-  /**
-   * Convert NFC ID to bytes32 format (ASCII encoding)
-   */
   private nfcToBytes32ASCII(nfcId: string): string {
     if (!nfcId) return '0x' + '0'.repeat(64)
     
     const cleanNfc = nfcId.replace(/^0x/, '').toUpperCase()
-    
     let asciiHex = ''
+    
     for (let i = 0; i < cleanNfc.length; i++) {
       const char = cleanNfc[i]
       const asciiCode = char.charCodeAt(0)
@@ -774,24 +356,16 @@ class BlockchainCryptoKaijuService {
       asciiHex += hexCode
     }
     
-    const paddedHex = asciiHex.padEnd(64, '0')
-    return '0x' + paddedHex
+    return '0x' + asciiHex.padEnd(64, '0')
   }
 
-  /**
-   * Convert NFC ID to bytes32 format (Direct hex encoding)
-   */
   private nfcToBytes32Direct(nfcId: string): string {
     if (!nfcId) return '0x' + '0'.repeat(64)
     
     const cleanNfc = nfcId.replace(/^0x/, '').toLowerCase()
-    const paddedHex = cleanNfc.padEnd(64, '0')
-    return '0x' + paddedHex
+    return '0x' + cleanNfc.padEnd(64, '0')
   }
 
-  /**
-   * Convert bytes32 to NFC hex string
-   */
   private bytes32ToNFC(bytes32: string): string {
     if (!bytes32 || bytes32 === '0x' + '0'.repeat(64)) return ''
     
@@ -819,13 +393,12 @@ class BlockchainCryptoKaijuService {
       return asciiResult
     }
     
-    // Otherwise, treat as direct hex encoding
-    const directHex = hex.replace(/0+$/, '').toUpperCase()
-    return directHex
+    // Otherwise, treat as direct hex
+    return hex.replace(/0+$/, '').toUpperCase()
   }
 
   /**
-   * Enhanced blockchain calls with timeout and comprehensive error handling
+   * Blockchain calls with timeout and caching
    */
   private async callContractWithTimeout<T>(
     method: string, 
@@ -838,7 +411,6 @@ class BlockchainCryptoKaijuService {
       const cached = this.cache.get(cacheKey)
       if (cached) {
         this.performanceMetrics.cacheHits++
-        this.verbose(`💾 Cache hit: ${cacheKey}`)
         return cached
       }
     }
@@ -847,14 +419,10 @@ class BlockchainCryptoKaijuService {
     
     return this.deduplicate(key, async () => {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => {
-        controller.abort()
-        this.warn(`⏰ Contract call ${method} timed out after ${this.TIMEOUTS.CONTRACT}ms`)
-      }, this.TIMEOUTS.CONTRACT)
+      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUTS.CONTRACT)
       
       try {
         this.performanceMetrics.totalRequests++
-        this.verbose(`📞 Contract call: ${method}(${params.map(p => p.toString()).join(', ')})`)
         
         const result = await readContract({
           contract: this.contract,
@@ -867,8 +435,6 @@ class BlockchainCryptoKaijuService {
         const duration = Date.now() - startTime
         this.performanceMetrics.averageResponseTime = 
           (this.performanceMetrics.averageResponseTime + duration) / 2
-        
-        this.verbose(`✅ Contract call completed in ${duration}ms`)
         
         if (cacheKey) {
           this.cache.set(cacheKey, result as T, this.TIMEOUTS.CACHE_TTL)
@@ -885,313 +451,157 @@ class BlockchainCryptoKaijuService {
             severity: ErrorSeverity.HIGH,
             message: `Contract call ${method} timed out`,
             userMessage: 'Blockchain request timed out. Please try again.',
-            technicalDetails: `Contract method ${method} exceeded ${this.TIMEOUTS.CONTRACT}ms timeout`,
             suggestions: [
               'Check your internet connection',
-              'Try again in a few moments',
-              'The Ethereum network might be congested'
+              'Try again in a few moments'
             ],
             retryable: true,
-            context: { method, params, timeout: this.TIMEOUTS.CONTRACT }
+            context: { method, params }
           })
         }
         
-        // Network or contract-specific errors
-        const errorMessage = getErrorMessage(error)
-        
-        if (errorMessage.includes('execution reverted') || errorMessage.includes('revert')) {
-          throw new CryptoKaijuError({
-            type: ErrorType.CONTRACT,
-            severity: ErrorSeverity.MEDIUM,
-            message: `Contract execution reverted: ${method}`,
-            userMessage: 'The requested data was not found on the blockchain.',
-            technicalDetails: errorMessage,
-            suggestions: [
-              'Double-check the Token ID or NFC ID',
-              'This Kaiju might not exist',
-              'Try searching in the Kaijudex instead'
-            ],
-            retryable: false,
-            context: { method, params, contractError: true }
-          })
-        }
-        
-        throw ErrorHandler.normalize(error, { method, params, contractCall: true })
+        throw ErrorHandler.normalize(error, { method, params })
       }
     })
   }
 
   /**
-   * OPTIMIZED: Primary-first IPFS fetching instead of racing all gateways
+   * OPTIMIZED: Primary IPFS first, then simple fallbacks
    */
-  private async fetchIpfsMetadataWithOptimizedStrategy(tokenURI: string): Promise<any> {
+  private async fetchIpfsMetadata(tokenURI: string): Promise<any> {
     const cacheKey = `ipfs:${tokenURI}`
     const cached = this.cache.get(cacheKey)
     if (cached) {
-      this.verbose(`💾 IPFS cache hit: ${tokenURI}`)
       return cached
     }
 
     return this.deduplicate(cacheKey, async () => {
-      try {
-        this.log(`📁 Fetching IPFS metadata: ${tokenURI}`)
-
-        // Extract IPFS hash
-        let ipfsHash = ''
-        if (tokenURI.includes('/ipfs/')) {
-          ipfsHash = tokenURI.split('/ipfs/')[1].split('?')[0] // Remove query params
-        } else if (tokenURI.startsWith('ipfs://')) {
-          ipfsHash = tokenURI.replace('ipfs://', '')
-        }
-
-        if (!ipfsHash) {
-          // Try direct URL first if not IPFS format
-          return await this.fetchFromDirectURL(tokenURI)
-        }
-
-        // STRATEGY 1: Try primary gateway first (should work 99% of time since content is pinned)
-        const primaryResult = await this.fetchFromPrimaryGateway(ipfsHash)
-        if (primaryResult) {
-          this.gatewayUsage.primary++
-          this.cache.set(cacheKey, primaryResult, 24 * 60 * 60 * 1000) // 24hr cache
-          this.log(`✅ Primary gateway success`)
-          return primaryResult
-        }
-
-        // STRATEGY 2: Sequential fallback through backup gateways (no racing)
-        const fallbackResult = await this.fetchFromFallbackGateways(ipfsHash)
-        if (fallbackResult) {
-          this.gatewayUsage.fallback++
-          this.cache.set(cacheKey, fallbackResult, 24 * 60 * 60 * 1000)
-          this.log(`✅ Fallback gateway success`)
-          return fallbackResult
-        }
-
-        // STRATEGY 3: Final fallback to API proxy
-        const proxyResult = await this.fetchFromAPIProxy(ipfsHash)
-        if (proxyResult) {
-          this.gatewayUsage.apiProxy++
-          this.cache.set(cacheKey, proxyResult, 6 * 60 * 60 * 1000) // Shorter cache for proxy
-          this.log(`✅ API proxy success`)
-          return proxyResult
-        }
-
-        // All strategies failed
-        this.gatewayUsage.failed++
-        throw ErrorFactory.ipfsError(ipfsHash)
-        
-      } catch (error) {
-        this.warn(`⚠️ All IPFS strategies failed for ${tokenURI}`)
-        throw error
+      let ipfsHash = ''
+      if (tokenURI.includes('/ipfs/')) {
+        ipfsHash = tokenURI.split('/ipfs/')[1].split('?')[0]
+      } else if (tokenURI.startsWith('ipfs://')) {
+        ipfsHash = tokenURI.replace('ipfs://', '')
       }
+
+      if (!ipfsHash) {
+        // Try direct URL
+        return await this.fetchFromDirectURL(tokenURI)
+      }
+
+      // Step 1: Try primary gateway (should work 95%+ of time)
+      try {
+        const result = await this.fetchFromGateway(this.PRIMARY_IPFS_GATEWAY, ipfsHash, this.TIMEOUTS.IPFS_PRIMARY)
+        this.performanceMetrics.ipfsSuccessRate = 
+          (this.performanceMetrics.ipfsSuccessRate * 0.9) + (1.0 * 0.1) // Rolling average
+        
+        this.cache.set(cacheKey, result, 24 * 60 * 60 * 1000) // 24hr cache for successful IPFS
+        this.log(`✅ Primary IPFS success: ${ipfsHash}`)
+        return result
+      } catch (primaryError) {
+        this.warn(`⚠️ Primary IPFS failed: ${getErrorMessage(primaryError)}`)
+      }
+
+      // Step 2: Try fallback gateways sequentially
+      for (const gateway of this.FALLBACK_GATEWAYS) {
+        try {
+          const result = await this.fetchFromGateway(gateway, ipfsHash, this.TIMEOUTS.IPFS_FALLBACK)
+          this.performanceMetrics.ipfsSuccessRate = 
+            (this.performanceMetrics.ipfsSuccessRate * 0.9) + (0.8 * 0.1) // Slightly lower for fallback
+          
+          this.cache.set(cacheKey, result, 6 * 60 * 60 * 1000) // 6hr cache for fallback
+          this.log(`✅ Fallback IPFS success: ${gateway}`)
+          return result
+        } catch (fallbackError) {
+          this.warn(`⚠️ Fallback ${gateway} failed: ${getErrorMessage(fallbackError)}`)
+        }
+      }
+
+      // Step 3: Try API proxy as final fallback
+      try {
+        const result = await this.fetchFromAPIProxy(ipfsHash)
+        this.cache.set(cacheKey, result, 1 * 60 * 60 * 1000) // 1hr cache for proxy
+        this.log(`✅ API proxy success: ${ipfsHash}`)
+        return result
+      } catch (proxyError) {
+        this.warn(`⚠️ API proxy failed: ${getErrorMessage(proxyError)}`)
+      }
+
+      // All IPFS sources failed
+      this.performanceMetrics.ipfsSuccessRate = 
+        (this.performanceMetrics.ipfsSuccessRate * 0.9) + (0.0 * 0.1)
+      
+      throw ErrorFactory.ipfsError(ipfsHash)
     })
   }
 
-  /**
-   * Fetch from direct URL (non-IPFS format)
-   */
   private async fetchFromDirectURL(tokenURI: string): Promise<any> {
-    try {
-      this.verbose(`🔗 Trying direct URL: ${tokenURI}`)
-      
-      const response = await fetch(tokenURI, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(this.TIMEOUTS.IPFS_PRIMARY)
-      })
-      
-      if (response.ok) {
-        return await response.json()
-      }
-      
-      throw new Error(`Direct URL failed: ${response.status}`)
-    } catch (error) {
-      this.verbose(`❌ Direct URL failed: ${getErrorMessage(error)}`)
-      throw error
-    }
-  }
-
-  /**
-   * Fast primary gateway fetch with retry logic
-   */
-  private async fetchFromPrimaryGateway(ipfsHash: string, retryCount = 0): Promise<any | null> {
-    const maxRetries = 2
-    const startTime = Date.now()
-
-    try {
-      this.verbose(`🎯 Trying primary gateway: ${this.PRIMARY_GATEWAY}/${ipfsHash}`)
-      
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUTS.IPFS_PRIMARY)
-      
-      const response = await fetch(`${this.PRIMARY_GATEWAY}/${ipfsHash}`, {
-        signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-          'User-Agent': 'CryptoKaiju/1.0',
-        }
-      })
-      
-      clearTimeout(timeoutId)
-      
-      if (response.ok) {
-        const data = await response.json()
-        const duration = Date.now() - startTime
-        this.trackGatewaySuccess(this.PRIMARY_GATEWAY, duration)
-        this.verbose(`✅ Primary gateway success in ${duration}ms`)
-        return data
-      } else {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-      }
-      
-    } catch (error) {
-      const duration = Date.now() - startTime
-      this.trackGatewayFailure(this.PRIMARY_GATEWAY, error)
-      
-      // Retry primary gateway for transient issues
-      if (retryCount < maxRetries && !this.isAbortError(error)) {
-        this.verbose(`🔄 Retrying primary gateway (attempt ${retryCount + 1}/${maxRetries})`)
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))) // Exponential backoff
-        return this.fetchFromPrimaryGateway(ipfsHash, retryCount + 1)
-      }
-      
-      this.verbose(`❌ Primary gateway failed after ${retryCount + 1} attempts: ${getErrorMessage(error)}`)
-      return null
-    }
-  }
-
-  /**
-   * Sequential fallback through backup gateways (no racing to save bandwidth)
-   */
-  private async fetchFromFallbackGateways(ipfsHash: string): Promise<any | null> {
-    this.log(`🔄 Primary failed, trying ${this.FALLBACK_GATEWAYS.length} fallback gateways sequentially`)
+    const response = await fetch(tokenURI, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(this.TIMEOUTS.IPFS_PRIMARY)
+    })
     
-    for (const gateway of this.FALLBACK_GATEWAYS) {
-      const startTime = Date.now()
-      
-      try {
-        this.verbose(`🌐 Trying fallback: ${gateway}/${ipfsHash}`)
-        
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUTS.IPFS_FALLBACK)
-        
-        const response = await fetch(`${gateway}/${ipfsHash}`, {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'CryptoKaiju/1.0',
-          }
-        })
-        
-        clearTimeout(timeoutId)
-        
-        if (response.ok) {
-          const data = await response.json()
-          const duration = Date.now() - startTime
-          this.trackGatewaySuccess(gateway, duration)
-          this.verbose(`✅ Fallback success: ${gateway} in ${duration}ms`)
-          return data
-        }
-        
-      } catch (error) {
-        const duration = Date.now() - startTime
-        this.trackGatewayFailure(gateway, error)
-        this.verbose(`⚠️ Fallback failed: ${gateway} - ${getErrorMessage(error)}`)
-        // Continue to next gateway
-      }
+    if (response.ok) {
+      return await response.json()
     }
     
-    this.warn(`❌ All fallback gateways failed for hash: ${ipfsHash}`)
-    return null
+    throw new Error(`Direct URL failed: ${response.status}`)
   }
 
-  /**
-   * Final API proxy attempt
-   */
-  private async fetchFromAPIProxy(ipfsHash: string): Promise<any | null> {
-    try {
-      this.verbose(`🔄 Trying API proxy: /api/ipfs/${ipfsHash}`)
-      
-      const response = await fetch(`/api/ipfs/${ipfsHash}`, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(10000)
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        
-        // Check if it's a fallback response from the API
-        if (data.fallback) {
-          this.warn(`📦 Using API fallback data for ${ipfsHash}`)
-          return data.fallback
-        }
-        
-        this.verbose(`✅ API proxy success`)
-        return data
-      }
-      
-    } catch (error) {
-      this.warn(`❌ API proxy failed: ${getErrorMessage(error)}`)
+  private async fetchFromGateway(gateway: string, ipfsHash: string, timeout: number): Promise<any> {
+    const response = await fetch(`${gateway}/${ipfsHash}`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'User-Agent': 'CryptoKaiju/1.0',
+      },
+      signal: AbortSignal.timeout(timeout)
+    })
+    
+    if (response.ok) {
+      return await response.json()
     }
     
-    return null
+    throw new Error(`Gateway ${gateway} returned ${response.status}`)
   }
 
-  // Keep the old method name for backward compatibility
-  private async fetchIpfsMetadataWithRacing(tokenURI: string): Promise<any> {
-    return this.fetchIpfsMetadataWithOptimizedStrategy(tokenURI)
+  private async fetchFromAPIProxy(ipfsHash: string): Promise<any> {
+    const response = await fetch(`/api/ipfs/${ipfsHash}`, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(10000)
+    })
+    
+    if (response.ok) {
+      const data = await response.json()
+      return data.fallback || data
+    }
+    
+    throw new Error(`API proxy failed: ${response.status}`)
   }
 
   /**
-   * ENHANCED: Get OpenSea data with comprehensive error handling
+   * OPTIMIZED: OpenSea as fallback metadata source only
    */
-  private async getOpenSeaDataOptimized(tokenId: string): Promise<OpenSeaAsset | null> {
-    const cacheKey = `opensea:${tokenId}`
+  private async getOpenSeaDataAsFallback(tokenId: string): Promise<OpenSeaAsset | null> {
+    const cacheKey = `opensea_fallback:${tokenId}`
     const cached = this.cache.get(cacheKey)
     if (cached) {
-      this.verbose(`💾 OpenSea cache hit: ${tokenId}`)
       return cached
     }
 
     return this.deduplicate(cacheKey, async () => {
       try {
-        const proxyUrl = `/api/opensea/chain/ethereum/contract/${KAIJU_NFT_ADDRESS}/nfts/${tokenId}`
+        this.performanceMetrics.openSeaFallbacks++
         
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => {
-          controller.abort()
-          this.warn(`⏰ OpenSea request timeout for token ${tokenId}`)
-        }, this.TIMEOUTS.OPENSEA)
-        
-        this.verbose(`🌊 Fetching OpenSea data for token ${tokenId}`)
-        
-        const response = await fetch(proxyUrl, {
+        const response = await fetch(`/api/opensea/chain/ethereum/contract/${KAIJU_NFT_ADDRESS}/nfts/${tokenId}`, {
           method: 'GET',
           headers: { 'Accept': 'application/json' },
-          signal: controller.signal
+          signal: AbortSignal.timeout(this.TIMEOUTS.OPENSEA)
         })
         
-        clearTimeout(timeoutId)
-        
-        // Handle specific HTTP status codes
-        if (response.status === 503) {
-          this.warn(`🚫 OpenSea service unavailable for token ${tokenId}`)
-          return this.createFallbackOpenSeaData(tokenId)
-        }
-        
-        if (response.status === 429) {
-          this.warn(`⏰ OpenSea rate limit exceeded for token ${tokenId}`)
-          throw ErrorFactory.rateLimitError('opensea')
-        }
-        
-        if (response.status === 404) {
-          this.warn(`🔍 Token ${tokenId} not found on OpenSea`)
-          return this.createFallbackOpenSeaData(tokenId)
-        }
-        
         if (!response.ok) {
-          throw new Error(`OpenSea API returned ${response.status}: ${response.statusText}`)
+          throw new Error(`OpenSea returned ${response.status}`)
         }
         
         const data = await response.json()
@@ -1209,59 +619,24 @@ class BlockchainCryptoKaijuService {
           }
           
           this.cache.set(cacheKey, result, 60 * 60 * 1000) // 1hr cache
-          this.log(`✅ OpenSea data fetched for token ${tokenId}`)
           return result
         }
         
-        this.warn(`📦 No NFT data in OpenSea response for token ${tokenId}`)
-        return this.createFallbackOpenSeaData(tokenId)
-        
+        return null
       } catch (error) {
-        if (error instanceof CryptoKaijuError) {
-          throw error
-        }
-        
-        // Log but don't fail - OpenSea is supplementary data
-        const osError = ErrorHandler.normalize(error, { 
-          service: 'opensea', 
-          tokenId,
-          action: 'getOpenSeaData'
-        })
-        
-        // Only log high severity errors to avoid spam
-        if (osError.severity === ErrorSeverity.HIGH || osError.severity === ErrorSeverity.CRITICAL) {
-          ErrorHandler.log(osError)
-        }
-        
-        return this.createFallbackOpenSeaData(tokenId)
+        this.warn(`OpenSea fallback failed for token ${tokenId}:`, error)
+        return null
       }
     })
   }
 
   /**
-   * Create enhanced fallback OpenSea data
-   */
-  private createFallbackOpenSeaData(tokenId: string): OpenSeaAsset {
-    return {
-      identifier: tokenId,
-      name: `CryptoKaiju #${tokenId}`,
-      description: 'A unique CryptoKaiju NFT with physical collectible counterpart.',
-      image_url: '',
-      display_image_url: '',
-      opensea_url: `https://opensea.io/assets/ethereum/${KAIJU_NFT_ADDRESS}/${tokenId}`,
-      traits: [],
-      rarity: undefined
-    }
-  }
-
-  /**
-   * ENHANCED: Get NFT by Token ID with comprehensive error handling and performance optimization
+   * OPTIMIZED: Get NFT by Token ID - Primary IPFS with OpenSea fallback
    */
   async getByTokenId(tokenId: string): Promise<{ nft: KaijuNFT | null; openSeaData: OpenSeaAsset | null }> {
     const startTime = Date.now()
     
     try {
-      // Comprehensive input validation
       if (!tokenId || typeof tokenId !== 'string') {
         throw ErrorFactory.validationError('tokenId', tokenId)
       }
@@ -1273,33 +648,21 @@ class BlockchainCryptoKaijuService {
 
       this.log(`🔍 Fetching Token ID: ${tokenId}`)
 
-      // Launch all requests in parallel for maximum speed
+      // Get blockchain data
       const [tokenDetailsResult, ownerResult, tokenURIResult] = await Promise.allSettled([
         this.callContractWithTimeout("tokenDetails", [BigInt(tokenId)], `tokenDetails:${tokenId}`),
         this.callContractWithTimeout("ownerOf", [BigInt(tokenId)], `owner:${tokenId}`),
         this.callContractWithTimeout("tokenURI", [BigInt(tokenId)], `tokenURI:${tokenId}`)
       ])
 
-      // Enhanced error checking with specific error messages
       if (tokenDetailsResult.status === 'rejected') {
-        this.warn(`Contract call failed for token ${tokenId}:`, tokenDetailsResult.reason)
-        
-        // Check if it's a "doesn't exist" error vs network error
-        const reason = tokenDetailsResult.reason
-        if (reason?.message?.includes('execution reverted') || 
-            reason?.message?.includes('ERC721: invalid token ID')) {
-          throw ErrorFactory.nftNotFound(tokenId)
-        }
-        
-        throw ErrorHandler.normalize(reason, { tokenId, action: 'tokenDetails' })
-      }
-
-      if (ownerResult.status === 'rejected') {
-        this.warn(`Owner lookup failed for token ${tokenId}:`, ownerResult.reason)
         throw ErrorFactory.nftNotFound(tokenId)
       }
 
-      // Extract contract data
+      if (ownerResult.status === 'rejected') {
+        throw ErrorFactory.nftNotFound(tokenId)
+      }
+
       const [contractTokenId, nfcIdBytes32, tokenDetailsURI, birthDate] = tokenDetailsResult.value as any
       const ownerAddress = ownerResult.value as string
       const tokenURI = tokenURIResult.status === 'fulfilled' ? 
@@ -1307,20 +670,7 @@ class BlockchainCryptoKaijuService {
 
       const nfcId = this.bytes32ToNFC(nfcIdBytes32)
 
-      this.verbose(`📊 Contract data extracted:`)
-      this.verbose(`   Token ID: ${contractTokenId}`)
-      this.verbose(`   Owner: ${ownerAddress}`)
-      this.verbose(`   NFC ID: ${nfcId || 'None'}`)
-      this.verbose(`   Birth Date: ${birthDate}`)
-      this.verbose(`   Token URI: ${tokenURI}`)
-
-      // Launch IPFS (optimized) and OpenSea in parallel
-      const [ipfsResult, openSeaResult] = await Promise.allSettled([
-        tokenURI ? this.fetchIpfsMetadataWithOptimizedStrategy(tokenURI) : Promise.resolve(null),
-        this.getOpenSeaDataOptimized(tokenId)
-      ])
-
-      // Build final NFT object
+      // Build NFT object
       const kaiju: KaijuNFT = {
         tokenId: contractTokenId.toString(),
         nfcId,
@@ -1329,71 +679,91 @@ class BlockchainCryptoKaijuService {
         birthDate: Number(birthDate)
       }
 
-      // Handle IPFS data with error context
-      if (ipfsResult.status === 'fulfilled' && ipfsResult.value) {
-        kaiju.ipfsData = ipfsResult.value
-        this.verbose(`✅ IPFS data loaded: ${ipfsResult.value.name}`)
-      } else if (ipfsResult.status === 'rejected') {
-        // Log IPFS error but don't fail the whole request
-        const ipfsError = ErrorHandler.normalize(ipfsResult.reason, { 
-          service: 'ipfs', 
-          tokenUri: tokenURI,
-          tokenId 
-        })
-        
-        // Only log if it's not a common IPFS issue
-        if (ipfsError.type !== ErrorType.IPFS) {
-          ErrorHandler.log(ipfsError)
+      // Try IPFS metadata first
+      let openSeaData: OpenSeaAsset | null = null
+      
+      if (tokenURI) {
+        try {
+          const ipfsData = await this.fetchIpfsMetadata(tokenURI)
+          kaiju.ipfsData = ipfsData
+          this.log(`✅ IPFS data loaded: ${ipfsData.name}`)
+        } catch (ipfsError) {
+          this.warn(`⚠️ IPFS failed, trying OpenSea fallback`)
+          
+          // IPFS failed, use OpenSea as metadata fallback
+          openSeaData = await this.getOpenSeaDataAsFallback(tokenId)
+          
+          if (openSeaData) {
+            // Build IPFS-like data from OpenSea
+            kaiju.ipfsData = {
+              name: openSeaData.name,
+              description: openSeaData.description,
+              image: openSeaData.display_image_url || openSeaData.image_url,
+              attributes: this.convertOpenSeaTraitsToAttributes(openSeaData.traits)
+            }
+            this.log(`✅ Using OpenSea as metadata fallback`)
+          }
         }
-        
-        this.warn(`⚠️ IPFS metadata unavailable for token ${tokenId}`)
       }
 
-      // Handle OpenSea data
-      const finalOpenSeaData = openSeaResult.status === 'fulfilled' ? 
-        openSeaResult.value : this.createFallbackOpenSeaData(tokenId)
-
-      // Extract batch from OpenSea traits with validation
-      if (finalOpenSeaData?.traits && Array.isArray(finalOpenSeaData.traits)) {
-        const batchTrait = finalOpenSeaData.traits.find(trait => 
+      // Extract batch from traits if available
+      if (openSeaData?.traits || kaiju.ipfsData?.attributes) {
+        const traits = openSeaData?.traits || this.attributesToTraits(kaiju.ipfsData?.attributes)
+        const batchTrait = traits?.find((trait: any) => 
           trait.trait_type?.toLowerCase() === 'batch'
         )
         if (batchTrait?.value) {
           kaiju.batch = String(batchTrait.value).trim()
-          this.verbose(`📦 Batch extracted: ${kaiju.batch}`)
         }
       }
 
       const duration = Date.now() - startTime
-      this.log(`✅ Successfully fetched Token ID ${tokenId} in ${duration}ms: ${kaiju.ipfsData?.name || 'Unnamed'}`)
+      this.log(`✅ Token ${tokenId} fetched in ${duration}ms`)
       
-      return { nft: kaiju, openSeaData: finalOpenSeaData }
+      return { nft: kaiju, openSeaData }
 
     } catch (error) {
       const duration = Date.now() - startTime
-      this.error(`❌ Failed to fetch Token ID ${tokenId} after ${duration}ms:`, error)
+      this.error(`❌ Failed to fetch token ${tokenId} after ${duration}ms:`, error)
       
       if (error instanceof CryptoKaijuError) {
         throw error
       }
       
-      const enhancedError = ErrorHandler.normalize(error, { 
-        tokenId, 
-        action: 'getByTokenId',
-        duration 
-      })
-      throw enhancedError
+      throw ErrorHandler.normalize(error, { tokenId, action: 'getByTokenId', duration })
     }
   }
 
   /**
-   * ENHANCED: Get NFT by NFC ID with smart encoding detection and comprehensive error handling
+   * Helper methods for OpenSea trait conversion
+   */
+  private convertOpenSeaTraitsToAttributes(traits: any[]): { [key: string]: any } {
+    const attributes: { [key: string]: any } = {}
+    if (traits && Array.isArray(traits)) {
+      traits.forEach(trait => {
+        if (trait.trait_type && trait.value !== undefined) {
+          attributes[trait.trait_type.toLowerCase()] = trait.value
+        }
+      })
+    }
+    return attributes
+  }
+
+  private attributesToTraits(attributes: any): any[] {
+    if (!attributes) return []
+    return Object.entries(attributes).map(([key, value]) => ({
+      trait_type: key,
+      value
+    }))
+  }
+
+  /**
+   * OPTIMIZED: Get NFT by NFC ID
    */
   async getByNFCId(nfcId: string): Promise<{ nft: KaijuNFT | null; openSeaData: OpenSeaAsset | null }> {
     const startTime = Date.now()
     
     try {
-      // Input validation
       if (!nfcId || typeof nfcId !== 'string') {
         throw ErrorFactory.validationError('nfcId', nfcId)
       }
@@ -1405,122 +775,34 @@ class BlockchainCryptoKaijuService {
 
       this.log(`🔍 Looking up NFC ID: ${cleanNfcId}`)
       
-      // Smart encoding detection
       const likelyEncoding = this.detectNFCEncoding(cleanNfcId)
-      this.log(`🧠 Detected likely encoding: ${likelyEncoding}`)
-      
-      const nfcBytes32ASCII = this.nfcToBytes32ASCII(cleanNfcId)
-      const nfcBytes32Direct = this.nfcToBytes32Direct(cleanNfcId)
+      const primaryBytes32 = likelyEncoding === 'direct' ? 
+        this.nfcToBytes32Direct(cleanNfcId) : this.nfcToBytes32ASCII(cleanNfcId)
+      const fallbackBytes32 = likelyEncoding === 'direct' ? 
+        this.nfcToBytes32ASCII(cleanNfcId) : this.nfcToBytes32Direct(cleanNfcId)
       
       let nfcDetails: any
-      let usedEncoding = likelyEncoding
-      let attemptCount = 0
-      
-      // Try the likely encoding first
-      const primaryBytes32 = likelyEncoding === 'direct' ? nfcBytes32Direct : nfcBytes32ASCII
-      const fallbackBytes32 = likelyEncoding === 'direct' ? nfcBytes32ASCII : nfcBytes32Direct
-      const fallbackEncoding = likelyEncoding === 'direct' ? 'ascii' : 'direct'
-      
-      this.verbose(`🔑 Primary encoding (${likelyEncoding}): ${primaryBytes32}`)
-      this.verbose(`🔑 Fallback encoding (${fallbackEncoding}): ${fallbackBytes32}`)
       
       try {
-        attemptCount++
-        this.log(`🎯 Attempt ${attemptCount}: Trying ${likelyEncoding} encoding first`)
-        
-        nfcDetails = await this.callContractWithTimeout(
-          "nfcDetails", 
-          [primaryBytes32], 
-          `nfcDetails:${cleanNfcId}:${likelyEncoding}`
-        )
-        
+        nfcDetails = await this.callContractWithTimeout("nfcDetails", [primaryBytes32])
         const [tokenId] = nfcDetails as [bigint, string, string, bigint]
         if (Number(tokenId) === 0) {
-          throw new Error(`Not found with ${likelyEncoding} encoding`)
+          throw new Error('Not found with primary encoding')
         }
-        
-        this.log(`✅ Found with ${likelyEncoding} encoding on first try!`)
-        
-      } catch (primaryError) {
-        this.log(`⚠️ ${likelyEncoding} encoding failed, trying ${fallbackEncoding}`)
-        
+      } catch {
         try {
-          attemptCount++
-          this.log(`🎯 Attempt ${attemptCount}: Trying ${fallbackEncoding} encoding`)
-          
-          nfcDetails = await this.callContractWithTimeout(
-            "nfcDetails", 
-            [fallbackBytes32], 
-            `nfcDetails:${cleanNfcId}:${fallbackEncoding}`
-          )
-          
+          nfcDetails = await this.callContractWithTimeout("nfcDetails", [fallbackBytes32])
           const [tokenId] = nfcDetails as [bigint, string, string, bigint]
           if (Number(tokenId) === 0) {
-            throw new Error(`Not found with ${fallbackEncoding} encoding either`)
+            throw new Error('Not found with fallback encoding')
           }
-          
-          usedEncoding = fallbackEncoding
-          this.log(`✅ Found with ${fallbackEncoding} encoding on second try`)
-          
-        } catch (fallbackError) {
-          this.log(`❌ Both encodings failed for NFC ID: ${cleanNfcId}`)
+        } catch {
           throw ErrorFactory.nfcScanError(cleanNfcId)
         }
       }
       
-      const [tokenId, returnedNfcId, tokenUri, dob] = nfcDetails as [bigint, string, string, bigint]
-      
-      this.log(`📊 NFC Lookup Stats: Found token ${tokenId} using ${usedEncoding} encoding in ${attemptCount} attempt(s)`)
-      
-      // Launch all parallel operations
-      const [ownerResult, ipfsResult, openSeaResult] = await Promise.allSettled([
-        this.callContractWithTimeout("ownerOf", [tokenId], `owner:${tokenId}`),
-        tokenUri ? this.fetchIpfsMetadataWithOptimizedStrategy(tokenUri) : Promise.resolve(null),
-        this.getOpenSeaDataOptimized(tokenId.toString())
-      ])
-      
-      // Build NFT object
-      const kaiju: KaijuNFT = {
-        tokenId: tokenId.toString(),
-        nfcId: this.bytes32ToNFC(returnedNfcId),
-        owner: ownerResult.status === 'fulfilled' ? (ownerResult.value as string) : '',
-        tokenURI: tokenUri,
-        birthDate: Number(dob)
-      }
-      
-      // Handle IPFS data
-      if (ipfsResult.status === 'fulfilled' && ipfsResult.value) {
-        kaiju.ipfsData = ipfsResult.value
-      } else if (ipfsResult.status === 'rejected') {
-        const ipfsError = ErrorHandler.normalize(ipfsResult.reason, { 
-          service: 'ipfs', 
-          tokenUri,
-          nfcId: cleanNfcId 
-        })
-        
-        if (ipfsError.type !== ErrorType.IPFS) {
-          ErrorHandler.log(ipfsError)
-        }
-      }
-      
-      // Handle OpenSea data
-      const finalOpenSeaData = openSeaResult.status === 'fulfilled' ? 
-        openSeaResult.value : this.createFallbackOpenSeaData(tokenId.toString())
-      
-      // Extract batch from OpenSea
-      if (finalOpenSeaData?.traits) {
-        const batchTrait = finalOpenSeaData.traits.find(trait => 
-          trait.trait_type?.toLowerCase() === 'batch'
-        )
-        if (batchTrait?.value) {
-          kaiju.batch = String(batchTrait.value).trim()
-        }
-      }
-      
-      const duration = Date.now() - startTime
-      this.log(`✅ Successfully found NFC ${cleanNfcId} -> Token ${tokenId} in ${duration}ms: ${kaiju.ipfsData?.name || 'Unnamed'}`)
-      
-      return { nft: kaiju, openSeaData: finalOpenSeaData }
+      const [tokenId] = nfcDetails as [bigint, string, string, bigint]
+      return await this.getByTokenId(tokenId.toString())
       
     } catch (error) {
       const duration = Date.now() - startTime
@@ -1530,108 +812,67 @@ class BlockchainCryptoKaijuService {
         throw error
       }
       
-      const enhancedError = ErrorHandler.normalize(error, { 
-        nfcId, 
-        action: 'getByNFCId',
-        duration 
-      })
-      throw enhancedError
+      throw ErrorHandler.normalize(error, { nfcId, action: 'getByNFCId', duration })
     }
   }
 
   /**
-   * ENHANCED: Search tokens with better error context and performance tracking
+   * Search tokens
    */
   async searchTokens(query: string): Promise<SearchResult[]> {
-    const startTime = Date.now()
     const trimmedQuery = query.trim()
-    
-    if (!trimmedQuery) {
-      return []
-    }
-    
-    this.log(`🔍 Searching for: "${trimmedQuery}"`)
+    if (!trimmedQuery) return []
     
     const isTokenId = /^\d+$/.test(trimmedQuery)
     
     try {
       if (isTokenId) {
-        this.log(`🎯 Detected Token ID search: ${trimmedQuery}`)
         const result = await this.getByTokenId(trimmedQuery)
-        
-        if (result.nft) {
-          const duration = Date.now() - startTime
-          this.log(`✅ Token ID search successful in ${duration}ms: Found ${result.nft.ipfsData?.name || 'Unnamed Kaiju'}`)
-          return [{ nft: result.nft, openSeaData: result.openSeaData }]
-        } else {
-          this.log(`❌ Token ID search failed: Token ${trimmedQuery} not found`)
-          return []
-        }
+        return result.nft ? [{ nft: result.nft, openSeaData: result.openSeaData }] : []
       } else {
-        this.log(`🏷️ Detected NFC ID search: ${trimmedQuery}`)
         const result = await this.getByNFCId(trimmedQuery)
-        
-        if (result.nft) {
-          const duration = Date.now() - startTime
-          this.log(`✅ NFC ID search successful in ${duration}ms: Found ${result.nft.ipfsData?.name || 'Unnamed Kaiju'}`)
-          return [{ nft: result.nft, openSeaData: result.openSeaData }]
-        } else {
-          this.log(`❌ NFC ID search failed: NFC ${trimmedQuery} not found`)
-          return []
-        }
+        return result.nft ? [{ nft: result.nft, openSeaData: result.openSeaData }] : []
       }
     } catch (error) {
-      const duration = Date.now() - startTime
-      this.error(`❌ Search error for query "${trimmedQuery}" after ${duration}ms:`, error)
-      
       if (error instanceof CryptoKaijuError) {
         throw error
       }
       
-      const enhancedError = ErrorHandler.normalize(error, { 
+      throw ErrorHandler.normalize(error, { 
         query: trimmedQuery, 
         action: 'searchTokens',
-        duration,
         searchType: isTokenId ? 'tokenId' : 'nfcId'
       })
-      throw enhancedError
     }
   }
 
   /**
-   * Get total supply with enhanced error handling
+   * Get total supply
    */
   async getTotalSupply(): Promise<number> {
     try {
       const supply = await this.callContractWithTimeout<bigint>("totalSupply", [], "totalSupply")
-      const result = Number(supply)
-      this.log(`📊 Total supply: ${result}`)
-      return result
+      return Number(supply)
     } catch (error) {
-      this.error('❌ Error fetching total supply:', error)
-      
       if (error instanceof CryptoKaijuError) {
         throw error
       }
-      
       throw ErrorHandler.normalize(error, { action: 'getTotalSupply' })
     }
   }
 
   /**
-   * ENHANCED: Get tokens owned by address with comprehensive error handling and progress tracking
+   * OPTIMIZED: Get tokens for address - try OpenSea first for speed, blockchain as fallback
    */
   async getTokensForAddress(address: string): Promise<KaijuNFT[]> {
     const startTime = Date.now()
     const cacheKey = `tokens:${address}`
     const cached = this.cache.get(cacheKey)
     if (cached) {
-      this.log(`💾 Cache hit for address ${address}: ${cached.length} tokens`)
       return cached
     }
 
     try {
-      // Enhanced address validation
       if (!address || typeof address !== 'string') {
         throw ErrorFactory.validationError('address', address)
       }
@@ -1643,37 +884,21 @@ class BlockchainCryptoKaijuService {
 
       this.log(`🔍 Fetching tokens for address: ${cleanAddress}`)
 
-      // Try OpenSea first (faster for most users and provides rich metadata)
+      // Try OpenSea first (usually faster and has metadata)
       try {
-        this.log(`🌊 Attempting OpenSea lookup for ${cleanAddress}`)
-        const openSeaResults = await this.getTokensForAddressFromOpenSea(cleanAddress)
-        
+        const openSeaResults = await this.getTokensFromOpenSea(cleanAddress)
         if (openSeaResults.length > 0) {
           const duration = Date.now() - startTime
           this.log(`✅ Found ${openSeaResults.length} tokens via OpenSea in ${duration}ms`)
           this.cache.set(cacheKey, openSeaResults, this.TIMEOUTS.CACHE_TTL)
           return openSeaResults
         }
-        
-        this.log(`ℹ️ No tokens found via OpenSea, trying blockchain...`)
       } catch (openSeaError) {
-        const osError = ErrorHandler.normalize(openSeaError, { 
-          service: 'opensea', 
-          address: cleanAddress,
-          action: 'getTokensForAddress'
-        })
-        
-        // Only log high severity OpenSea errors
-        if (osError.severity === ErrorSeverity.HIGH || osError.severity === ErrorSeverity.CRITICAL) {
-          ErrorHandler.log(osError)
-        }
-        
-        this.log(`⚠️ OpenSea failed (${osError.type}), falling back to blockchain lookup`)
+        this.warn(`⚠️ OpenSea failed, trying blockchain: ${getErrorMessage(openSeaError)}`)
       }
       
-      // Fallback to blockchain with progress tracking
-      this.log(`⛓️ Starting blockchain lookup for ${cleanAddress}`)
-      const blockchainResults = await this.getTokensForAddressFromBlockchain(cleanAddress)
+      // Fallback to blockchain
+      const blockchainResults = await this.getTokensFromBlockchain(cleanAddress)
       
       const duration = Date.now() - startTime
       this.log(`✅ Found ${blockchainResults.length} tokens via blockchain in ${duration}ms`)
@@ -1683,250 +908,106 @@ class BlockchainCryptoKaijuService {
       
     } catch (error) {
       const duration = Date.now() - startTime
-      this.error(`❌ Failed to fetch tokens for address ${address} after ${duration}ms:`, error)
+      this.error(`❌ Failed to fetch tokens for ${address} after ${duration}ms:`, error)
       
       if (error instanceof CryptoKaijuError) {
         throw error
       }
       
-      const enhancedError = ErrorHandler.normalize(error, { 
-        address, 
-        action: 'getTokensForAddress',
-        duration
+      throw ErrorHandler.normalize(error, { address, action: 'getTokensForAddress', duration })
+    }
+  }
+
+  private async getTokensFromOpenSea(address: string): Promise<KaijuNFT[]> {
+    const allNFTs: KaijuNFT[] = []
+    let cursor = ''
+    let pageCount = 0
+    const maxPages = 10
+    
+    while (pageCount < maxPages) {
+      const url = `/api/opensea/chain/ethereum/account/${address}/nfts?limit=100${cursor ? `&next=${cursor}` : ''}`
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(this.TIMEOUTS.OPENSEA)
       })
-      throw enhancedError
-    }
-  }
-
-  /**
-   * Get tokens from OpenSea API with enhanced error handling and rate limiting respect
-   */
-  private async getTokensForAddressFromOpenSea(address: string): Promise<KaijuNFT[]> {
-    try {
-      const allCryptoKaijuNFTs: KaijuNFT[] = []
-      let currentCursor = ''
-      let pageCount = 0
-      const maxPages = 20
-      let consecutivePagesWithoutKaiju = 0
-      const maxConsecutiveEmpty = 3
       
-      this.verbose(`🌊 Starting OpenSea pagination for ${address}`)
+      if (!response.ok) {
+        throw new Error(`OpenSea returned ${response.status}`)
+      }
       
-      while (pageCount < maxPages) {
-        const url = `/api/opensea/chain/ethereum/account/${address}/nfts?limit=100${currentCursor ? `&next=${currentCursor}` : ''}`
-        
-        const controller = new AbortController()
-        const timeoutId = setTimeout(() => controller.abort(), this.TIMEOUTS.OPENSEA)
-        
-        this.verbose(`📄 Fetching OpenSea page ${pageCount + 1}: ${url}`)
-        
-        const response = await fetch(url, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          signal: controller.signal
-        })
-        
-        clearTimeout(timeoutId)
-        
-        if (response.status === 503 || response.status >= 500) {
-          throw new CryptoKaijuError({
-            type: ErrorType.OPENSEA,
-            severity: ErrorSeverity.MEDIUM,
-            message: 'OpenSea service unavailable',
-            userMessage: 'OpenSea marketplace is temporarily unavailable.',
-            suggestions: ['Using blockchain data instead', 'Try again in a few minutes'],
-            retryable: true,
-            context: { status: response.status, address }
-          })
-        }
-        
-        if (response.status === 429) {
-          throw ErrorFactory.rateLimitError('opensea')
-        }
-        
-        if (!response.ok) {
-          throw new Error(`OpenSea API returned ${response.status}: ${response.statusText}`)
-        }
-        
-        const data = await response.json()
-        
-        if (!data.nfts || !Array.isArray(data.nfts)) {
-          this.warn(`⚠️ Unexpected OpenSea response format on page ${pageCount + 1}`)
-          break
-        }
-        
-        // Filter and convert CryptoKaiju NFTs with error handling
-        const pageKaijus: KaijuNFT[] = []
-        
-        for (const nft of data.nfts) {
-          try {
-            if (nft.contract?.toLowerCase() === KAIJU_NFT_ADDRESS.toLowerCase()) {
-              const convertedKaiju = this.convertOpenSeaNFTToKaiju(nft, address)
-              pageKaijus.push(convertedKaiju)
-            }
-          } catch (conversionError) {
-            this.warn(`⚠️ Failed to convert OpenSea NFT ${nft.identifier}:`, conversionError)
-            // Continue with other NFTs instead of failing the whole batch
-          }
-        }
-        
-        this.verbose(`📊 Page ${pageCount + 1}: Found ${pageKaijus.length} CryptoKaiju out of ${data.nfts.length} total NFTs`)
-        
-        if (pageKaijus.length > 0) {
-          allCryptoKaijuNFTs.push(...pageKaijus)
-          consecutivePagesWithoutKaiju = 0
-        } else {
-          consecutivePagesWithoutKaiju++
-          
-          // Optimization: Stop if we've had several pages without any CryptoKaiju
-          if (consecutivePagesWithoutKaiju >= maxConsecutiveEmpty && allCryptoKaijuNFTs.length > 0) {
-            this.log(`🛑 Stopping after ${consecutivePagesWithoutKaiju} pages without CryptoKaiju`)
-            break
-          }
-        }
-        
-        currentCursor = data.next || ''
-        if (!currentCursor || data.nfts.length < 100) {
-          this.log(`📄 Reached end of OpenSea pagination`)
-          break
-        }
-        
-        pageCount++
-        
-        // Respectful delay between requests
-        if (currentCursor && pageCount < maxPages) {
-          await new Promise(resolve => setTimeout(resolve, 200))
+      const data = await response.json()
+      
+      if (!data.nfts || !Array.isArray(data.nfts)) break
+      
+      // Filter for CryptoKaiju NFTs
+      const pageKaijus: KaijuNFT[] = []
+      for (const nft of data.nfts) {
+        if (nft.contract?.toLowerCase() === KAIJU_NFT_ADDRESS.toLowerCase()) {
+          pageKaijus.push(this.convertOpenSeaNFTToKaiju(nft, address))
         }
       }
       
-      this.log(`🎯 OpenSea summary: ${allCryptoKaijuNFTs.length} CryptoKaiju NFTs found across ${pageCount} pages`)
-      return allCryptoKaijuNFTs
-      
-    } catch (error) {
-      // Re-throw CryptoKaijuErrors as-is
-      if (error instanceof CryptoKaijuError) {
-        throw error
+      if (pageKaijus.length > 0) {
+        allNFTs.push(...pageKaijus)
       }
       
-      // Convert other errors to OpenSea-specific errors
-      throw ErrorFactory.openSeaError('collection_fetch')
-    }
-  }
-
-  /**
-   * Convert OpenSea NFT to KaijuNFT with enhanced error handling
-   */
-  private convertOpenSeaNFTToKaiju(osNft: OpenSeaAccountNFT, ownerAddress: string): KaijuNFT {
-    try {
-      const nfcId = this.extractNFCFromTraits(osNft.traits)
-      const batch = this.extractBatchFromTraits(osNft.traits)
+      cursor = data.next || ''
+      if (!cursor || data.nfts.length < 100) break
       
-      // Build attributes object with error handling
-      const attributes: { [key: string]: any } = {}
-      if (osNft.traits && Array.isArray(osNft.traits)) {
-        osNft.traits.forEach(trait => {
-          if (trait.trait_type && trait.value !== undefined) {
-            attributes[trait.trait_type.toLowerCase()] = trait.value
-          }
-        })
-      }
-
-      return {
-        tokenId: osNft.identifier || 'unknown',
-        nfcId,
-        owner: ownerAddress,
-        tokenURI: osNft.metadata_url || '',
-        batch,
-        ipfsData: {
-          name: osNft.name || `CryptoKaiju #${osNft.identifier}`,
-          description: osNft.description || 'A unique CryptoKaiju NFT with physical collectible counterpart.',
-          image: osNft.display_image_url || osNft.image_url || '',
-          attributes
-        }
-      }
-    } catch (error) {
-      this.warn(`⚠️ Error converting OpenSea NFT ${osNft.identifier}:`, error)
-      
-      // Return minimal fallback instead of failing
-      return {
-        tokenId: osNft.identifier || 'unknown',
-        owner: ownerAddress,
-        tokenURI: '',
-        ipfsData: {
-          name: `CryptoKaiju #${osNft.identifier}`,
-          description: 'NFT data temporarily unavailable',
-          image: '/images/placeholder-kaiju.png',
-          attributes: {}
-        }
-      }
-    }
-  }
-
-  /**
-   * Extract NFC ID from traits with validation
-   */
-  private extractNFCFromTraits(traits: Array<{ trait_type: string; value: any }>): string | undefined {
-    if (!traits || !Array.isArray(traits)) return undefined
-    
-    const nfcTrait = traits.find(trait => {
-      const traitType = trait.trait_type?.toLowerCase() || ''
-      return traitType === 'nfc' || 
-             traitType === 'nfc_id' || 
-             traitType === 'nfcid' ||
-             traitType === 'chip_id'
-    })
-    
-    if (nfcTrait?.value) {
-      const nfcValue = String(nfcTrait.value).trim().toUpperCase()
-      // Validate NFC format
-      if (nfcValue.length >= 4 && /^[0-9A-F]+$/.test(nfcValue.replace(/^0x/, ''))) {
-        return nfcValue
+      pageCount++
+      if (cursor && pageCount < maxPages) {
+        await new Promise(resolve => setTimeout(resolve, 200))
       }
     }
     
-    return undefined
+    return allNFTs
   }
 
-  /**
-   * Extract batch from traits with validation
-   */
-  private extractBatchFromTraits(traits: Array<{ trait_type: string; value: any }>): string | undefined {
-    if (!traits || !Array.isArray(traits)) return undefined
-    
-    const batchTrait = traits.find(trait => 
-      trait.trait_type?.toLowerCase() === 'batch'
+  private convertOpenSeaNFTToKaiju(osNft: any, ownerAddress: string): KaijuNFT {
+    const attributes: { [key: string]: any } = {}
+    if (osNft.traits && Array.isArray(osNft.traits)) {
+      osNft.traits.forEach((trait: any) => {
+        if (trait.trait_type && trait.value !== undefined) {
+          attributes[trait.trait_type.toLowerCase()] = trait.value
+        }
+      })
+    }
+
+    const nfcTrait = osNft.traits?.find((t: any) => 
+      ['nfc', 'nfc_id', 'nfcid', 'chip_id'].includes(t.trait_type?.toLowerCase())
     )
-    
-    return batchTrait?.value ? String(batchTrait.value).trim() : undefined
+    const batchTrait = osNft.traits?.find((t: any) => 
+      t.trait_type?.toLowerCase() === 'batch'
+    )
+
+    return {
+      tokenId: osNft.identifier || 'unknown',
+      nfcId: nfcTrait?.value ? String(nfcTrait.value).trim().toUpperCase() : undefined,
+      owner: ownerAddress,
+      tokenURI: osNft.metadata_url || '',
+      batch: batchTrait?.value ? String(batchTrait.value).trim() : undefined,
+      ipfsData: {
+        name: osNft.name || `CryptoKaiju #${osNft.identifier}`,
+        description: osNft.description || 'A unique CryptoKaiju NFT with physical collectible counterpart.',
+        image: osNft.display_image_url || osNft.image_url || '',
+        attributes
+      }
+    }
   }
 
-  /**
-   * Fallback: Get tokens from blockchain with enhanced error handling
-   */
-  private async getTokensForAddressFromBlockchain(address: string): Promise<KaijuNFT[]> {
+  private async getTokensFromBlockchain(address: string): Promise<KaijuNFT[]> {
     try {
-      this.log(`⛓️ Trying tokensOf method for ${address}`)
+      const tokenIds = await this.callContractWithTimeout<bigint[]>("tokensOf", [address])
       
-      const tokenIds = await this.callContractWithTimeout<bigint[]>(
-        "tokensOf", 
-        [address], 
-        `tokensOf:${address}`
-      )
+      if (tokenIds.length === 0) return []
       
-      if (tokenIds.length === 0) {
-        this.log(`ℹ️ No tokens found for address ${address}`)
-        return []
-      }
-      
-      this.log(`📊 Found ${tokenIds.length} token IDs, fetching details...`)
-      
-      // Process in batches for speed and reliability
-      const BATCH_SIZE = 8 // Reduced for better reliability
+      const BATCH_SIZE = 6
       const results: KaijuNFT[] = []
       
       for (let i = 0; i < tokenIds.length; i += BATCH_SIZE) {
         const batch = tokenIds.slice(i, i + BATCH_SIZE)
-        this.verbose(`📦 Processing batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(tokenIds.length/BATCH_SIZE)}`)
         
         const batchPromises = batch.map(async (tokenId) => {
           try {
@@ -1945,264 +1026,57 @@ class BlockchainCryptoKaijuService {
         
         results.push(...validResults)
         
-        // Small delay between batches to be respectful
         if (i + BATCH_SIZE < tokenIds.length) {
           await new Promise(resolve => setTimeout(resolve, 100))
         }
       }
       
-      this.log(`✅ Successfully fetched ${results.length}/${tokenIds.length} tokens from blockchain`)
       return results
-      
     } catch (error) {
-      this.warn(`⚠️ tokensOf method failed, trying fallback approach`)
-      return this.getTokensForAddressFinalFallback(address)
-    }
-  }
-
-  /**
-   * Final fallback method with enhanced error handling
-   */
-  private async getTokensForAddressFinalFallback(address: string): Promise<KaijuNFT[]> {
-    try {
-      this.log(`🔧 Using final fallback method for ${address}`)
-      
-      const balance = await this.callContractWithTimeout<bigint>(
-        "balanceOf", 
-        [address], 
-        `balance:${address}`
-      )
-      const tokenCount = Number(balance)
-      
-      if (tokenCount === 0) {
-        this.log(`ℹ️ Balance is 0 for address ${address}`)
-        return []
-      }
-      
-      if (tokenCount > 100) {
-        this.warn(`⚠️ Address ${address} has ${tokenCount} tokens, limiting to first 100`)
-      }
-      
-      const limitedCount = Math.min(tokenCount, 100)
-      
-      const tokenIdPromises = Array.from({ length: limitedCount }, (_, i) =>
-        this.callContractWithTimeout<bigint>("tokenOfOwnerByIndex", [address, BigInt(i)])
-          .catch(error => {
-            this.warn(`⚠️ Failed to get token at index ${i}:`, error)
-            return null
-          })
-      )
-      
-      const tokenIds = await Promise.allSettled(tokenIdPromises)
-      const validTokenIds = tokenIds
-        .filter(result => result.status === 'fulfilled' && result.value !== null)
-        .map(result => (result as PromiseFulfilledResult<bigint>).value.toString())
-      
-      this.log(`📊 Found ${validTokenIds.length} valid token IDs via fallback`)
-      
-      // Process in smaller batches for fallback method
-      const BATCH_SIZE = 5
-      const results: KaijuNFT[] = []
-      
-      for (let i = 0; i < validTokenIds.length; i += BATCH_SIZE) {
-        const batch = validTokenIds.slice(i, i + BATCH_SIZE)
-        
-        const batchPromises = batch.map(async (tokenId) => {
-          try {
-            const result = await this.getByTokenId(tokenId)
-            return result.nft
-          } catch (error) {
-            this.warn(`⚠️ Failed to fetch token ${tokenId} in fallback:`, error)
-            return null
-          }
-        })
-        
-        const batchResults = await Promise.allSettled(batchPromises)
-        const validResults = batchResults
-          .filter(result => result.status === 'fulfilled' && result.value)
-          .map(result => (result as PromiseFulfilledResult<KaijuNFT>).value)
-        
-        results.push(...validResults)
-        
-        // Longer delay for fallback method
-        if (i + BATCH_SIZE < validTokenIds.length) {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        }
-      }
-      
-      this.log(`✅ Fallback method completed: ${results.length} tokens`)
-      return results
-      
-    } catch (error) {
-      this.error('❌ Final fallback method failed:', error)
-      
       throw new CryptoKaijuError({
         type: ErrorType.CONTRACT,
         severity: ErrorSeverity.HIGH,
-        message: 'All token fetching methods failed',
-        userMessage: 'Unable to load your NFT collection at this time.',
-        technicalDetails: `Blockchain lookup failed: ${getErrorMessage(error)}`,
+        message: 'Blockchain token lookup failed',
+        userMessage: 'Unable to load your NFT collection from the blockchain.',
         suggestions: [
           'Check your internet connection',
-          'Try again in a few minutes',
-          'The Ethereum network might be experiencing issues'
+          'Try again in a few minutes'
         ],
         retryable: true,
-        context: { address, method: 'final_fallback' }
+        context: { address }
       })
     }
   }
 
   /**
-   * Get collection stats with enhanced error handling
+   * Get collection stats
    */
   async getCollectionStats(): Promise<CollectionStats> {
     try {
       const totalSupply = await this.getTotalSupply()
       return { totalSupply }
     } catch (error) {
-      this.error('❌ Error fetching collection stats:', error)
-      
       if (error instanceof CryptoKaijuError) {
         throw error
       }
-      
       throw ErrorHandler.normalize(error, { action: 'getCollectionStats' })
     }
   }
 
   /**
-   * Enhanced service testing with comprehensive error scenarios
+   * Service management methods
    */
-  async testService(): Promise<void> {
-    if (!this.DEBUG) return
-    
-    this.log('🧪 Testing Enhanced Blockchain Service...')
-    
-    try {
-      // Test 1: Performance metrics baseline
-      const initialMetrics = { ...this.performanceMetrics }
-      this.log(`📊 Initial metrics: ${JSON.stringify(initialMetrics)}`)
-      
-      // Test 2: Cache health check
-      const cacheHealth = this.cache.getHealthMetrics()
-      this.log(`💾 Cache health: ${JSON.stringify(cacheHealth)}`)
-      
-      // Test 3: Gateway metrics
-      const gatewayStats = this.getGatewayPerformanceReport()
-      this.log(`🌐 Gateway stats: ${JSON.stringify(gatewayStats)}`)
-      
-      // Test 4: Total supply (should always work)
-      const totalSupply = await this.getTotalSupply()
-      this.log(`✅ Total supply: ${totalSupply}`)
-      
-      // Test 5: Token lookup with error handling
-      try {
-        const result = await this.getByTokenId('1')
-        if (result.nft) {
-          this.log(`✅ Token lookup: ${result.nft.ipfsData?.name || 'Unnamed'}`)
-        }
-      } catch (error) {
-        this.log(`⚠️ Token lookup error (expected for testing):`, ErrorHandler.getUserMessage(error))
-      }
-      
-      // Test 6: NFC lookup with encoding detection
-      try {
-        const nfcResult = await this.getByNFCId('042C0A8A9F6580')
-        if (nfcResult.nft) {
-          this.log(`✅ NFC lookup: ${nfcResult.nft.ipfsData?.name || 'Unnamed'}`)
-        }
-      } catch (error) {
-        this.log(`⚠️ NFC lookup error (expected for testing):`, ErrorHandler.getUserMessage(error))
-      }
-      
-      // Test 7: Error factory validation
-      try {
-        throw ErrorFactory.validationError('test_field', 'test_value')
-      } catch (error) {
-        this.log(`✅ Error handling: ${ErrorHandler.getUserMessage(error)}`)
-      }
-      
-      // Test 8: Cache effectiveness
-      const cacheStart = Date.now()
-      await this.getByTokenId('1') // Should be faster from cache
-      const cacheTime = Date.now() - cacheStart
-      this.log(`✅ Cached lookup: ${cacheTime}ms`)
-      
-      // Test 9: Gateway usage statistics
-      this.logGatewayUsageStats()
-      
-      // Test 10: Performance summary
-      const finalMetrics = this.performanceMetrics
-      const finalCacheHealth = this.cache.getHealthMetrics()
-      this.log(`📈 Performance Summary:`)
-      this.log(`   Total requests: ${finalMetrics.totalRequests}`)
-      this.log(`   Cache hits: ${finalMetrics.cacheHits}`)
-      this.log(`   Errors: ${finalMetrics.errors}`)
-      this.log(`   Avg response time: ${finalMetrics.averageResponseTime.toFixed(2)}ms`)
-      this.log(`   Cache size: ${finalCacheHealth.totalItems} entries`)
-      this.log(`   Storage usage: ${finalCacheHealth.storageUsage} bytes`)
-      this.log(`   Cache version: v${finalCacheHealth.version}`)
-      
-      this.log('🎉 Enhanced service test completed successfully!')
-      
-    } catch (error) {
-      this.error('❌ Service test failed:', error)
-      throw ErrorHandler.normalize(error, { action: 'testService' })
+  getServiceStats(): ServiceStats {
+    return {
+      performance: { ...this.performanceMetrics },
+      cache: {
+        size: this.cache.size,
+        keys: []
+      },
+      pendingRequests: this.pendingRequests.size
     }
   }
 
-  /**
-   * Helper methods for utility functions
-   */
-  private isAbortError(error: any): boolean {
-    return error instanceof Error && error.name === 'AbortError'
-  }
-
-  /**
-   * Get gateway performance report
-   */
-  getGatewayPerformanceReport(): { [url: string]: any } {
-    const report: { [url: string]: any } = {}
-    
-    for (const [url, metrics] of this.gatewayMetrics) {
-      const total = metrics.successCount + metrics.failureCount
-      const successRate = total > 0 ? (metrics.successCount / total) * 100 : 0
-      
-      report[url] = {
-        isPrimary: metrics.isPrimary,
-        successRate: successRate.toFixed(1) + '%',
-        totalRequests: total,
-        avgResponseTime: metrics.avgResponseTime.toFixed(0) + 'ms',
-        lastSuccess: metrics.lastSuccess ? new Date(metrics.lastSuccess).toISOString() : 'Never',
-        lastFailure: metrics.lastFailure ? new Date(metrics.lastFailure).toISOString() : 'Never'
-      }
-    }
-    
-    return report
-  }
-
-  /**
-   * Log gateway usage statistics
-   */
-  logGatewayUsageStats(): void {
-    const total = Object.values(this.gatewayUsage).reduce((a, b) => a + b, 0)
-    if (total === 0) {
-      this.log('🏆 No IPFS requests yet')
-      return
-    }
-
-    this.log('🏆 IPFS Gateway Usage:', {
-      primary: `${((this.gatewayUsage.primary / total) * 100).toFixed(1)}% (${this.gatewayUsage.primary} requests)`,
-      fallback: `${((this.gatewayUsage.fallback / total) * 100).toFixed(1)}% (${this.gatewayUsage.fallback} requests)`,
-      apiProxy: `${((this.gatewayUsage.apiProxy / total) * 100).toFixed(1)}% (${this.gatewayUsage.apiProxy} requests)`,
-      failed: `${((this.gatewayUsage.failed / total) * 100).toFixed(1)}% (${this.gatewayUsage.failed} requests)`
-    })
-  }
-
-  /**
-   * Clear cache and reset performance metrics
-   */
   clearCache(): void {
     this.cache.clear()
     this.pendingRequests.clear()
@@ -2210,37 +1084,42 @@ class BlockchainCryptoKaijuService {
       totalRequests: 0,
       cacheHits: 0,
       errors: 0,
-      averageResponseTime: 0
+      averageResponseTime: 0,
+      ipfsSuccessRate: 0,
+      openSeaFallbacks: 0
     }
-    
-    // Reset gateway metrics
-    this.initializeGatewayMetrics()
-    this.gatewayUsage = { primary: 0, fallback: 0, apiProxy: 0, failed: 0 }
-    
-    this.log('🗑️ Cache and metrics cleared')
+    this.log('🗑️ Cache cleared')
   }
 
-  /**
-   * Get detailed service statistics with proper typing
-   */
-  getServiceStats(): ServiceStats {
-    return {
-      performance: { ...this.performanceMetrics },
-      cache: this.cache.getStats(),
-      cacheHealth: this.cache.getHealthMetrics(),
-      pendingRequests: this.pendingRequests.size,
-      config: { ...this.TIMEOUTS },
-      gatewayStats: Object.fromEntries(this.gatewayMetrics),
-      gatewayUsage: { ...this.gatewayUsage }
+  async testService(): Promise<void> {
+    if (!this.DEBUG) return
+    
+    this.log('🧪 Testing Optimized Service...')
+    
+    try {
+      const totalSupply = await this.getTotalSupply()
+      this.log(`✅ Total supply: ${totalSupply}`)
+      
+      try {
+        const result = await this.getByTokenId('1')
+        if (result.nft) {
+          this.log(`✅ Token lookup: ${result.nft.ipfsData?.name || 'Unnamed'}`)
+        }
+      } catch (error) {
+        this.log(`⚠️ Token lookup test:`, ErrorHandler.getUserMessage(error))
+      }
+      
+      const stats = this.getServiceStats()
+      this.log(`📊 Stats: ${stats.performance.totalRequests} requests, ${stats.performance.cacheHits} cache hits`)
+      this.log(`📈 IPFS success rate: ${(stats.performance.ipfsSuccessRate * 100).toFixed(1)}%`)
+      this.log(`🔄 OpenSea fallbacks: ${stats.performance.openSeaFallbacks}`)
+      
+      this.log('🎉 Optimized service test completed!')
+      
+    } catch (error) {
+      this.error('❌ Service test failed:', error)
+      throw ErrorHandler.normalize(error, { action: 'testService' })
     }
-  }
-
-  /**
-   * Force cache cleanup (for debugging/maintenance)
-   */
-  forceCleanupCache(): void {
-    this.cache.forceCleanup()
-    this.log('🧹 Forced cache cleanup completed')
   }
 }
 
