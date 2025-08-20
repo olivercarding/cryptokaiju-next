@@ -1,4 +1,4 @@
-// src/lib/contentful.ts - COMPLETE AND CORRECTED
+// src/lib/contentful.ts - COMPLETE UPDATE WITH SEO FIELDS
 import type {
   Asset,
   AssetFile,
@@ -127,7 +127,7 @@ export interface AuthorSkeleton extends EntrySkeletonType {
   }
 }
 
-// NEW: Enhanced Kaiju Batch Content Model with multiple NFT support
+// 🆕 UPDATED: Enhanced Kaiju Batch Content Model with ALL SEO fields
 export interface KaijuBatchSkeleton extends EntrySkeletonType {
   contentTypeId: 'kaijuBatch'
   fields: {
@@ -152,10 +152,10 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     secondaryMarketUrl?: EntryFieldTypes.Symbol
     backgroundColor?: EntryFieldTypes.Symbol
     
-    // Image fields - Updated to support multiple NFT images
+    // Image fields - Enhanced to support multiple NFT images
     physicalImages: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     
-    // NEW: Multiple NFT images support
+    // 🆕 NEW: Multiple NFT images support
     nftImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     
     // DEPRECATED: Single NFT image (kept for backward compatibility)
@@ -165,6 +165,34 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     detailImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     conceptImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     packagingImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    
+    // 🆕 NEW: SEO FIELDS
+    seoTitle?: EntryFieldTypes.Symbol
+    seoDescription?: EntryFieldTypes.Text
+    seoKeywords?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
+    openGraphTitle?: EntryFieldTypes.Symbol
+    openGraphDescription?: EntryFieldTypes.Text
+    openGraphImage?: EntryFieldTypes.AssetLink | any
+    twitterTitle?: EntryFieldTypes.Symbol
+    twitterDescription?: EntryFieldTypes.Text
+    
+    // 🆕 NEW: Additional product/marketing fields
+    featured?: EntryFieldTypes.Boolean
+    productManufacturer?: EntryFieldTypes.Symbol
+    productPrice?: EntryFieldTypes.Number
+    productCurrency?: EntryFieldTypes.Symbol
+    productCondition?: EntryFieldTypes.Symbol
+    productAvailability?: EntryFieldTypes.Symbol
+    productBrand?: EntryFieldTypes.Symbol
+    productGtin?: EntryFieldTypes.Symbol
+    productMpn?: EntryFieldTypes.Symbol
+    marketingTagline?: EntryFieldTypes.Symbol
+    collectorsNote?: EntryFieldTypes.Text
+    featuredPriority?: EntryFieldTypes.Number
+    isPartOfSeries?: EntryFieldTypes.Boolean
+    seriesName?: EntryFieldTypes.Symbol
+    seriesDescription?: EntryFieldTypes.Text
+    seriesPosition?: EntryFieldTypes.Number
   }
 }
 
@@ -444,7 +472,7 @@ export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Local Kaiju Batch Interface (Enhanced for multiple NFT support)  */
+/*  Local Kaiju Batch Interface (Enhanced for SEO and multiple NFT)  */
 /* ------------------------------------------------------------------ */
 
 export interface LocalKaijuBatch {
@@ -476,11 +504,55 @@ export interface LocalKaijuBatch {
   discoveredDate: string
   secondaryMarketUrl?: string
   backgroundColor?: string
+  
+  // 🆕 NEW: SEO FIELDS organized in logical groups
+  seo?: {
+    title?: string
+    description?: string
+    keywords?: string[]
+    openGraph?: {
+      title?: string
+      description?: string
+      image?: string
+    }
+    twitter?: {
+      title?: string
+      description?: string
+    }
+  }
+  
+  // 🆕 NEW: PRODUCT INFORMATION FIELDS
+  featured?: boolean
+  productInfo?: {
+    manufacturer?: string
+    price?: number
+    currency?: string
+    condition?: string
+    availability?: string
+    brand?: string
+    gtin?: string
+    mpn?: string
+  }
+  
+  // 🆕 NEW: MARKETING FIELDS
+  marketing?: {
+    tagline?: string
+    collectorsNote?: string
+    featuredPriority?: number
+  }
+  
+  // 🆕 NEW: SERIES FIELDS
+  series?: {
+    isPartOfSeries?: boolean
+    name?: string
+    description?: string
+    position?: number
+  }
 }
 
 /**
- * Convert Contentful KaijuBatch to your existing KaijuBatch interface
- * Enhanced to handle both single and multiple NFT images
+ * 🆕 ENHANCED: Convert Contentful KaijuBatch to LocalKaijuBatch with full SEO support
+ * Enhanced to handle both single and multiple NFT images + all new SEO fields
  */
 export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatch {
   const fields = batch.fields
@@ -540,6 +612,52 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     discoveredDate: toStringValue(fields.discoveredDate),
     secondaryMarketUrl: toStringValue(fields.secondaryMarketUrl),
     backgroundColor: toStringValue(fields.backgroundColor),
+    
+    // 🆕 NEW: SEO FIELDS with proper organization
+    seo: {
+      title: toStringValue(fields.seoTitle),
+      description: toStringValue(fields.seoDescription),
+      keywords: toStringArray(fields.seoKeywords),
+      openGraph: {
+        title: toStringValue(fields.openGraphTitle),
+        description: toStringValue(fields.openGraphDescription),
+        image: getAssetUrl(fields.openGraphImage)
+      },
+      twitter: {
+        title: toStringValue(fields.twitterTitle),
+        description: toStringValue(fields.twitterDescription)
+      }
+    },
+    
+    // 🆕 NEW: FEATURED STATUS
+    featured: fields.featured || false,
+    
+    // 🆕 NEW: PRODUCT INFORMATION
+    productInfo: {
+      manufacturer: toStringValue(fields.productManufacturer),
+      price: fields.productPrice ? Number(fields.productPrice) : undefined,
+      currency: toStringValue(fields.productCurrency),
+      condition: toStringValue(fields.productCondition),
+      availability: toStringValue(fields.productAvailability),
+      brand: toStringValue(fields.productBrand),
+      gtin: toStringValue(fields.productGtin),
+      mpn: toStringValue(fields.productMpn)
+    },
+    
+    // 🆕 NEW: MARKETING INFORMATION
+    marketing: {
+      tagline: toStringValue(fields.marketingTagline),
+      collectorsNote: toStringValue(fields.collectorsNote),
+      featuredPriority: fields.featuredPriority ? Number(fields.featuredPriority) : undefined
+    },
+    
+    // 🆕 NEW: SERIES INFORMATION
+    series: {
+      isPartOfSeries: fields.isPartOfSeries || false,
+      name: toStringValue(fields.seriesName),
+      description: toStringValue(fields.seriesDescription),
+      position: fields.seriesPosition ? Number(fields.seriesPosition) : undefined
+    }
   }
 }
 
@@ -787,7 +905,7 @@ export async function getRecentBlogPosts(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API - Kaiju Batches                                       */
+/*  Public API - Kaiju Batches (Enhanced with SEO support)           */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -896,5 +1014,48 @@ export async function getKaijuBatchesByRarity(rarity: 'Common' | 'Rare' | 'Ultra
     },
     [],
     `Error fetching Kaiju batches by rarity: ${rarity}`,
+  )
+}
+
+/**
+ * 🆕 NEW: Get featured Kaiju batches for homepage/SEO
+ */
+export async function getFeaturedKaijuBatches(limit = 6): Promise<KaijuBatch[]> {
+  return safeContentfulCall(
+    async (client) => {
+      const res = await client.getEntries({
+        content_type: 'kaijuBatch',
+        'fields.featured': true,
+        limit: Math.min(limit, 100),
+        include: 2,
+        order: ['fields.featuredPriority', 'fields.batchId']
+      })
+      return res.items.filter(isValidKaijuBatch)
+    },
+    [],
+    'Error fetching featured Kaiju batches',
+  )
+}
+
+/**
+ * 🆕 NEW: Get batches by series for related content
+ */
+export async function getKaijuBatchesBySeries(seriesName: string): Promise<KaijuBatch[]> {
+  if (!seriesName) return []
+
+  return safeContentfulCall(
+    async (client) => {
+      const res = await client.getEntries({
+        content_type: 'kaijuBatch',
+        'fields.seriesName': seriesName,
+        'fields.isPartOfSeries': true,
+        limit: 1000,
+        include: 2,
+        order: ['fields.seriesPosition', 'fields.batchId']
+      })
+      return res.items.filter(isValidKaijuBatch)
+    },
+    [],
+    `Error fetching Kaiju batches by series: ${seriesName}`,
   )
 }

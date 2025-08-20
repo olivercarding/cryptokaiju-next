@@ -1,537 +1,451 @@
-// src/lib/services/KaijuBatchService.ts - UPDATED FOR NEW CONTENTFUL SCHEMA
-import {
-  getAllKaijuBatches,
-  getKaijuBatchBySlug as getContentfulBatchBySlug,
-  getKaijuBatchById as getContentfulBatchById,
+// src/lib/services/KaijuBatchService.ts - ENHANCED WITH SEO HELPERS
+import { 
+  getAllKaijuBatches, 
+  getKaijuBatchBySlug, 
+  getKaijuBatchById,
   getKaijuBatchesByType,
   getKaijuBatchesByRarity,
-  getFeaturedKaijuBatches,
-  getKaijuBatchesBySeries,
   convertContentfulBatchToLocal,
   type LocalKaijuBatch,
-  type KaijuBatch as ContentfulKaijuBatch,
+  type KaijuBatch as ContentfulKaijuBatch
 } from '@/lib/contentful'
 
-// Re-export the LocalKaijuBatch type for components to use
-export type KaijuBatch = LocalKaijuBatch
-
-// Collection stats interface
-export interface CollectionStats {
-  totalBatches: number
-  plushCount: number
-  vinylCount: number
-  legendaryCount: number
-  commonCount: number
-  rareCount: number
-  ultraRareCount: number
-  featuredCount: number
-  seriesCount: number
-}
-
-// Search/filter options
-export interface BatchFilters {
-  type?: 'Plush' | 'Vinyl'
-  rarity?: 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'
-  availability?: 'Secondary' | 'Mintable'
-  featured?: boolean
-  seriesName?: string
-  hasNftImages?: boolean
-}
-
 class KaijuBatchService {
-  
-  /* ------------------------------------------------------------------ */
-  /*  Basic CRUD Operations                                             */
-  /* ------------------------------------------------------------------ */
-  
+  private cache = new Map<string, LocalKaijuBatch[]>()
+  private batchCache = new Map<string, LocalKaijuBatch>()
+  private readonly CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+  private lastFetch = 0
+
   /**
-   * Get all Kaiju batches converted to local format
+   * Get all batches with caching
    */
-  async getAllBatches(): Promise<KaijuBatch[]> {
+  async getAllBatches(): Promise<LocalKaijuBatch[]> {
+    const cacheKey = 'all-batches'
+    const now = Date.now()
+    
+    // Check cache first
+    if (this.cache.has(cacheKey) && (now - this.lastFetch) < this.CACHE_TTL) {
+      console.log('📦 Using cached batches')
+      return this.cache.get(cacheKey)!
+    }
+
     try {
+      console.log('🔄 Fetching batches from Contentful...')
       const contentfulBatches = await getAllKaijuBatches()
-      return contentfulBatches.map(convertContentfulBatchToLocal)
+      const localBatches = contentfulBatches.map(convertContentfulBatchToLocal)
+      
+      // Update caches
+      this.cache.set(cacheKey, localBatches)
+      this.lastFetch = now
+      
+      // Update individual batch cache
+      localBatches.forEach(batch => {
+        this.batchCache.set(batch.slug, batch)
+        this.batchCache.set(batch.id, batch)
+      })
+      
+      console.log(`✅ Fetched ${localBatches.length} batches from Contentful`)
+      return localBatches
     } catch (error) {
-      console.error('Error fetching all batches:', error)
+      console.error('❌ Error fetching batches from Contentful:', error)
+      
+      // Return cached data if available, even if stale
+      if (this.cache.has(cacheKey)) {
+        console.log('⚠️ Using stale cached data due to error')
+        return this.cache.get(cacheKey)!
+      }
+      
+      // Final fallback to empty array
       return []
     }
   }
 
   /**
-   * Get Kaiju batch by slug
+   * Get batch by slug with caching
    */
-  async getBatchBySlug(slug: string): Promise<KaijuBatch | null> {
+  async getBatchBySlug(slug: string): Promise<LocalKaijuBatch | undefined> {
+    // Check individual cache first
+    if (this.batchCache.has(slug)) {
+      console.log(`📦 Using cached batch: ${slug}`)
+      return this.batchCache.get(slug)
+    }
+
     try {
-      if (!slug) return null
+      console.log(`🔄 Fetching batch ${slug} from Contentful...`)
+      const contentfulBatch = await getKaijuBatchBySlug(slug)
       
-      const contentfulBatch = await getContentfulBatchBySlug(slug)
-      return contentfulBatch ? convertContentfulBatchToLocal(contentfulBatch) : null
+      if (contentfulBatch) {
+        const localBatch = convertContentfulBatchToLocal(contentfulBatch)
+        this.batchCache.set(slug, localBatch)
+        this.batchCache.set(localBatch.id, localBatch)
+        
+        console.log(`✅ Fetched batch: ${localBatch.name}`)
+        return localBatch
+      }
+      
+      console.log(`❌ Batch not found: ${slug}`)
+      return undefined
     } catch (error) {
-      console.error(`Error fetching batch by slug ${slug}:`, error)
-      return null
+      console.error(`❌ Error fetching batch ${slug}:`, error)
+      return undefined
     }
   }
 
   /**
-   * Get Kaiju batch by batch ID
+   * Get batch by ID with caching
    */
-  async getBatchById(batchId: string): Promise<KaijuBatch | null> {
+  async getBatchById(id: string): Promise<LocalKaijuBatch | undefined> {
+    // Check individual cache first
+    if (this.batchCache.has(id)) {
+      console.log(`📦 Using cached batch: ${id}`)
+      return this.batchCache.get(id)
+    }
+
     try {
-      if (!batchId) return null
+      console.log(`🔄 Fetching batch ${id} from Contentful...`)
+      const contentfulBatch = await getKaijuBatchById(id)
       
-      const contentfulBatch = await getContentfulBatchById(batchId)
-      return contentfulBatch ? convertContentfulBatchToLocal(contentfulBatch) : null
+      if (contentfulBatch) {
+        const localBatch = convertContentfulBatchToLocal(contentfulBatch)
+        this.batchCache.set(id, localBatch)
+        this.batchCache.set(localBatch.slug, localBatch)
+        
+        console.log(`✅ Fetched batch: ${localBatch.name}`)
+        return localBatch
+      }
+      
+      console.log(`❌ Batch not found: ${id}`)
+      return undefined
     } catch (error) {
-      console.error(`Error fetching batch by ID ${batchId}:`, error)
-      return null
+      console.error(`❌ Error fetching batch ${id}:`, error)
+      return undefined
     }
   }
-
-  /* ------------------------------------------------------------------ */
-  /*  Filtered Queries                                                  */
-  /* ------------------------------------------------------------------ */
 
   /**
    * Get batches by type
    */
-  async getBatchesByType(type: 'Plush' | 'Vinyl'): Promise<KaijuBatch[]> {
+  async getBatchesByType(type: 'Plush' | 'Vinyl'): Promise<LocalKaijuBatch[]> {
+    const cacheKey = `type-${type}`
+    
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey)!
+    }
+
     try {
       const contentfulBatches = await getKaijuBatchesByType(type)
-      return contentfulBatches.map(convertContentfulBatchToLocal)
+      const localBatches = contentfulBatches.map(convertContentfulBatchToLocal)
+      
+      this.cache.set(cacheKey, localBatches)
+      return localBatches
     } catch (error) {
-      console.error(`Error fetching batches by type ${type}:`, error)
-      return []
+      console.error(`❌ Error fetching ${type} batches:`, error)
+      
+      // Fallback: filter from all batches if available
+      const allBatches = await this.getAllBatches()
+      return allBatches.filter(batch => batch.type === type)
     }
   }
 
   /**
    * Get batches by rarity
    */
-  async getBatchesByRarity(rarity: 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'): Promise<KaijuBatch[]> {
+  async getBatchesByRarity(rarity: 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'): Promise<LocalKaijuBatch[]> {
+    const cacheKey = `rarity-${rarity}`
+    
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey)!
+    }
+
     try {
       const contentfulBatches = await getKaijuBatchesByRarity(rarity)
-      return contentfulBatches.map(convertContentfulBatchToLocal)
+      const localBatches = contentfulBatches.map(convertContentfulBatchToLocal)
+      
+      this.cache.set(cacheKey, localBatches)
+      return localBatches
     } catch (error) {
-      console.error(`Error fetching batches by rarity ${rarity}:`, error)
-      return []
+      console.error(`❌ Error fetching ${rarity} batches:`, error)
+      
+      // Fallback: filter from all batches if available
+      const allBatches = await this.getAllBatches()
+      return allBatches.filter(batch => batch.rarity === rarity)
     }
   }
 
   /**
-   * Get featured batches
+   * Get statistics about the collection
    */
-  async getFeaturedBatches(limit = 10): Promise<KaijuBatch[]> {
+  async getCollectionStats(): Promise<{
+    totalBatches: number
+    plushCount: number
+    vinylCount: number
+    legendaryCount: number
+  }> {
     try {
-      const contentfulBatches = await getFeaturedKaijuBatches(limit)
-      return contentfulBatches.map(convertContentfulBatchToLocal)
+      const allBatches = await this.getAllBatches()
+      
+      return {
+        totalBatches: allBatches.length,
+        plushCount: allBatches.filter(b => b.type === 'Plush').length,
+        vinylCount: allBatches.filter(b => b.type === 'Vinyl').length,
+        legendaryCount: allBatches.filter(b => b.rarity === 'Legendary').length,
+      }
     } catch (error) {
-      console.error('Error fetching featured batches:', error)
-      return []
-    }
-  }
-
-  /**
-   * Get batches by series name
-   */
-  async getBatchesBySeries(seriesName: string): Promise<KaijuBatch[]> {
-    try {
-      const contentfulBatches = await getKaijuBatchesBySeries(seriesName)
-      return contentfulBatches.map(convertContentfulBatchToLocal)
-    } catch (error) {
-      console.error(`Error fetching batches by series ${seriesName}:`, error)
-      return []
-    }
-  }
-
-  /**
-   * Get batches with advanced filtering (client-side filtering)
-   */
-  async getBatchesFiltered(filters: BatchFilters): Promise<KaijuBatch[]> {
-    try {
-      let batches = await this.getAllBatches()
-
-      if (filters.type) {
-        batches = batches.filter(batch => batch.type === filters.type)
-      }
-
-      if (filters.rarity) {
-        batches = batches.filter(batch => batch.rarity === filters.rarity)
-      }
-
-      if (filters.availability) {
-        batches = batches.filter(batch => batch.availability === filters.availability)
-      }
-
-      if (filters.featured !== undefined) {
-        batches = batches.filter(batch => batch.marketing?.featured === filters.featured)
-      }
-
-      if (filters.seriesName) {
-        batches = batches.filter(batch => 
-          batch.series?.isPartOfSeries && 
-          batch.series?.name === filters.seriesName
-        )
-      }
-
-      if (filters.hasNftImages !== undefined) {
-        batches = batches.filter(batch => {
-          const hasNft = batch.images.nft && batch.images.nft.length > 0
-          return filters.hasNftImages ? hasNft : !hasNft
-        })
-      }
-
-      return batches
-    } catch (error) {
-      console.error('Error filtering batches:', error)
-      return []
-    }
-  }
-
-  /* ------------------------------------------------------------------ */
-  /*  Statistics and Analytics                                          */
-  /* ------------------------------------------------------------------ */
-
-  /**
-   * Get collection statistics
-   */
-  async getCollectionStats(): Promise<CollectionStats> {
-    try {
-      const batches = await this.getAllBatches()
-
-      const stats: CollectionStats = {
-        totalBatches: batches.length,
-        plushCount: batches.filter(b => b.type === 'Plush').length,
-        vinylCount: batches.filter(b => b.type === 'Vinyl').length,
-        commonCount: batches.filter(b => b.rarity === 'Common').length,
-        rareCount: batches.filter(b => b.rarity === 'Rare').length,
-        ultraRareCount: batches.filter(b => b.rarity === 'Ultra Rare').length,
-        legendaryCount: batches.filter(b => b.rarity === 'Legendary').length,
-        featuredCount: batches.filter(b => b.marketing?.featured).length,
-        seriesCount: batches.filter(b => b.series?.isPartOfSeries).length,
-      }
-
-      return stats
-    } catch (error) {
-      console.error('Error calculating collection stats:', error)
+      console.error('❌ Error getting collection stats:', error)
       return {
         totalBatches: 0,
         plushCount: 0,
         vinylCount: 0,
-        commonCount: 0,
-        rareCount: 0,
-        ultraRareCount: 0,
         legendaryCount: 0,
-        featuredCount: 0,
-        seriesCount: 0,
       }
     }
   }
 
   /**
-   * Get rarity distribution
+   * Clear all caches
    */
-  async getRarityDistribution(): Promise<Record<string, number>> {
+  clearCache(): void {
+    this.cache.clear()
+    this.batchCache.clear()
+    this.lastFetch = 0
+    console.log('🗑️ Batch caches cleared')
+  }
+
+  /**
+   * Preload all batches (useful for performance)
+   */
+  async preloadBatches(): Promise<void> {
     try {
-      const batches = await this.getAllBatches()
-      const distribution: Record<string, number> = {}
-
-      batches.forEach(batch => {
-        distribution[batch.rarity] = (distribution[batch.rarity] || 0) + 1
-      })
-
-      return distribution
+      await this.getAllBatches()
+      console.log('🚀 Batches preloaded successfully')
     } catch (error) {
-      console.error('Error calculating rarity distribution:', error)
-      return {}
+      console.error('❌ Error preloading batches:', error)
     }
   }
 
   /**
-   * Get all unique series names
+   * Check if batch exists by slug
    */
-  async getAllSeries(): Promise<string[]> {
+  async batchExists(slug: string): Promise<boolean> {
     try {
-      const batches = await this.getAllBatches()
-      const seriesNames = batches
-        .filter(batch => batch.series?.isPartOfSeries && batch.series?.name)
-        .map(batch => batch.series!.name!)
-        .filter((name, index, arr) => arr.indexOf(name) === index)
-        .sort()
-
-      return seriesNames
+      const batch = await this.getBatchBySlug(slug)
+      return !!batch
     } catch (error) {
-      console.error('Error fetching series names:', error)
-      return []
+      return false
     }
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Image Helper Methods                                              */
-  /* ------------------------------------------------------------------ */
-
   /**
-   * Get primary image for a batch (first physical image)
+   * Get the primary image for a batch
    */
-  getBatchPrimaryImage(batch: KaijuBatch): string {
-    if (batch.images.physical && batch.images.physical.length > 0) {
-      return batch.images.physical[0]
-    }
-    return '/images/placeholder-kaiju.png'
+  getBatchPrimaryImage(batch: LocalKaijuBatch): string {
+    return batch.images?.physical?.[0] || '/images/placeholder-kaiju.png'
   }
 
   /**
-   * Get first NFT image for a batch (backward compatibility)
+   * Get the NFT image for a batch - UPDATED for multiple NFT support
+   * @param batch - The batch to get NFT image for
+   * @returns The first NFT image URL or undefined if none exists
    */
-  getBatchNFTImage(batch: KaijuBatch): string | null {
-    if (batch.images.nft && batch.images.nft.length > 0) {
-      return batch.images.nft[0]
-    }
-    return null
-  }
-
-  /**
-   * Get all NFT images for a batch
-   */
-  getBatchNFTImages(batch: KaijuBatch): string[] {
-    return batch.images.nft || []
-  }
-
-  /**
-   * Get image for a specific category
-   */
-  getBatchImagesByCategory(batch: KaijuBatch, category: keyof KaijuBatch['images']): string[] {
-    return batch.images[category] || []
-  }
-
-  /**
-   * Check if batch has NFT images
-   */
-  batchHasNFTImages(batch: KaijuBatch): boolean {
-    return batch.images.nft && batch.images.nft.length > 0
-  }
-
-  /**
-   * Get best available image for display (primary physical or first NFT)
-   */
-  getBatchDisplayImage(batch: KaijuBatch): string {
-    // First try physical images
-    if (batch.images.physical && batch.images.physical.length > 0) {
-      return batch.images.physical[0]
-    }
+  getBatchNFTImage(batch: LocalKaijuBatch): string | undefined {
+    if (!batch.images?.nft) return undefined
     
-    // Then try NFT images
-    if (batch.images.nft && batch.images.nft.length > 0) {
-      return batch.images.nft[0]
+    // Handle both single and multiple NFT images
+    if (Array.isArray(batch.images.nft)) {
+      // If it's an array, return the first NFT image
+      return batch.images.nft[0] || undefined
+    } else {
+      // If it's a single string, return it
+      return batch.images.nft
     }
+  }
+
+  /**
+   * Get all NFT images for a batch - NEW method for multiple NFT support
+   * @param batch - The batch to get NFT images for
+   * @returns Array of NFT image URLs
+   */
+  getBatchAllNFTImages(batch: LocalKaijuBatch): string[] {
+    if (!batch.images?.nft) return []
     
-    // Finally fallback to placeholder
-    return '/images/placeholder-kaiju.png'
-  }
-
-  /* ------------------------------------------------------------------ */
-  /*  SEO and Metadata Helpers                                         */
-  /* ------------------------------------------------------------------ */
-
-  /**
-   * Get SEO-optimized title for a batch
-   */
-  getBatchSEOTitle(batch: KaijuBatch): string {
-    if (batch.seo?.title) {
-      return batch.seo.title
-    }
-    return `${batch.name} | ${batch.type} ${batch.rarity} | CryptoKaiju`
-  }
-
-  /**
-   * Get SEO-optimized description for a batch
-   */
-  getBatchSEODescription(batch: KaijuBatch): string {
-    if (batch.seo?.description) {
-      return batch.seo.description
-    }
-    return batch.characterDescription.substring(0, 160)
-  }
-
-  /**
-   * Get Open Graph data for a batch
-   */
-  getBatchOpenGraphData(batch: KaijuBatch) {
-    return {
-      title: batch.openGraph?.title || this.getBatchSEOTitle(batch),
-      description: batch.openGraph?.description || this.getBatchSEODescription(batch),
-      image: batch.openGraph?.image || this.getBatchPrimaryImage(batch),
-      type: 'website' as const,
+    // Handle both single and multiple NFT images
+    if (Array.isArray(batch.images.nft)) {
+      return batch.images.nft.filter(Boolean) // Filter out empty strings
+    } else {
+      return batch.images.nft ? [batch.images.nft] : []
     }
   }
 
   /**
-   * Get Twitter Card data for a batch
+   * Convert batch name to slug (for backward compatibility)
    */
-  getBatchTwitterData(batch: KaijuBatch) {
-    return {
-      title: batch.twitter?.title || this.getBatchSEOTitle(batch),
-      description: batch.twitter?.description || this.getBatchSEODescription(batch),
-      image: this.getBatchPrimaryImage(batch),
-      card: 'summary_large_image' as const,
-    }
+  batchNameToSlug(batchName: string): string {
+    if (!batchName) return ''
+    
+    return batchName
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Search and Discovery                                              */
-  /* ------------------------------------------------------------------ */
+  // 🆕 NEW SEO-RELATED METHODS
 
   /**
-   * Search batches by name, description, or characteristics
+   * Get batches optimized for SEO (featured first, then by priority)
    */
-  async searchBatches(query: string): Promise<KaijuBatch[]> {
-    try {
-      if (!query.trim()) return []
-
-      const batches = await this.getAllBatches()
-      const searchTerm = query.toLowerCase().trim()
-
-      return batches.filter(batch => {
-        const searchableText = [
-          batch.name,
-          batch.characterDescription,
-          batch.physicalDescription,
-          batch.essence,
-          batch.type,
-          batch.rarity,
-          batch.habitat,
-          batch.materials,
-          ...batch.colors,
-          ...(batch.features || []),
-          batch.marketing?.tagline,
-          batch.series?.name,
-        ].filter(Boolean).join(' ').toLowerCase()
-
-        return searchableText.includes(searchTerm)
-      })
-    } catch (error) {
-      console.error(`Error searching batches with query "${query}":`, error)
-      return []
-    }
-  }
-
-  /**
-   * Get similar batches based on characteristics
-   */
-  async getSimilarBatches(batch: KaijuBatch, limit = 4): Promise<KaijuBatch[]> {
+  async getFeaturedBatches(limit: number = 6): Promise<LocalKaijuBatch[]> {
     try {
       const allBatches = await this.getAllBatches()
       
-      // Filter out the current batch
-      const otherBatches = allBatches.filter(b => b.id !== batch.id)
-      
-      // Score batches by similarity
-      const scoredBatches = otherBatches.map(otherBatch => {
-        let score = 0
-        
-        // Same type = +3 points
-        if (otherBatch.type === batch.type) score += 3
-        
-        // Same rarity = +2 points
-        if (otherBatch.rarity === batch.rarity) score += 2
-        
-        // Same series = +5 points
-        if (batch.series?.isPartOfSeries && 
-            otherBatch.series?.isPartOfSeries && 
-            batch.series.name === otherBatch.series.name) {
-          score += 5
-        }
-        
-        // Shared colors = +1 point per shared color
-        const sharedColors = batch.colors.filter(color => 
-          otherBatch.colors.includes(color)
-        )
-        score += sharedColors.length
-        
-        // Same availability = +1 point
-        if (otherBatch.availability === batch.availability) score += 1
-        
-        return { batch: otherBatch, score }
-      })
-      
-      // Sort by score and return top results
-      return scoredBatches
-        .sort((a, b) => b.score - a.score)
+      return allBatches
+        .filter(batch => batch.featured)
+        .sort((a, b) => {
+          const priorityA = a.marketing?.featuredPriority || 999
+          const priorityB = b.marketing?.featuredPriority || 999
+          return priorityA - priorityB
+        })
         .slice(0, limit)
-        .map(item => item.batch)
-        
     } catch (error) {
-      console.error('Error finding similar batches:', error)
+      console.error('❌ Error getting featured batches:', error)
       return []
     }
   }
 
-  /* ------------------------------------------------------------------ */
-  /*  Utility Methods                                                   */
-  /* ------------------------------------------------------------------ */
+  /**
+   * Get batches with best SEO optimization (have custom SEO fields)
+   */
+  async getSEOOptimizedBatches(): Promise<LocalKaijuBatch[]> {
+    try {
+      const allBatches = await this.getAllBatches()
+      
+      return allBatches.filter(batch => 
+        batch.seo?.title || 
+        batch.seo?.description || 
+        batch.seo?.keywords?.length
+      )
+    } catch (error) {
+      console.error('❌ Error getting SEO optimized batches:', error)
+      return []
+    }
+  }
 
   /**
-   * Get formatted price for a batch
+   * Get the best SEO title for a batch (custom or generated)
    */
-  getBatchFormattedPrice(batch: KaijuBatch): string | null {
-    if (!batch.product?.price || !batch.product?.currency) {
-      return null
-    }
+  getBatchSEOTitle(batch: LocalKaijuBatch): string {
+    return batch.seo?.title || `${batch.name} - ${batch.type} Collectible | CryptoKaiju`
+  }
 
-    const { price, currency } = batch.product
+  /**
+   * Get the best SEO description for a batch (custom or generated)
+   */
+  getBatchSEODescription(batch: LocalKaijuBatch): string {
+    return batch.seo?.description || 
+      `Discover ${batch.name}, a ${batch.rarity.toLowerCase()} ${batch.type.toLowerCase()} collectible. ${batch.essence}. ${batch.characterDescription.substring(0, 100)}...`
+  }
+
+  /**
+   * Get all SEO keywords for a batch (custom + generated)
+   */
+  getBatchSEOKeywords(batch: LocalKaijuBatch): string[] {
+    const customKeywords = batch.seo?.keywords || []
+    const generatedKeywords = [
+      'Physical NFT',
+      'Connected Collectible', 
+      'NFC Authentication',
+      batch.name,
+      batch.type,
+      batch.rarity,
+      'CryptoKaiju'
+    ]
     
-    switch (currency) {
-      case 'ETH':
-        return `${price} ETH`
-      case 'USD':
-        return `$${price.toFixed(2)}`
-      case 'EUR':
-        return `€${price.toFixed(2)}`
-      case 'GBP':
-        return `£${price.toFixed(2)}`
-      default:
-        return `${price} ${currency}`
+    // Combine and deduplicate
+    return [...new Set([...customKeywords, ...generatedKeywords])]
+  }
+
+  /**
+   * Get the best Open Graph image for a batch
+   */
+  getBatchOGImage(batch: LocalKaijuBatch): string {
+    return batch.seo?.openGraph?.image ||
+      batch.images.physical[0] ||
+      (typeof batch.images.nft === 'string' ? batch.images.nft : batch.images.nft?.[0]) ||
+      '/images/og-default.jpg'
+  }
+
+  /**
+   * Search batches by SEO-friendly terms
+   */
+  async searchBatchesBySEO(searchTerm: string): Promise<LocalKaijuBatch[]> {
+    if (!searchTerm.trim()) return []
+    
+    try {
+      const allBatches = await this.getAllBatches()
+      const term = searchTerm.toLowerCase().trim()
+      
+      return allBatches.filter(batch => {
+        const searchableText = [
+          batch.name,
+          batch.essence,
+          batch.characterDescription,
+          batch.seo?.title,
+          batch.seo?.description,
+          ...(batch.seo?.keywords || []),
+          batch.marketing?.tagline,
+          batch.marketing?.collectorsNote,
+          batch.series?.name,
+          batch.series?.description
+        ].filter(Boolean).join(' ').toLowerCase()
+        
+        return searchableText.includes(term)
+      })
+    } catch (error) {
+      console.error('❌ Error searching batches by SEO:', error)
+      return []
     }
   }
 
   /**
-   * Check if a batch is currently available
+   * Get series batches (useful for related content SEO)
    */
-  isBatchAvailable(batch: KaijuBatch): boolean {
-    return batch.product?.availability === 'InStock' || 
-           batch.availability === 'Mintable'
+  async getSeriesBatches(seriesName: string): Promise<LocalKaijuBatch[]> {
+    try {
+      const allBatches = await this.getAllBatches()
+      
+      return allBatches.filter(batch => 
+        batch.series?.isPartOfSeries && 
+        batch.series?.name?.toLowerCase() === seriesName.toLowerCase()
+      ).sort((a, b) => {
+        const posA = a.series?.position || 999
+        const posB = b.series?.position || 999
+        return posA - posB
+      })
+    } catch (error) {
+      console.error('❌ Error getting series batches:', error)
+      return []
+    }
   }
 
   /**
-   * Get batch status for display
+   * Get batch marketing summary for social sharing
    */
-  getBatchStatus(batch: KaijuBatch): string {
-    if (batch.product?.availability === 'InStock') return 'Available'
-    if (batch.product?.availability === 'PreOrder') return 'Pre-Order'
-    if (batch.product?.availability === 'OutOfStock') return 'Sold Out'
-    if (batch.availability === 'Mintable') return 'Mintable'
-    if (batch.availability === 'Secondary') return 'Secondary Market'
-    return 'Unknown'
-  }
-
-  /**
-   * Get batch rarity color for UI
-   */
-  getBatchRarityColor(batch: KaijuBatch): string {
-    switch (batch.rarity) {
-      case 'Common':
-        return 'text-green-600 bg-green-50 border-green-200'
-      case 'Rare':
-        return 'text-blue-600 bg-blue-50 border-blue-200'
-      case 'Ultra Rare':
-        return 'text-purple-600 bg-purple-50 border-purple-200'
-      case 'Legendary':
-        return 'text-yellow-600 bg-yellow-50 border-yellow-200'
-      default:
-        return 'text-gray-600 bg-gray-50 border-gray-200'
+  getBatchMarketingSummary(batch: LocalKaijuBatch): {
+    tagline?: string
+    collectorsNote?: string
+    isHighValue: boolean
+    hasSpecialFeatures: boolean
+  } {
+    return {
+      tagline: batch.marketing?.tagline,
+      collectorsNote: batch.marketing?.collectorsNote,
+      isHighValue: batch.rarity === 'Legendary' || batch.rarity === 'Ultra Rare',
+      hasSpecialFeatures: (batch.features?.length || 0) > 0
     }
   }
 }
 
-// Export singleton instance
-const kaijuBatchService = new KaijuBatchService()
-export default kaijuBatchService
+export default new KaijuBatchService()
+export { type LocalKaijuBatch as KaijuBatch }

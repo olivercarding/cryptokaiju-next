@@ -1,5 +1,6 @@
-// src/lib/seo.ts
+// src/lib/seo.ts - ENHANCED WITH CONTENTFUL BATCH SEO
 import type { Metadata } from 'next'
+import type { LocalKaijuBatch } from '@/lib/contentful'
 
 interface SEOConfig {
   title: string
@@ -125,7 +126,101 @@ export function generatePageMetadata(path: string, customConfig?: Partial<SEOCon
   }
 }
 
-// Dynamic metadata for parameterized routes
+// 🆕 NEW: Enhanced batch metadata generation with Contentful SEO
+export function generateBatchMetadata(batch: LocalKaijuBatch): Metadata {
+  // Use Contentful SEO fields if available, otherwise generate from batch data
+  const seoTitle = batch.seo?.title || 
+    `${batch.name} - ${batch.type} Collectible | CryptoKaiju`
+  
+  const seoDescription = batch.seo?.description || 
+    `Discover ${batch.name}, a ${batch.rarity.toLowerCase()} ${batch.type.toLowerCase()} collectible from CryptoKaiju. ${batch.essence}. ${batch.characterDescription.substring(0, 100)}...`
+  
+  const seoKeywords = batch.seo?.keywords?.length ? batch.seo.keywords : [
+    'Physical NFT',
+    'Connected Collectible',
+    'NFC Authentication',
+    batch.name,
+    batch.type,
+    batch.rarity,
+    'CryptoKaiju'
+  ]
+  
+  // Open Graph
+  const ogTitle = batch.seo?.openGraph?.title || seoTitle
+  const ogDescription = batch.seo?.openGraph?.description || seoDescription
+  const ogImage = batch.seo?.openGraph?.image || 
+    batch.images.physical[0] || 
+    (typeof batch.images.nft === 'string' ? batch.images.nft : batch.images.nft?.[0]) ||
+    `${baseConfig.siteUrl}/api/og/batch/${batch.slug}`
+  
+  // Twitter
+  const twitterTitle = batch.seo?.twitter?.title || ogTitle
+  const twitterDescription = batch.seo?.twitter?.description || ogDescription
+  
+  const canonicalUrl = `${baseConfig.siteUrl}/kaijudex/${batch.slug}`
+  
+  return {
+    title: seoTitle,
+    description: seoDescription,
+    keywords: seoKeywords.join(', '),
+    
+    // Open Graph
+    openGraph: {
+      title: ogTitle,
+      description: ogDescription,
+      url: canonicalUrl,
+      siteName: baseConfig.siteName,
+      type: 'product',
+      images: [
+        {
+          url: ogImage.startsWith('http') ? ogImage : `${baseConfig.siteUrl}${ogImage}`,
+          width: 1200,
+          height: 630,
+          alt: batch.name
+        }
+      ]
+    },
+    
+    // Twitter
+    twitter: {
+      card: 'summary_large_image',
+      site: baseConfig.twitterHandle,
+      title: twitterTitle,
+      description: twitterDescription,
+      images: [ogImage.startsWith('http') ? ogImage : `${baseConfig.siteUrl}${ogImage}`]
+    },
+    
+    // Canonical
+    alternates: {
+      canonical: canonicalUrl
+    },
+    
+    // Product-specific metadata
+    other: {
+      'product:availability': batch.availability,
+      'product:condition': batch.productInfo?.condition || 'new',
+      'product:category': 'Collectibles',
+      'product:brand': batch.productInfo?.brand || 'CryptoKaiju',
+      'product:price:amount': batch.productInfo?.price?.toString(),
+      'product:price:currency': batch.productInfo?.currency || 'ETH',
+    },
+    
+    // Robots
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    }
+  }
+}
+
+// Dynamic metadata for parameterized routes (legacy - keeping for backward compatibility)
 export function generateKaijuMetadata(tokenId: string, kaijuName?: string): Metadata {
   const title = kaijuName 
     ? `${kaijuName} - Physical NFT #${tokenId} | Connected Collectible Details`
@@ -143,6 +238,7 @@ export function generateKaijuMetadata(tokenId: string, kaijuName?: string): Meta
   })
 }
 
+// Legacy function - keeping for backward compatibility
 export function generateBatchMetadata(slug: string, batchName?: string): Metadata {
   const title = batchName 
     ? `${batchName} Batch - Physical NFTs & Connected Collectibles Collection`
@@ -160,5 +256,94 @@ export function generateBatchMetadata(slug: string, batchName?: string): Metadat
   })
 }
 
+// 🆕 NEW: Generate JSON-LD structured data with batch info
+export function generateBatchStructuredData(batch: LocalKaijuBatch): object {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: batch.name,
+    description: batch.characterDescription,
+    image: batch.images.physical[0] || (typeof batch.images.nft === 'string' ? batch.images.nft : batch.images.nft?.[0]),
+    brand: {
+      '@type': 'Brand',
+      name: batch.productInfo?.brand || 'CryptoKaiju'
+    },
+    manufacturer: {
+      '@type': 'Organization',
+      name: batch.productInfo?.manufacturer || 'CryptoKaiju'
+    },
+    category: 'Digital Collectibles',
+    sku: `CK-${batch.id}`,
+    gtin: batch.productInfo?.gtin,
+    mpn: batch.productInfo?.mpn,
+    url: `${baseConfig.siteUrl}/kaijudex/${batch.slug}`,
+    offers: {
+      '@type': 'Offer',
+      availability: batch.availability === 'Mintable' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      price: batch.productInfo?.price,
+      priceCurrency: batch.productInfo?.currency || 'ETH',
+      itemCondition: `https://schema.org/${batch.productInfo?.condition === 'New' ? 'NewCondition' : 'UsedCondition'}`,
+      seller: {
+        '@type': 'Organization',
+        name: 'CryptoKaiju'
+      }
+    },
+    additionalProperty: [
+      {
+        '@type': 'PropertyValue',
+        name: 'Rarity',
+        value: batch.rarity
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Type',
+        value: batch.type
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Estimated Supply',
+        value: batch.estimatedSupply
+      },
+      {
+        '@type': 'PropertyValue',
+        name: 'Authentication Method',
+        value: 'NFC Chip + Blockchain'
+      }
+    ],
+    ...(batch.series?.isPartOfSeries && {
+      isPartOf: {
+        '@type': 'CollectionPage',
+        name: batch.series.name,
+        description: batch.series.description
+      }
+    })
+  }
+}
+
 // Import and re-export createKaijuProductSchema for convenience
 export { createKaijuProductSchema } from './structured-data'
+
+// 🆕 NEW: Helper to get the best available title/description
+export function getBestSEOValue(
+  contentfulValue: string | undefined,
+  fallbackValue: string,
+  maxLength?: number
+): string {
+  const value = contentfulValue || fallbackValue
+  return maxLength ? value.substring(0, maxLength) : value
+}
+
+// 🆕 NEW: Generate social media preview data
+export function generateSocialPreview(batch: LocalKaijuBatch): {
+  title: string
+  description: string
+  image: string
+  url: string
+} {
+  return {
+    title: getBestSEOValue(batch.seo?.openGraph?.title, `${batch.name} | CryptoKaiju`, 60),
+    description: getBestSEOValue(batch.seo?.openGraph?.description, batch.characterDescription, 160),
+    image: batch.seo?.openGraph?.image || batch.images.physical[0] || '/images/og-default.jpg',
+    url: `${baseConfig.siteUrl}/kaijudex/${batch.slug}`
+  }
+}
