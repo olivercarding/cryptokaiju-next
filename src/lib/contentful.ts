@@ -1,4 +1,4 @@
-// src/lib/contentful.ts - UPDATED FOR COMPLETE KAIJU BATCH SCHEMA
+// src/lib/contentful.ts - COMPLETE AND CORRECTED
 import type {
   Asset,
   AssetFile,
@@ -127,81 +127,44 @@ export interface AuthorSkeleton extends EntrySkeletonType {
   }
 }
 
-// UPDATED: Complete Kaiju Batch Content Model matching your schema
+// NEW: Enhanced Kaiju Batch Content Model with multiple NFT support
 export interface KaijuBatchSkeleton extends EntrySkeletonType {
   contentTypeId: 'kaijuBatch'
   fields: {
-    // Core identification
-    batchId: EntryFieldTypes.Symbol
+    batchId: EntryFieldTypes.Text
     slug: EntryFieldTypes.Symbol
-    name: EntryFieldTypes.Symbol
+    name: EntryFieldTypes.Text
     type: EntryFieldTypes.Symbol // 'Plush' | 'Vinyl'
     rarity: EntryFieldTypes.Symbol // 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'
-    essence: EntryFieldTypes.Symbol
+    essence: EntryFieldTypes.Text
     availability: EntryFieldTypes.Symbol // 'Secondary' | 'Mintable'
-    colors: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-    
-    // Descriptions
+    colors?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
     characterDescription: EntryFieldTypes.Text
     physicalDescription: EntryFieldTypes.Text
-    
-    // Supply and discovery
-    estimatedSupply: EntryFieldTypes.Integer
-    discoveredDate: EntryFieldTypes.Date
-    
-    // Optional details
-    habitat?: EntryFieldTypes.Symbol
+    habitat?: EntryFieldTypes.Text
     materials?: EntryFieldTypes.Text
-    dimensions?: EntryFieldTypes.Symbol
+    dimensions?: EntryFieldTypes.Text
     features?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-    packagingStyle?: EntryFieldTypes.Symbol
+    packagingStyle?: EntryFieldTypes.Text
     productionNotes?: EntryFieldTypes.Text
+    estimatedSupply: EntryFieldTypes.Number
+    discoveredDate: EntryFieldTypes.Symbol
     secondaryMarketUrl?: EntryFieldTypes.Symbol
     backgroundColor?: EntryFieldTypes.Symbol
     
-    // Image arrays
+    // Image fields - Updated to support multiple NFT images
     physicalImages: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    
+    // NEW: Multiple NFT images support
     nftImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    
+    // DEPRECATED: Single NFT image (kept for backward compatibility)
+    nftImage?: EntryFieldTypes.AssetLink | any
+    
     lifestyleImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     detailImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     conceptImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     packagingImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
-    
-    // SEO fields
-    seoTitle?: EntryFieldTypes.Symbol
-    seoDescription?: EntryFieldTypes.Text
-    seoKeywords?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-    
-    // Open Graph fields
-    openGraphTitle?: EntryFieldTypes.Symbol
-    openGraphDescription?: EntryFieldTypes.Text
-    openGraphImage?: EntryFieldTypes.AssetLink | any
-    
-    // Twitter fields
-    twitterTitle?: EntryFieldTypes.Symbol
-    twitterDescription?: EntryFieldTypes.Text
-    
-    // Product information
-    productPrice?: EntryFieldTypes.Number
-    productCurrency?: EntryFieldTypes.Symbol // 'ETH' | 'USD' | 'EUR' | 'GBP'
-    productCondition?: EntryFieldTypes.Symbol // 'New' | 'Used' | 'Refurbished'
-    productAvailability?: EntryFieldTypes.Symbol // 'InStock' | 'OutOfStock' | 'PreOrder'
-    productBrand?: EntryFieldTypes.Symbol
-    productGtin?: EntryFieldTypes.Symbol
-    productMpn?: EntryFieldTypes.Symbol
-    productManufacturer?: EntryFieldTypes.Symbol
-    
-    // Marketing and featured content
-    featured?: EntryFieldTypes.Boolean
-    featuredPriority?: EntryFieldTypes.Integer
-    marketingTagline?: EntryFieldTypes.Symbol
-    collectorsNote?: EntryFieldTypes.Text
-    
-    // Series information
-    isPartOfSeries?: EntryFieldTypes.Boolean
-    seriesName?: EntryFieldTypes.Symbol
-    seriesDescription?: EntryFieldTypes.Text
-    seriesPosition?: EntryFieldTypes.Integer
   }
 }
 
@@ -371,33 +334,6 @@ export function toAssetArray(value: any): Asset[] {
   })
 }
 
-export function toNumberValue(value: any): number {
-  if (value == null) return 0
-  const extracted = extractLocalizedValue(value)
-  if (typeof extracted === 'number') return extracted
-  const parsed = Number(extracted)
-  return isNaN(parsed) ? 0 : parsed
-}
-
-export function toBooleanValue(value: any): boolean {
-  if (value == null) return false
-  const extracted = extractLocalizedValue(value)
-  return Boolean(extracted)
-}
-
-export function toDateString(value: any): string {
-  if (!value) return ''
-  const extracted = extractLocalizedValue(value)
-  if (extracted instanceof Date) {
-    return extracted.toISOString().split('T')[0]
-  }
-  if (typeof extracted === 'string') {
-    const date = new Date(extracted)
-    return isNaN(date.getTime()) ? extracted : date.toISOString().split('T')[0]
-  }
-  return String(extracted)
-}
-
 /* ------------------------------------------------------------------ */
 /*  Type guards                                                       */
 /* ------------------------------------------------------------------ */
@@ -489,7 +425,7 @@ export function isValidDocument(content: any): content is Document {
   )
 }
 
-// UPDATED: Enhanced Kaiju Batch type guard for new schema
+// Enhanced Kaiju Batch type guard
 export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
   return (
     entry &&
@@ -502,19 +438,16 @@ export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
     entry.fields.rarity &&
     entry.fields.characterDescription &&
     entry.fields.physicalDescription &&
-    entry.fields.physicalImages &&
-    Array.isArray(extractLocalizedValue(entry.fields.physicalImages)) &&
     typeof entry.fields.estimatedSupply === 'number' &&
     entry.fields.discoveredDate
   )
 }
 
 /* ------------------------------------------------------------------ */
-/*  Local Kaiju Batch Interface (UPDATED FOR COMPLETE SCHEMA)        */
+/*  Local Kaiju Batch Interface (Enhanced for multiple NFT support)  */
 /* ------------------------------------------------------------------ */
 
 export interface LocalKaijuBatch {
-  // Core identification
   id: string
   slug: string
   name: string
@@ -523,103 +456,58 @@ export interface LocalKaijuBatch {
   essence: string
   availability: 'Secondary' | 'Mintable'
   colors: string[]
-  
-  // Descriptions
   characterDescription: string  
   physicalDescription: string   
-  
-  // Images - Enhanced structure
   images: {
     physical: string[]        
-    nft: string[]            // Now always an array for consistency
+    nft?: string | string[]  // 🎯 Enhanced to support both single and multiple NFT images
     lifestyle: string[]      
     detail: string[]         
     concept: string[]        
     packaging: string[]      
   }
-  
-  // Supply and discovery
-  estimatedSupply: number
-  discoveredDate: string
-  
-  // Optional details
   habitat?: string
   materials?: string           
   dimensions?: string         
   features?: string[]         
   packagingStyle?: string     
-  productionNotes?: string
+  productionNotes?: string   
+  estimatedSupply: number
+  discoveredDate: string
   secondaryMarketUrl?: string
   backgroundColor?: string
-  
-  // SEO fields
-  seo?: {
-    title?: string
-    description?: string
-    keywords?: string[]
-  }
-  
-  // Open Graph fields
-  openGraph?: {
-    title?: string
-    description?: string
-    image?: string
-  }
-  
-  // Twitter fields
-  twitter?: {
-    title?: string
-    description?: string
-  }
-  
-  // Product information
-  product?: {
-    price?: number
-    currency?: 'ETH' | 'USD' | 'EUR' | 'GBP'
-    condition?: 'New' | 'Used' | 'Refurbished'
-    availability?: 'InStock' | 'OutOfStock' | 'PreOrder'
-    brand?: string
-    gtin?: string
-    mpn?: string
-    manufacturer?: string
-  }
-  
-  // Marketing and featured content
-  marketing?: {
-    featured?: boolean
-    featuredPriority?: number
-    tagline?: string
-    collectorsNote?: string
-  }
-  
-  // Series information
-  series?: {
-    isPartOfSeries?: boolean
-    name?: string
-    description?: string
-    position?: number
-  }
 }
 
 /**
- * UPDATED: Convert Contentful KaijuBatch to LocalKaijuBatch interface
- * Now supports all new schema fields
+ * Convert Contentful KaijuBatch to your existing KaijuBatch interface
+ * Enhanced to handle both single and multiple NFT images
  */
 export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatch {
   const fields = batch.fields
   
-  // Enhanced NFT image handling - always return array for consistency
-  const getNftImages = (): string[] => {
+  // Enhanced NFT image handling with backward compatibility
+  const getNftImages = (): string | string[] | undefined => {
+    // Priority: use new nftImages array if available
     if (fields.nftImages) {
-      return toAssetArray(fields.nftImages)
-        .map(asset => getAssetUrl(asset))
-        .filter(Boolean) as string[]
+      const nftImageUrls = toAssetArray(fields.nftImages)
+        .map(asset => getAssetUrl(asset) || '')
+        .filter(Boolean)
+      
+      if (nftImageUrls.length > 0) {
+        return nftImageUrls.length === 1 ? nftImageUrls[0] : nftImageUrls
+      }
     }
-    return []
+    
+    // Fallback: use legacy single nftImage field
+    if (fields.nftImage) {
+      const singleNftUrl = getAssetUrl(fields.nftImage)
+      return singleNftUrl || undefined
+    }
+    
+    return undefined
   }
   
   return {
-    // Core identification
     id: toStringValue(fields.batchId),
     slug: toStringValue(fields.slug),
     name: toStringValue(fields.name),
@@ -629,81 +517,29 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     availability: toStringValue(fields.availability) as 'Secondary' | 'Mintable',
     colors: toStringArray(fields.colors),
     
-    // Descriptions
     characterDescription: toStringValue(fields.characterDescription),
     physicalDescription: toStringValue(fields.physicalDescription),
     
-    // Images - Enhanced structure
     images: {
-      physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
-      nft: getNftImages(),
-      lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
-      detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
-      concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
-      packaging: toAssetArray(fields.packagingImages || []).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
+      physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      nft: getNftImages(), // 🎯 Enhanced with backward compatibility
+      lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      packaging: toAssetArray(fields.packagingImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
     },
     
-    // Supply and discovery
-    estimatedSupply: toNumberValue(fields.estimatedSupply),
-    discoveredDate: toDateString(fields.discoveredDate),
-    
-    // Optional details
-    habitat: toStringValue(fields.habitat) || undefined,
-    materials: toStringValue(fields.materials) || undefined,
-    dimensions: toStringValue(fields.dimensions) || undefined,
+    habitat: toStringValue(fields.habitat),
+    materials: toStringValue(fields.materials),
+    dimensions: toStringValue(fields.dimensions),
     features: toStringArray(fields.features),
-    packagingStyle: toStringValue(fields.packagingStyle) || undefined,
-    productionNotes: toStringValue(fields.productionNotes) || undefined,
-    secondaryMarketUrl: toStringValue(fields.secondaryMarketUrl) || undefined,
-    backgroundColor: toStringValue(fields.backgroundColor) || undefined,
+    packagingStyle: toStringValue(fields.packagingStyle),
+    productionNotes: toStringValue(fields.productionNotes),
     
-    // SEO fields
-    seo: {
-      title: toStringValue(fields.seoTitle) || undefined,
-      description: toStringValue(fields.seoDescription) || undefined,
-      keywords: toStringArray(fields.seoKeywords),
-    },
-    
-    // Open Graph fields
-    openGraph: {
-      title: toStringValue(fields.openGraphTitle) || undefined,
-      description: toStringValue(fields.openGraphDescription) || undefined,
-      image: getAssetUrl(fields.openGraphImage) || undefined,
-    },
-    
-    // Twitter fields
-    twitter: {
-      title: toStringValue(fields.twitterTitle) || undefined,
-      description: toStringValue(fields.twitterDescription) || undefined,
-    },
-    
-    // Product information
-    product: {
-      price: toNumberValue(fields.productPrice) || undefined,
-      currency: toStringValue(fields.productCurrency) as 'ETH' | 'USD' | 'EUR' | 'GBP' || undefined,
-      condition: toStringValue(fields.productCondition) as 'New' | 'Used' | 'Refurbished' || undefined,
-      availability: toStringValue(fields.productAvailability) as 'InStock' | 'OutOfStock' | 'PreOrder' || undefined,
-      brand: toStringValue(fields.productBrand) || undefined,
-      gtin: toStringValue(fields.productGtin) || undefined,
-      mpn: toStringValue(fields.productMpn) || undefined,
-      manufacturer: toStringValue(fields.productManufacturer) || undefined,
-    },
-    
-    // Marketing and featured content
-    marketing: {
-      featured: toBooleanValue(fields.featured),
-      featuredPriority: toNumberValue(fields.featuredPriority) || undefined,
-      tagline: toStringValue(fields.marketingTagline) || undefined,
-      collectorsNote: toStringValue(fields.collectorsNote) || undefined,
-    },
-    
-    // Series information
-    series: {
-      isPartOfSeries: toBooleanValue(fields.isPartOfSeries),
-      name: toStringValue(fields.seriesName) || undefined,
-      description: toStringValue(fields.seriesDescription) || undefined,
-      position: toNumberValue(fields.seriesPosition) || undefined,
-    },
+    estimatedSupply: Number(fields.estimatedSupply) || 0,
+    discoveredDate: toStringValue(fields.discoveredDate),
+    secondaryMarketUrl: toStringValue(fields.secondaryMarketUrl),
+    backgroundColor: toStringValue(fields.backgroundColor),
   }
 }
 
@@ -951,7 +787,7 @@ export async function getRecentBlogPosts(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API - Kaiju Batches (UPDATED FOR NEW SCHEMA)             */
+/*  Public API - Kaiju Batches                                       */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -1060,51 +896,5 @@ export async function getKaijuBatchesByRarity(rarity: 'Common' | 'Rare' | 'Ultra
     },
     [],
     `Error fetching Kaiju batches by rarity: ${rarity}`,
-  )
-}
-
-/**
- * Get featured Kaiju batches
- */
-export async function getFeaturedKaijuBatches(limit = 10): Promise<KaijuBatch[]> {
-  return safeContentfulCall(
-    async (client) => {
-      const res = await client.getEntries({
-        content_type: 'kaijuBatch',
-        'fields.featured': true,
-        limit: Math.min(limit, 1000),
-        include: 2,
-        order: ['-fields.featuredPriority', 'fields.batchId']
-      })
-      return res.items.filter(isValidKaijuBatch)
-    },
-    [],
-    'Error fetching featured Kaiju batches',
-  )
-}
-
-/**
- * Get Kaiju batches by series
- */
-export async function getKaijuBatchesBySeries(seriesName: string): Promise<KaijuBatch[]> {
-  if (!seriesName) {
-    console.error('Invalid seriesName for getKaijuBatchesBySeries:', seriesName)
-    return []
-  }
-
-  return safeContentfulCall(
-    async (client) => {
-      const res = await client.getEntries({
-        content_type: 'kaijuBatch',
-        'fields.isPartOfSeries': true,
-        'fields.seriesName': seriesName,
-        limit: 1000,
-        include: 2,
-        order: ['fields.seriesPosition', 'fields.batchId']
-      })
-      return res.items.filter(isValidKaijuBatch)
-    },
-    [],
-    `Error fetching Kaiju batches by series: ${seriesName}`,
   )
 }
