@@ -1,4 +1,4 @@
-// src/lib/seo.ts - ENHANCED WITH CONTENTFUL BATCH SEO
+// src/lib/seo.ts - ENHANCED WITH CONTENTFUL BATCH SEO - FIXED DUPLICATE FUNCTIONS
 import type { Metadata } from 'next'
 import type { LocalKaijuBatch } from '@/lib/contentful'
 
@@ -238,8 +238,8 @@ export function generateKaijuMetadata(tokenId: string, kaijuName?: string): Meta
   })
 }
 
-// Legacy function - keeping for backward compatibility
-export function generateBatchMetadata(slug: string, batchName?: string): Metadata {
+// 🔧 FIXED: Legacy function renamed to avoid conflicts
+export function generateLegacyBatchMetadata(slug: string, batchName?: string): Metadata {
   const title = batchName 
     ? `${batchName} Batch - Physical NFTs & Connected Collectibles Collection`
     : `Kaiju Batch ${slug} - Connected Objects Collection Details`
