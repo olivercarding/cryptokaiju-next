@@ -1,4 +1,4 @@
-// src/components/pages/KaijudexPageClient.tsx - UPDATED FOR NEW CONTENTFUL SCHEMA
+// src/components/pages/KaijudexPageClient.tsx - FIXED METHOD NAME
 'use client'
 
 import { useState, useRef } from 'react'
@@ -19,7 +19,7 @@ interface KaijudexPageClientProps {
   }
 }
 
-// UPDATED: Enhanced polaroid card with new schema support
+// FIXED: Enhanced polaroid card with corrected service method calls
 const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: number }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
@@ -34,11 +34,11 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
   const rotations = ['-2deg', '1deg', '-1deg', '2deg', '-1.5deg', '1.5deg']
   const rotation = rotations[index % rotations.length]
 
-  // Use service methods for images
+  // FIXED: Use service methods for images with correct method names
   const primaryImage = KaijuBatchService.getBatchPrimaryImage(batch)
-  const nftImages = KaijuBatchService.getBatchNFTImages(batch)
+  const nftImage = KaijuBatchService.getBatchNFTImage(batch) // FIXED: Changed from getBatchNFTImages to getBatchNFTImage
   const hasNftImages = KaijuBatchService.batchHasNFTImages(batch)
-  const firstNftImage = nftImages.length > 0 ? nftImages[0] : null
+  const firstNftImage = nftImage // FIXED: Since getBatchNFTImage returns a single image, use it directly
 
   // Get status and availability info
   const status = KaijuBatchService.getBatchStatus(batch)
@@ -133,7 +133,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
               )}
             </motion.div>
 
-            {/* NFT images (back) - enhanced to show multiple */}
+            {/* NFT images (back) - FIXED: simplified since we have single NFT image */}
             {firstNftImage && (
               <motion.div
                 className="absolute inset-0"
@@ -159,10 +159,10 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
                   />
                 </div>
                 
-                {/* NFT label with count */}
+                {/* NFT label */}
                 <div className="absolute bottom-2 left-2 bg-kaiju-pink/90 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
                   <Database className="w-3 h-3" />
-                  {nftImages.length > 1 ? `NFT (${nftImages.length})` : 'Digital NFT'}
+                  Digital NFT
                 </div>
               </motion.div>
             )}
@@ -240,7 +240,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
   )
 }
 
-// UPDATED: Enhanced filter pills with new options
+// Enhanced filter pills with new options
 const FilterPills = ({ 
   selectedType, 
   selectedRarity, 
@@ -366,7 +366,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
   const ref = useRef(null)
   const isInView = useInView(ref, { once: true, margin: "-100px" })
 
-  // UPDATED: Enhanced filtering with new schema fields
+  // Enhanced filtering with new schema fields
   const filteredBatches = initialBatches.filter(batch => {
     const typeMatch = selectedType === 'All' || batch.type === selectedType
     const rarityMatch = selectedRarity === 'All' || batch.rarity === selectedRarity
@@ -452,7 +452,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
               </p>
             </motion.div>
 
-            {/* UPDATED: Enhanced stats showcase */}
+            {/* Enhanced stats showcase */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -481,7 +481,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
               ))}
             </motion.div>
 
-            {/* UPDATED: Enhanced filters */}
+            {/* Enhanced filters */}
             <FilterPills
               selectedType={selectedType}
               selectedRarity={selectedRarity}
