@@ -37,7 +37,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
   // FIXED: Use service methods for images with correct method names
   const primaryImage = KaijuBatchService.getBatchPrimaryImage(batch)
   const nftImage = KaijuBatchService.getBatchNFTImage(batch) // FIXED: Changed from getBatchNFTImages to getBatchNFTImage
-  const hasNftImages = KaijuBatchService.batchHasNFTImages(batch)
+  const hasNftImages = !!nftImage // FIXED: Simple check if NFT image exists
   const firstNftImage = nftImage // FIXED: Since getBatchNFTImage returns a single image, use it directly
 
   // Get status and availability info
