@@ -1,4 +1,4 @@
-// src/lib/contentful.ts - COMPLETE UPDATE WITH SEO FIELDS
+// src/lib/contentful.ts - FIXED TYPE COMPATIBILITY ISSUE
 import type {
   Asset,
   AssetFile,
@@ -127,7 +127,7 @@ export interface AuthorSkeleton extends EntrySkeletonType {
   }
 }
 
-// 🆕 UPDATED: Enhanced Kaiju Batch Content Model with ALL SEO fields
+// Enhanced Kaiju Batch Content Model with ALL SEO fields
 export interface KaijuBatchSkeleton extends EntrySkeletonType {
   contentTypeId: 'kaijuBatch'
   fields: {
@@ -155,7 +155,7 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     // Image fields - Enhanced to support multiple NFT images
     physicalImages: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     
-    // 🆕 NEW: Multiple NFT images support
+    // NEW: Multiple NFT images support
     nftImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     
     // DEPRECATED: Single NFT image (kept for backward compatibility)
@@ -166,7 +166,7 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     conceptImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     packagingImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     
-    // 🆕 NEW: SEO FIELDS
+    // NEW: SEO FIELDS
     seoTitle?: EntryFieldTypes.Symbol
     seoDescription?: EntryFieldTypes.Text
     seoKeywords?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
@@ -176,7 +176,7 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     twitterTitle?: EntryFieldTypes.Symbol
     twitterDescription?: EntryFieldTypes.Text
     
-    // 🆕 NEW: Additional product/marketing fields
+    // NEW: Additional product/marketing fields
     featured?: EntryFieldTypes.Boolean
     productManufacturer?: EntryFieldTypes.Symbol
     productPrice?: EntryFieldTypes.Number
@@ -488,7 +488,7 @@ export interface LocalKaijuBatch {
   physicalDescription: string   
   images: {
     physical: string[]        
-    nft?: string | string[]  // 🎯 Enhanced to support both single and multiple NFT images
+    nft?: string | string[]  // Enhanced to support both single and multiple NFT images
     lifestyle: string[]      
     detail: string[]         
     concept: string[]        
@@ -505,7 +505,7 @@ export interface LocalKaijuBatch {
   secondaryMarketUrl?: string
   backgroundColor?: string
   
-  // 🆕 NEW: SEO FIELDS organized in logical groups
+  // NEW: SEO FIELDS organized in logical groups
   seo?: {
     title?: string
     description?: string
@@ -521,7 +521,7 @@ export interface LocalKaijuBatch {
     }
   }
   
-  // 🆕 NEW: PRODUCT INFORMATION FIELDS
+  // NEW: PRODUCT INFORMATION FIELDS
   featured?: boolean
   productInfo?: {
     manufacturer?: string
@@ -534,14 +534,14 @@ export interface LocalKaijuBatch {
     mpn?: string
   }
   
-  // 🆕 NEW: MARKETING FIELDS
+  // NEW: MARKETING FIELDS
   marketing?: {
     tagline?: string
     collectorsNote?: string
     featuredPriority?: number
   }
   
-  // 🆕 NEW: SERIES FIELDS
+  // NEW: SERIES FIELDS
   series?: {
     isPartOfSeries?: boolean
     name?: string
@@ -551,7 +551,7 @@ export interface LocalKaijuBatch {
 }
 
 /**
- * 🆕 ENHANCED: Convert Contentful KaijuBatch to LocalKaijuBatch with full SEO support
+ * ENHANCED: Convert Contentful KaijuBatch to LocalKaijuBatch with full SEO support
  * Enhanced to handle both single and multiple NFT images + all new SEO fields
  */
 export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatch {
@@ -594,7 +594,7 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     
     images: {
       physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset) || '').filter(Boolean),
-      nft: getNftImages(), // 🎯 Enhanced with backward compatibility
+      nft: getNftImages(), // Enhanced with backward compatibility
       lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
@@ -613,7 +613,7 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     secondaryMarketUrl: toStringValue(fields.secondaryMarketUrl),
     backgroundColor: toStringValue(fields.backgroundColor),
     
-    // 🆕 NEW: SEO FIELDS with proper organization
+    // NEW: SEO FIELDS with proper organization
     seo: {
       title: toStringValue(fields.seoTitle),
       description: toStringValue(fields.seoDescription),
@@ -621,7 +621,7 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
       openGraph: {
         title: toStringValue(fields.openGraphTitle),
         description: toStringValue(fields.openGraphDescription),
-        image: getAssetUrl(fields.openGraphImage)
+        image: getAssetUrl(fields.openGraphImage) || undefined // FIXED: Convert null to undefined
       },
       twitter: {
         title: toStringValue(fields.twitterTitle),
@@ -629,10 +629,10 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
       }
     },
     
-    // 🆕 NEW: FEATURED STATUS
+    // NEW: FEATURED STATUS
     featured: fields.featured || false,
     
-    // 🆕 NEW: PRODUCT INFORMATION
+    // NEW: PRODUCT INFORMATION
     productInfo: {
       manufacturer: toStringValue(fields.productManufacturer),
       price: fields.productPrice ? Number(fields.productPrice) : undefined,
@@ -644,14 +644,14 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
       mpn: toStringValue(fields.productMpn)
     },
     
-    // 🆕 NEW: MARKETING INFORMATION
+    // NEW: MARKETING INFORMATION
     marketing: {
       tagline: toStringValue(fields.marketingTagline),
       collectorsNote: toStringValue(fields.collectorsNote),
       featuredPriority: fields.featuredPriority ? Number(fields.featuredPriority) : undefined
     },
     
-    // 🆕 NEW: SERIES INFORMATION
+    // NEW: SERIES INFORMATION
     series: {
       isPartOfSeries: fields.isPartOfSeries || false,
       name: toStringValue(fields.seriesName),
@@ -1018,7 +1018,7 @@ export async function getKaijuBatchesByRarity(rarity: 'Common' | 'Rare' | 'Ultra
 }
 
 /**
- * 🆕 NEW: Get featured Kaiju batches for homepage/SEO
+ * NEW: Get featured Kaiju batches for homepage/SEO
  */
 export async function getFeaturedKaijuBatches(limit = 6): Promise<KaijuBatch[]> {
   return safeContentfulCall(
@@ -1038,7 +1038,7 @@ export async function getFeaturedKaijuBatches(limit = 6): Promise<KaijuBatch[]> 
 }
 
 /**
- * 🆕 NEW: Get batches by series for related content
+ * NEW: Get batches by series for related content
  */
 export async function getKaijuBatchesBySeries(seriesName: string): Promise<KaijuBatch[]> {
   if (!seriesName) return []
