@@ -1,4 +1,16 @@
-// src/lib/contentful.ts - UPDATED FOR COMPLETE KAIJU BATCH SCHEMA
+// src/lib/contentful.ts - UPDATED WITH ADDITIONAL OPTIONAL FIELDS
+//
+// This module wraps the Contentful SDK and defines strongly‑typed interfaces
+// for the various content types used by the CryptoKaiju Next.js project.  It
+// also provides helper functions for localisation, asset handling and type
+// guards, as well as convenience functions for querying entries from
+// Contentful.  The Kaiju batch content model has been extended to include
+// optional SEO and product attributes such as open graph metadata, pricing,
+// product identification codes and series information.  When converting a
+// Contentful entry into the local batch interface, these optional fields
+// are extracted when present so that downstream components can access
+// richer metadata without additional API calls.
+
 import type {
   Asset,
   AssetFile,
@@ -6,7 +18,7 @@ import type {
   EntryFieldTypes,
   EntrySkeletonType,
 } from 'contentful'
-import type { Document } from '@contentful/rich-text-types'
+import type { Document } from '@contentful/rich‑text‑types'
 
 /* ------------------------------------------------------------------ */
 /*  Environment setup                                                 */
@@ -32,7 +44,7 @@ async function getContentfulClient() {
 
     // Dynamic import to avoid including contentful in client bundle
     const { createClient } = await import('contentful')
-    
+
     contentfulClient = createClient({
       space: process.env.CONTENTFUL_SPACE_ID,
       accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
@@ -54,7 +66,7 @@ export interface ImageGallerySkeleton extends EntrySkeletonType {
   contentTypeId: 'imageGallery'
   fields: {
     title: EntryFieldTypes.Text
-    galleryStyle: EntryFieldTypes.Symbol // 'two-column' | 'grid' | 'carousel' | 'masonry'
+    galleryStyle: EntryFieldTypes.Symbol // 'two‑column' | 'grid' | 'carousel' | 'masonry'
     images: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     captions?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
   }
@@ -68,7 +80,7 @@ export interface ProductShowcaseSkeleton extends EntrySkeletonType {
     image: EntryFieldTypes.AssetLink | any
     price?: EntryFieldTypes.Text
     mintPrice?: EntryFieldTypes.Text
-    status: EntryFieldTypes.Symbol // 'available' | 'sold-out' | 'coming-soon' | 'minting'
+    status: EntryFieldTypes.Symbol // 'available' | 'sold out' | 'coming soon' | 'minting'
     mintUrl?: EntryFieldTypes.Symbol
     collectionName?: EntryFieldTypes.Symbol
     rarity?: EntryFieldTypes.Symbol
@@ -127,61 +139,61 @@ export interface AuthorSkeleton extends EntrySkeletonType {
   }
 }
 
-// UPDATED: Complete Kaiju Batch Content Model matching your schema
+// Enhanced Kaiju Batch Content Model with optional SEO and product fields
 export interface KaijuBatchSkeleton extends EntrySkeletonType {
   contentTypeId: 'kaijuBatch'
   fields: {
-    // Core identification
-    batchId: EntryFieldTypes.Symbol
+    batchId: EntryFieldTypes.Text
     slug: EntryFieldTypes.Symbol
-    name: EntryFieldTypes.Symbol
+    name: EntryFieldTypes.Text
     type: EntryFieldTypes.Symbol // 'Plush' | 'Vinyl'
     rarity: EntryFieldTypes.Symbol // 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'
-    essence: EntryFieldTypes.Symbol
+    essence: EntryFieldTypes.Text
     availability: EntryFieldTypes.Symbol // 'Secondary' | 'Mintable'
-    colors: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-    
-    // Descriptions
+    colors?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
     characterDescription: EntryFieldTypes.Text
     physicalDescription: EntryFieldTypes.Text
-    
-    // Supply and discovery
-    estimatedSupply: EntryFieldTypes.Integer
-    discoveredDate: EntryFieldTypes.Date
-    
-    // Optional details
-    habitat?: EntryFieldTypes.Symbol
+    habitat?: EntryFieldTypes.Text
     materials?: EntryFieldTypes.Text
-    dimensions?: EntryFieldTypes.Symbol
+    dimensions?: EntryFieldTypes.Text
     features?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-    packagingStyle?: EntryFieldTypes.Symbol
+    packagingStyle?: EntryFieldTypes.Text
     productionNotes?: EntryFieldTypes.Text
+    estimatedSupply: EntryFieldTypes.Number
+    discoveredDate: EntryFieldTypes.Symbol
     secondaryMarketUrl?: EntryFieldTypes.Symbol
     backgroundColor?: EntryFieldTypes.Symbol
-    
-    // Image arrays
+
+    // Image fields - physical and NFT support
     physicalImages: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    // New: multiple NFT images support
     nftImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
+    // Deprecated: single NFT image (kept for backward compatibility)
+    nftImage?: EntryFieldTypes.AssetLink | any
     lifestyleImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     detailImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     conceptImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     packagingImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
-    
-    // SEO fields
+
+    // Optional SEO fields
     seoTitle?: EntryFieldTypes.Symbol
     seoDescription?: EntryFieldTypes.Text
     seoKeywords?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-    
+
+    // Optional marketing fields
+    featured?: EntryFieldTypes.Boolean
+    productManufacturer?: EntryFieldTypes.Symbol
+
     // Open Graph fields
     openGraphTitle?: EntryFieldTypes.Symbol
     openGraphDescription?: EntryFieldTypes.Text
     openGraphImage?: EntryFieldTypes.AssetLink | any
-    
-    // Twitter fields
+
+    // Twitter card fields
     twitterTitle?: EntryFieldTypes.Symbol
     twitterDescription?: EntryFieldTypes.Text
-    
-    // Product information
+
+    // Commerce fields
     productPrice?: EntryFieldTypes.Number
     productCurrency?: EntryFieldTypes.Symbol // 'ETH' | 'USD' | 'EUR' | 'GBP'
     productCondition?: EntryFieldTypes.Symbol // 'New' | 'Used' | 'Refurbished'
@@ -189,19 +201,15 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     productBrand?: EntryFieldTypes.Symbol
     productGtin?: EntryFieldTypes.Symbol
     productMpn?: EntryFieldTypes.Symbol
-    productManufacturer?: EntryFieldTypes.Symbol
-    
-    // Marketing and featured content
-    featured?: EntryFieldTypes.Boolean
-    featuredPriority?: EntryFieldTypes.Integer
     marketingTagline?: EntryFieldTypes.Symbol
     collectorsNote?: EntryFieldTypes.Text
-    
+    featuredPriority?: EntryFieldTypes.Number
+
     // Series information
     isPartOfSeries?: EntryFieldTypes.Boolean
     seriesName?: EntryFieldTypes.Symbol
     seriesDescription?: EntryFieldTypes.Text
-    seriesPosition?: EntryFieldTypes.Integer
+    seriesPosition?: EntryFieldTypes.Number
   }
 }
 
@@ -223,7 +231,7 @@ export type VideoEmbedFields = VideoEmbedSkeleton['fields']
 export type SocialEmbedFields = SocialEmbedSkeleton['fields']
 export type KaijuBatchFields = KaijuBatchSkeleton['fields']
 
-// Re-export Asset type for use in components
+// Re‑export Asset type for use in components
 export type { Asset } from 'contentful'
 
 /* ------------------------------------------------------------------ */
@@ -280,12 +288,12 @@ export function getAssetUrl(
   options?: { w?: number; h?: number; fit?: string },
 ): string | null {
   if (!asset) return null
-  
+
   // Handle unresolved links
   if (asset.sys && asset.sys.type === 'Link') {
     return null // Can't get URL from unresolved link
   }
-  
+
   // Handle both Asset and AssetLink types
   const assetFields = asset.fields
   if (!assetFields?.file) return null
@@ -309,12 +317,12 @@ export function getAssetUrl(
 
 export function getAssetTitle(asset: Asset | EntryFieldTypes.AssetLink | any | undefined): string {
   if (!asset) return ''
-  
+
   // Handle unresolved links
   if (asset.sys && asset.sys.type === 'Link') {
-    return '' // Can't get title from unresolved link
+    return ''
   }
-  
+
   if (!asset.fields) return ''
 
   const pick = (field: any): string => {
@@ -339,8 +347,7 @@ export function toStringValue(value: any): string {
   const extracted = extractLocalizedValue(value)
   if (extracted == null) return ''
   if (typeof extracted === 'string') return extracted
-  if (typeof extracted === 'object' && extracted.toString)
-    return extracted.toString()
+  if (typeof extracted === 'object' && extracted.toString) return extracted.toString()
   return String(extracted)
 }
 
@@ -362,40 +369,13 @@ export function toAssetArray(value: any): Asset[] {
     }
     // Handle both direct Asset objects and AssetLink references
     if (item && item.fields && item.fields.file) {
-      return true // Direct Asset
+      return true
     }
     if (item && item.sys && item.sys.type === 'Asset' && item.fields && item.fields.file) {
-      return true // AssetLink resolved to Asset
+      return true
     }
     return false
   })
-}
-
-export function toNumberValue(value: any): number {
-  if (value == null) return 0
-  const extracted = extractLocalizedValue(value)
-  if (typeof extracted === 'number') return extracted
-  const parsed = Number(extracted)
-  return isNaN(parsed) ? 0 : parsed
-}
-
-export function toBooleanValue(value: any): boolean {
-  if (value == null) return false
-  const extracted = extractLocalizedValue(value)
-  return Boolean(extracted)
-}
-
-export function toDateString(value: any): string {
-  if (!value) return ''
-  const extracted = extractLocalizedValue(value)
-  if (extracted instanceof Date) {
-    return extracted.toISOString().split('T')[0]
-  }
-  if (typeof extracted === 'string') {
-    const date = new Date(extracted)
-    return isNaN(date.getTime()) ? extracted : date.toISOString().split('T')[0]
-  }
-  return String(extracted)
 }
 
 /* ------------------------------------------------------------------ */
@@ -418,7 +398,7 @@ export function isValidBlogPost(entry: any): entry is BlogPost {
       Array.isArray(entry.fields.content.content)
     ))
   )
-  
+
   // Debug logging for invalid posts
   if (!isValid && process.env.NODE_ENV === 'development') {
     console.log('Invalid blog post:', {
@@ -429,10 +409,10 @@ export function isValidBlogPost(entry: any): entry is BlogPost {
       hasExcerpt: !!entry?.fields?.excerpt,
       hasAuthor: !!entry?.fields?.author,
       hasPublishDate: !!entry?.fields?.publishDate,
-      entry: entry
+      entry: entry,
     })
   }
-  
+
   return isValid
 }
 
@@ -489,7 +469,7 @@ export function isValidDocument(content: any): content is Document {
   )
 }
 
-// UPDATED: Enhanced Kaiju Batch type guard for new schema
+// Kaiju batch type guard – checks only required fields; optional fields are ignored
 export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
   return (
     entry &&
@@ -502,19 +482,16 @@ export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
     entry.fields.rarity &&
     entry.fields.characterDescription &&
     entry.fields.physicalDescription &&
-    entry.fields.physicalImages &&
-    Array.isArray(extractLocalizedValue(entry.fields.physicalImages)) &&
     typeof entry.fields.estimatedSupply === 'number' &&
     entry.fields.discoveredDate
   )
 }
 
 /* ------------------------------------------------------------------ */
-/*  Local Kaiju Batch Interface (UPDATED FOR COMPLETE SCHEMA)        */
+/*  Local Kaiju Batch Interface                                      */
 /* ------------------------------------------------------------------ */
 
 export interface LocalKaijuBatch {
-  // Core identification
   id: string
   slug: string
   name: string
@@ -523,103 +500,84 @@ export interface LocalKaijuBatch {
   essence: string
   availability: 'Secondary' | 'Mintable'
   colors: string[]
-  
-  // Descriptions
-  characterDescription: string  
-  physicalDescription: string   
-  
-  // Images - Enhanced structure
+  characterDescription: string
+  physicalDescription: string
   images: {
-    physical: string[]        
-    nft: string[]            // Now always an array for consistency
-    lifestyle: string[]      
-    detail: string[]         
-    concept: string[]        
-    packaging: string[]      
+    physical: string[]
+    nft?: string | string[]
+    lifestyle: string[]
+    detail: string[]
+    concept: string[]
+    packaging: string[]
   }
-  
-  // Supply and discovery
+  habitat?: string
+  materials?: string
+  dimensions?: string
+  features?: string[]
+  packagingStyle?: string
+  productionNotes?: string
   estimatedSupply: number
   discoveredDate: string
-  
-  // Optional details
-  habitat?: string
-  materials?: string           
-  dimensions?: string         
-  features?: string[]         
-  packagingStyle?: string     
-  productionNotes?: string
   secondaryMarketUrl?: string
   backgroundColor?: string
-  
-  // SEO fields
-  seo?: {
-    title?: string
-    description?: string
-    keywords?: string[]
-  }
-  
-  // Open Graph fields
-  openGraph?: {
-    title?: string
-    description?: string
-    image?: string
-  }
-  
-  // Twitter fields
-  twitter?: {
-    title?: string
-    description?: string
-  }
-  
-  // Product information
-  product?: {
-    price?: number
-    currency?: 'ETH' | 'USD' | 'EUR' | 'GBP'
-    condition?: 'New' | 'Used' | 'Refurbished'
-    availability?: 'InStock' | 'OutOfStock' | 'PreOrder'
-    brand?: string
-    gtin?: string
-    mpn?: string
-    manufacturer?: string
-  }
-  
-  // Marketing and featured content
-  marketing?: {
-    featured?: boolean
-    featuredPriority?: number
-    tagline?: string
-    collectorsNote?: string
-  }
-  
-  // Series information
-  series?: {
-    isPartOfSeries?: boolean
-    name?: string
-    description?: string
-    position?: number
-  }
+  // Additional optional fields
+  seoTitle?: string
+  seoDescription?: string
+  seoKeywords?: string[]
+  featured?: boolean
+  productManufacturer?: string
+  openGraphTitle?: string
+  openGraphDescription?: string
+  openGraphImage?: string | null
+  twitterTitle?: string
+  twitterDescription?: string
+  productPrice?: number
+  productCurrency?: string
+  productCondition?: string
+  productAvailability?: string
+  productBrand?: string
+  productGtin?: string
+  productMpn?: string
+  marketingTagline?: string
+  collectorsNote?: string
+  featuredPriority?: number
+  isPartOfSeries?: boolean
+  seriesName?: string
+  seriesDescription?: string
+  seriesPosition?: number
 }
 
 /**
- * UPDATED: Convert Contentful KaijuBatch to LocalKaijuBatch interface
- * Now supports all new schema fields
+ * Convert a Contentful Kaiju batch into the local batch interface.  This
+ * function extracts both required and optional fields from the Contentful
+ * entry, converting rich data types into plain JavaScript primitives.  It
+ * handles multiple NFT images, legacy single NFT image fields and the new
+ * optional SEO and product metadata fields.  When a field is absent, the
+ * corresponding property on the returned object remains undefined.
  */
 export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatch {
   const fields = batch.fields
-  
-  // Enhanced NFT image handling - always return array for consistency
-  const getNftImages = (): string[] => {
+
+  // Enhanced NFT image handling with backward compatibility
+  const getNftImages = (): string | string[] | undefined => {
+    // Priority: use new nftImages array if available
     if (fields.nftImages) {
-      return toAssetArray(fields.nftImages)
-        .map(asset => getAssetUrl(asset))
-        .filter(Boolean) as string[]
+      const nftImageUrls = toAssetArray(fields.nftImages)
+        .map(asset => getAssetUrl(asset) || '')
+        .filter(Boolean)
+      if (nftImageUrls.length > 0) {
+        return nftImageUrls.length === 1 ? nftImageUrls[0] : nftImageUrls
+      }
     }
-    return []
+    // Fallback: use legacy single nftImage field
+    if (fields.nftImage) {
+      const singleNftUrl = getAssetUrl(fields.nftImage)
+      return singleNftUrl || undefined
+    }
+    return undefined
   }
-  
+
   return {
-    // Core identification
     id: toStringValue(fields.batchId),
     slug: toStringValue(fields.slug),
     name: toStringValue(fields.name),
@@ -628,95 +586,60 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     essence: toStringValue(fields.essence),
     availability: toStringValue(fields.availability) as 'Secondary' | 'Mintable',
     colors: toStringArray(fields.colors),
-    
-    // Descriptions
     characterDescription: toStringValue(fields.characterDescription),
     physicalDescription: toStringValue(fields.physicalDescription),
-    
-    // Images - Enhanced structure
     images: {
-      physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
+      physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       nft: getNftImages(),
-      lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
-      detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
-      concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
-      packaging: toAssetArray(fields.packagingImages || []).map(asset => getAssetUrl(asset)).filter(Boolean) as string[],
+      lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      packaging: toAssetArray(fields.packagingImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
     },
-    
-    // Supply and discovery
-    estimatedSupply: toNumberValue(fields.estimatedSupply),
-    discoveredDate: toDateString(fields.discoveredDate),
-    
-    // Optional details
-    habitat: toStringValue(fields.habitat) || undefined,
-    materials: toStringValue(fields.materials) || undefined,
-    dimensions: toStringValue(fields.dimensions) || undefined,
+    habitat: toStringValue(fields.habitat),
+    materials: toStringValue(fields.materials),
+    dimensions: toStringValue(fields.dimensions),
     features: toStringArray(fields.features),
-    packagingStyle: toStringValue(fields.packagingStyle) || undefined,
-    productionNotes: toStringValue(fields.productionNotes) || undefined,
-    secondaryMarketUrl: toStringValue(fields.secondaryMarketUrl) || undefined,
-    backgroundColor: toStringValue(fields.backgroundColor) || undefined,
-    
-    // SEO fields
-    seo: {
-      title: toStringValue(fields.seoTitle) || undefined,
-      description: toStringValue(fields.seoDescription) || undefined,
-      keywords: toStringArray(fields.seoKeywords),
-    },
-    
-    // Open Graph fields
-    openGraph: {
-      title: toStringValue(fields.openGraphTitle) || undefined,
-      description: toStringValue(fields.openGraphDescription) || undefined,
-      image: getAssetUrl(fields.openGraphImage) || undefined,
-    },
-    
-    // Twitter fields
-    twitter: {
-      title: toStringValue(fields.twitterTitle) || undefined,
-      description: toStringValue(fields.twitterDescription) || undefined,
-    },
-    
-    // Product information
-    product: {
-      price: toNumberValue(fields.productPrice) || undefined,
-      currency: toStringValue(fields.productCurrency) as 'ETH' | 'USD' | 'EUR' | 'GBP' || undefined,
-      condition: toStringValue(fields.productCondition) as 'New' | 'Used' | 'Refurbished' || undefined,
-      availability: toStringValue(fields.productAvailability) as 'InStock' | 'OutOfStock' | 'PreOrder' || undefined,
-      brand: toStringValue(fields.productBrand) || undefined,
-      gtin: toStringValue(fields.productGtin) || undefined,
-      mpn: toStringValue(fields.productMpn) || undefined,
-      manufacturer: toStringValue(fields.productManufacturer) || undefined,
-    },
-    
-    // Marketing and featured content
-    marketing: {
-      featured: toBooleanValue(fields.featured),
-      featuredPriority: toNumberValue(fields.featuredPriority) || undefined,
-      tagline: toStringValue(fields.marketingTagline) || undefined,
-      collectorsNote: toStringValue(fields.collectorsNote) || undefined,
-    },
-    
-    // Series information
-    series: {
-      isPartOfSeries: toBooleanValue(fields.isPartOfSeries),
-      name: toStringValue(fields.seriesName) || undefined,
-      description: toStringValue(fields.seriesDescription) || undefined,
-      position: toNumberValue(fields.seriesPosition) || undefined,
-    },
+    packagingStyle: toStringValue(fields.packagingStyle),
+    productionNotes: toStringValue(fields.productionNotes),
+    estimatedSupply: Number(fields.estimatedSupply) || 0,
+    discoveredDate: toStringValue(fields.discoveredDate),
+    secondaryMarketUrl: toStringValue(fields.secondaryMarketUrl),
+    backgroundColor: toStringValue(fields.backgroundColor),
+    // Optional SEO fields
+    seoTitle: toStringValue(fields.seoTitle),
+    seoDescription: toStringValue(fields.seoDescription),
+    seoKeywords: toStringArray(fields.seoKeywords),
+    featured: fields.featured ?? false,
+    productManufacturer: toStringValue(fields.productManufacturer),
+    openGraphTitle: toStringValue(fields.openGraphTitle),
+    openGraphDescription: toStringValue(fields.openGraphDescription),
+    openGraphImage: getAssetUrl(fields.openGraphImage),
+    twitterTitle: toStringValue(fields.twitterTitle),
+    twitterDescription: toStringValue(fields.twitterDescription),
+    productPrice: fields.productPrice != null ? Number(fields.productPrice) : undefined,
+    productCurrency: toStringValue(fields.productCurrency),
+    productCondition: toStringValue(fields.productCondition),
+    productAvailability: toStringValue(fields.productAvailability),
+    productBrand: toStringValue(fields.productBrand),
+    productGtin: toStringValue(fields.productGtin),
+    productMpn: toStringValue(fields.productMpn),
+    marketingTagline: toStringValue(fields.marketingTagline),
+    collectorsNote: toStringValue(fields.collectorsNote),
+    featuredPriority: fields.featuredPriority != null ? Number(fields.featuredPriority) : undefined,
+    isPartOfSeries: fields.isPartOfSeries ?? false,
+    seriesName: toStringValue(fields.seriesName),
+    seriesDescription: toStringValue(fields.seriesDescription),
+    seriesPosition: fields.seriesPosition != null ? Number(fields.seriesPosition) : undefined,
   }
 }
 
 /* ------------------------------------------------------------------ */
-/*  Internal helper                                                   */
+/*  Internal helpers                                                  */
 /* ------------------------------------------------------------------ */
 
 function sortPostsNewestFirst(items: BlogPost[]): BlogPost[] {
-  return items.sort(
-    (a, b) =>
-      new Date(b.fields.publishDate).getTime() -
-      new Date(a.fields.publishDate).getTime(),
-  )
+  return items.sort((a, b) => new Date(b.fields.publishDate).getTime() - new Date(a.fields.publishDate).getTime())
 }
 
 async function safeContentfulCall<T>(
@@ -726,42 +649,35 @@ async function safeContentfulCall<T>(
 ): Promise<T> {
   try {
     const client = await getContentfulClient()
-    
     // Return fallback immediately if on client side or no client
     if (!client) {
       return fallback
     }
-
     return await operation(client)
   } catch (error) {
     console.error(`${message}:`, error)
-
     if (process.env.NODE_ENV === 'development') {
       console.error('Contentful error details:', {
         message: error instanceof Error ? error.message : 'Unknown error',
         stack: error instanceof Error ? error.stack : undefined,
       })
     }
-
     return fallback
   }
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API - Blog Posts                                          */
+/*  Public API – Blog Posts                                          */
 /* ------------------------------------------------------------------ */
 
-export async function getBlogPosts(
-  limit = 10,
-  skip = 0,
-): Promise<BlogPost[]> {
+export async function getBlogPosts(limit = 10, skip = 0): Promise<BlogPost[]> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'blogpost',
         limit: Math.min(limit, 1000),
         skip,
-        include: 3, // Increased to include gallery references
+        include: 3,
       })
       return sortPostsNewestFirst(res.items.filter(isValidBlogPost))
     },
@@ -770,21 +686,18 @@ export async function getBlogPosts(
   )
 }
 
-export async function getBlogPostBySlug(
-  slug: string,
-): Promise<BlogPost | null> {
+export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
   if (!slug) {
     console.error('Invalid slug for getBlogPostBySlug:', slug)
     return null
   }
-
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'blogpost',
         'fields.slug': slug,
         limit: 1,
-        include: 3, // Increased to include gallery references
+        include: 3,
       })
       const entry = res.items[0]
       return isValidBlogPost(entry) ? entry : null
@@ -794,16 +707,13 @@ export async function getBlogPostBySlug(
   )
 }
 
-export async function getImageGalleryById(
-  id: string,
-): Promise<ImageGallery | null> {
+export async function getImageGalleryById(id: string): Promise<ImageGallery | null> {
   if (!id) {
     console.error('Invalid id for getImageGalleryById:', id)
     return null
   }
-
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const entry = await client.getEntry(id, { include: 2 })
       return isValidImageGallery(entry) ? entry : null
     },
@@ -812,11 +722,9 @@ export async function getImageGalleryById(
   )
 }
 
-export async function getImageGalleries(
-  limit = 10,
-): Promise<ImageGallery[]> {
+export async function getImageGalleries(limit = 10): Promise<ImageGallery[]> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'imageGallery',
         limit: Math.min(limit, 1000),
@@ -829,11 +737,9 @@ export async function getImageGalleries(
   )
 }
 
-export async function getFeaturedBlogPosts(
-  limit = 3,
-): Promise<BlogPost[]> {
+export async function getFeaturedBlogPosts(limit = 3): Promise<BlogPost[]> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'blogpost',
         'fields.featured': true,
@@ -847,17 +753,13 @@ export async function getFeaturedBlogPosts(
   )
 }
 
-export async function getBlogPostsByTag(
-  tag: string,
-  limit = 10,
-): Promise<BlogPost[]> {
+export async function getBlogPostsByTag(tag: string, limit = 10): Promise<BlogPost[]> {
   if (!tag) {
     console.error('Invalid tag for getBlogPostsByTag:', tag)
     return []
   }
-
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'blogpost',
         'fields.tags[in]': [tag],
@@ -871,14 +773,10 @@ export async function getBlogPostsByTag(
   )
 }
 
-export async function searchBlogPosts(
-  query: string,
-  limit = 10,
-): Promise<BlogPost[]> {
+export async function searchBlogPosts(query: string, limit = 10): Promise<BlogPost[]> {
   if (!query.trim()) return []
-
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'blogpost',
         query: query.trim(),
@@ -894,15 +792,15 @@ export async function searchBlogPosts(
 
 export async function getAllTags(): Promise<string[]> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'blogpost',
         limit: 1000,
         select: ['fields.tags'],
       })
       const tags = res.items
-        .filter((item: any) => item && item.fields && item.fields.tags)
-        .flatMap((item: any) => toStringArray(item.fields.tags))
+        .filter(item => item && item.fields && item.fields.tags)
+        .flatMap(item => toStringArray(item.fields.tags))
         .filter(Boolean)
         .filter((t: any, idx: number, arr: any[]) => arr.indexOf(t) === idx)
         .sort()
@@ -915,7 +813,7 @@ export async function getAllTags(): Promise<string[]> {
 
 export async function getBlogPostsCount(): Promise<number> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'blogpost',
         limit: 0,
@@ -927,11 +825,9 @@ export async function getBlogPostsCount(): Promise<number> {
   )
 }
 
-export async function getRecentBlogPosts(
-  limit = 50,
-): Promise<BlogPost[]> {
+export async function getRecentBlogPosts(limit = 50): Promise<BlogPost[]> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'blogpost',
         limit: Math.min(limit, 1000),
@@ -951,20 +847,17 @@ export async function getRecentBlogPosts(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API - Kaiju Batches (UPDATED FOR NEW SCHEMA)             */
+/*  Public API – Kaiju Batches                                       */
 /* ------------------------------------------------------------------ */
 
-/**
- * Get all Kaiju batches
- */
 export async function getAllKaijuBatches(): Promise<KaijuBatch[]> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'kaijuBatch',
         limit: 1000,
         include: 2,
-        order: ['fields.batchId']
+        order: ['fields.batchId'],
       })
       return res.items.filter(isValidKaijuBatch)
     },
@@ -973,17 +866,13 @@ export async function getAllKaijuBatches(): Promise<KaijuBatch[]> {
   )
 }
 
-/**
- * Get Kaiju batch by slug
- */
 export async function getKaijuBatchBySlug(slug: string): Promise<KaijuBatch | null> {
   if (!slug) {
     console.error('Invalid slug for getKaijuBatchBySlug:', slug)
     return null
   }
-
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'kaijuBatch',
         'fields.slug': slug,
@@ -998,17 +887,13 @@ export async function getKaijuBatchBySlug(slug: string): Promise<KaijuBatch | nu
   )
 }
 
-/**
- * Get Kaiju batch by ID
- */
 export async function getKaijuBatchById(batchId: string): Promise<KaijuBatch | null> {
   if (!batchId) {
     console.error('Invalid batchId for getKaijuBatchById:', batchId)
     return null
   }
-
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'kaijuBatch',
         'fields.batchId': batchId,
@@ -1023,18 +908,15 @@ export async function getKaijuBatchById(batchId: string): Promise<KaijuBatch | n
   )
 }
 
-/**
- * Get Kaiju batches by type
- */
 export async function getKaijuBatchesByType(type: 'Plush' | 'Vinyl'): Promise<KaijuBatch[]> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'kaijuBatch',
         'fields.type': type,
         limit: 1000,
         include: 2,
-        order: ['fields.batchId']
+        order: ['fields.batchId'],
       })
       return res.items.filter(isValidKaijuBatch)
     },
@@ -1043,68 +925,19 @@ export async function getKaijuBatchesByType(type: 'Plush' | 'Vinyl'): Promise<Ka
   )
 }
 
-/**
- * Get Kaiju batches by rarity
- */
 export async function getKaijuBatchesByRarity(rarity: 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'): Promise<KaijuBatch[]> {
   return safeContentfulCall(
-    async (client) => {
+    async client => {
       const res = await client.getEntries({
         content_type: 'kaijuBatch',
         'fields.rarity': rarity,
         limit: 1000,
         include: 2,
-        order: ['fields.batchId']
+        order: ['fields.batchId'],
       })
       return res.items.filter(isValidKaijuBatch)
     },
     [],
     `Error fetching Kaiju batches by rarity: ${rarity}`,
-  )
-}
-
-/**
- * Get featured Kaiju batches
- */
-export async function getFeaturedKaijuBatches(limit = 10): Promise<KaijuBatch[]> {
-  return safeContentfulCall(
-    async (client) => {
-      const res = await client.getEntries({
-        content_type: 'kaijuBatch',
-        'fields.featured': true,
-        limit: Math.min(limit, 1000),
-        include: 2,
-        order: ['-fields.featuredPriority', 'fields.batchId']
-      })
-      return res.items.filter(isValidKaijuBatch)
-    },
-    [],
-    'Error fetching featured Kaiju batches',
-  )
-}
-
-/**
- * Get Kaiju batches by series
- */
-export async function getKaijuBatchesBySeries(seriesName: string): Promise<KaijuBatch[]> {
-  if (!seriesName) {
-    console.error('Invalid seriesName for getKaijuBatchesBySeries:', seriesName)
-    return []
-  }
-
-  return safeContentfulCall(
-    async (client) => {
-      const res = await client.getEntries({
-        content_type: 'kaijuBatch',
-        'fields.isPartOfSeries': true,
-        'fields.seriesName': seriesName,
-        limit: 1000,
-        include: 2,
-        order: ['fields.seriesPosition', 'fields.batchId']
-      })
-      return res.items.filter(isValidKaijuBatch)
-    },
-    [],
-    `Error fetching Kaiju batches by series: ${seriesName}`,
   )
 }
