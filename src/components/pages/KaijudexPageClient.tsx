@@ -73,7 +73,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
             </div>
             
             {/* Featured badge */}
-            {batch.marketing?.featured && (
+            {batch.featured && (
               <div className="bg-kaiju-pink text-white px-2 py-1 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
                 <Star className="w-3 h-3" />
                 FEATURED
@@ -371,7 +371,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
     const typeMatch = selectedType === 'All' || batch.type === selectedType
     const rarityMatch = selectedRarity === 'All' || batch.rarity === selectedRarity
     const availabilityMatch = selectedAvailability === 'All' || batch.availability === selectedAvailability
-    const featuredMatch = !showFeaturedOnly || batch.marketing?.featured
+    const featuredMatch = !showFeaturedOnly || batch.featured
     
     return typeMatch && rarityMatch && availabilityMatch && featuredMatch
   })

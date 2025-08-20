@@ -1,4 +1,4 @@
-// src/components/pages/KaijuDetailsPageClient.tsx - FIXED BATCH LINKING
+// src/components/pages/KaijuDetailsPageClient.tsx - FIXED FOR CONTENTFUL STRUCTURE
 'use client'
 
 import { useState, useEffect } from 'react'
@@ -8,7 +8,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
 import { useBlockchainKaiju } from '@/lib/hooks/useBlockchainCryptoKaiju'
-import { batchPageExistsSync, batchNameToSlug, getBatchPageUrl } from '@/lib/utils/batchUtils'
 
 interface KaijuDetailsPageClientProps {
   tokenId: string
@@ -383,26 +382,10 @@ export default function KaijuDetailsPageClient({ tokenId }: KaijuDetailsPageClie
                     {kaiju.nfcId && (
                       <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">NFC: {kaiju.nfcId}</span>
                     )}
-                    {/* FIXED: Updated batch linking with new utils */}
+                    {/* FIXED: Simple batch display without complex linking */}
                     {kaiju.batch && (
                       <span className="text-white/60 font-mono text-sm bg-white/10 px-2 py-1 rounded">
-                        Batch: {batchPageExistsSync(kaiju.batch) ? (
-                          <Link 
-                            href={getBatchPageUrl(kaiju.batch)}
-                            className="text-white hover:text-white transition-colors underline decoration-dotted underline-offset-2 ml-1"
-                            title={`View ${kaiju.batch} collection page`}
-                          >
-                            {kaiju.batch}
-                          </Link>
-                        ) : (
-                          <span className="ml-1">{kaiju.batch}</span>
-                        )}
-                      </span>
-                    )}
-                    {/* Debug batch info */}
-                    {process.env.NODE_ENV === 'development' && kaiju.batch && (
-                      <span className="text-yellow-400 text-xs bg-black/50 px-2 py-1 rounded">
-                        Batch: "{kaiju.batch}" → Exists: {batchPageExistsSync(kaiju.batch) ? 'YES' : 'NO'}
+                        Batch: <span className="ml-1">{kaiju.batch}</span>
                       </span>
                     )}
                   </div>
