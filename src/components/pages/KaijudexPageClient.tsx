@@ -7,7 +7,7 @@ import { Search, Database, Filter, Sparkles, Zap, Eye, Package, Star, Award } fr
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
-import KaijuBatchService, { type KaijuBatch } from '@/lib/services/KaijuBatchService'
+import { type KaijuBatch } from '@/lib/services/KaijuBatchService'
 
 interface KaijudexPageClientProps {
   initialBatches: KaijuBatch[]
@@ -34,16 +34,16 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
   const rotations = ['-2deg', '1deg', '-1deg', '2deg', '-1.5deg', '1.5deg']
   const rotation = rotations[index % rotations.length]
 
-  // FIXED: Use service methods for images with correct method names
-  const primaryImage = KaijuBatchService.getBatchPrimaryImage(batch)
-  const nftImage = KaijuBatchService.getBatchNFTImage(batch) // FIXED: Changed from getBatchNFTImages to getBatchNFTImage
-  const hasNftImages = !!nftImage // FIXED: Simple check if NFT image exists
-  const firstNftImage = nftImage // FIXED: Since getBatchNFTImage returns a single image, use it directly
+  // FIXED: Use direct property access instead of service methods
+  const primaryImage = batch.images.physical[0] || '/images/placeholder-kaiju.png'
+  const nftImage = typeof batch.images.nft === 'string' ? batch.images.nft : batch.images.nft?.[0]
+  const hasNftImages = !!nftImage
+  const firstNftImage = nftImage
 
-  // Get status and availability info
-  const status = KaijuBatchService.getBatchStatus(batch)
-  const isAvailable = KaijuBatchService.isBatchAvailable(batch)
-  const formattedPrice = KaijuBatchService.getBatchFormattedPrice(batch)
+  // Get status and availability info directly from batch properties
+  const status = batch.availability === 'Mintable' ? 'Available' : 'Secondary Only'
+  const isAvailable = batch.availability === 'Mintable'
+  const formattedPrice = batch.productInfo?.price ? `${batch.productInfo.price} ${batch.productInfo.currency || 'ETH'}` : null
 
   return (
     <motion.div
