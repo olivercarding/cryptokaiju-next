@@ -1,4 +1,4 @@
-// src/lib/contentful.ts - FIXED TYPE COMPATIBILITY ISSUE
+// src/lib/contentful.ts - FIXED TYPE COMPATIBILITY ISSUE.
 import type {
   Asset,
   AssetFile,

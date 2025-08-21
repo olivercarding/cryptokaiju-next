@@ -1,4 +1,4 @@
-// src/lib/seo.ts - ENHANCED WITH CONTENTFUL BATCH SEO - FIXED DUPLICATE FUNCTIONS
+// src/lib/seo.ts - COMPLETELY FIXED FOR TYPESCRIPT COMPATIBILITY
 import type { Metadata } from 'next'
 import type { LocalKaijuBatch } from '@/lib/contentful'
 
@@ -86,7 +86,7 @@ export function generatePageMetadata(path: string, customConfig?: Partial<SEOCon
       description: config.description,
       url: canonicalUrl,
       siteName: baseConfig.siteName,
-      type: 'website',
+      type: 'website', // Use valid Next.js OpenGraph type
       images: [
         {
           url: ogImageUrl,
@@ -126,7 +126,7 @@ export function generatePageMetadata(path: string, customConfig?: Partial<SEOCon
   }
 }
 
-// 🆕 NEW: Enhanced batch metadata generation with Contentful SEO
+// Enhanced batch metadata generation with Contentful SEO
 export function generateBatchMetadata(batch: LocalKaijuBatch): Metadata {
   // Use Contentful SEO fields if available, otherwise generate from batch data
   const seoTitle = batch.seo?.title || 
@@ -164,13 +164,13 @@ export function generateBatchMetadata(batch: LocalKaijuBatch): Metadata {
     description: seoDescription,
     keywords: seoKeywords.join(', '),
     
-    // Open Graph
+    // Open Graph - Use 'website' instead of 'product' (Next.js doesn't support 'product')
     openGraph: {
       title: ogTitle,
       description: ogDescription,
       url: canonicalUrl,
       siteName: baseConfig.siteName,
-      type: 'product',
+      type: 'website', // FIXED: Use valid Next.js OpenGraph type
       images: [
         {
           url: ogImage.startsWith('http') ? ogImage : `${baseConfig.siteUrl}${ogImage}`,
@@ -193,16 +193,6 @@ export function generateBatchMetadata(batch: LocalKaijuBatch): Metadata {
     // Canonical
     alternates: {
       canonical: canonicalUrl
-    },
-    
-    // Product-specific metadata
-    other: {
-      'product:availability': batch.availability,
-      'product:condition': batch.productInfo?.condition || 'new',
-      'product:category': 'Collectibles',
-      'product:brand': batch.productInfo?.brand || 'CryptoKaiju',
-      'product:price:amount': batch.productInfo?.price?.toString(),
-      'product:price:currency': batch.productInfo?.currency || 'ETH',
     },
     
     // Robots
@@ -238,7 +228,7 @@ export function generateKaijuMetadata(tokenId: string, kaijuName?: string): Meta
   })
 }
 
-// 🔧 FIXED: Legacy function renamed to avoid conflicts
+// Legacy function renamed to avoid conflicts
 export function generateLegacyBatchMetadata(slug: string, batchName?: string): Metadata {
   const title = batchName 
     ? `${batchName} Batch - Physical NFTs & Connected Collectibles Collection`
@@ -248,7 +238,7 @@ export function generateLegacyBatchMetadata(slug: string, batchName?: string): M
     ? `Explore the ${batchName} collection of physical NFTs and connected collectibles. Each connected object features unique traits, NFC authentication, and blockchain verification.`
     : `Discover connected collectibles from the ${slug} batch. View physical NFTs with NFC chips linking toys to blockchain ownership.`
 
-  return generatePageMetadata(`/kaijudex/${slug}`, {
+  return generatePageMetadata(`/kaijudx/${slug}`, {
     title,
     description,
     keywords: ['Physical NFT Collection', 'Connected Collectibles Batch', 'NFC Objects Series', batchName || slug],
@@ -256,7 +246,7 @@ export function generateLegacyBatchMetadata(slug: string, batchName?: string): M
   })
 }
 
-// 🆕 NEW: Generate JSON-LD structured data with batch info
+// Generate JSON-LD structured data with batch info (separate from Next.js metadata)
 export function generateBatchStructuredData(batch: LocalKaijuBatch): object {
   return {
     '@context': 'https://schema.org',
@@ -320,10 +310,7 @@ export function generateBatchStructuredData(batch: LocalKaijuBatch): object {
   }
 }
 
-// Import and re-export createKaijuProductSchema for convenience
-export { createKaijuProductSchema } from './structured-data'
-
-// 🆕 NEW: Helper to get the best available title/description
+// Helper to get the best available title/description
 export function getBestSEOValue(
   contentfulValue: string | undefined,
   fallbackValue: string,
@@ -333,7 +320,7 @@ export function getBestSEOValue(
   return maxLength ? value.substring(0, maxLength) : value
 }
 
-// 🆕 NEW: Generate social media preview data
+// Generate social media preview data
 export function generateSocialPreview(batch: LocalKaijuBatch): {
   title: string
   description: string
