@@ -70,7 +70,9 @@ const richTextOptions: any = {
     [MARKS.UNDERLINE]: (text: ReactNode) => <u className="underline decoration-kaiju-pink">{text}</u>,
   },
   renderNode: {
-    [BLOCKS.PARAGRAPH]: (_node: any, children: ReactNode) => <p className="mb-4 text-kaiju-navy/80 leading-relaxed">{children}</p>,
+    [BLOCKS.PARAGRAPH]: (_node: any, children: ReactNode) => (
+      <p className="text-kaiju-navy/80 leading-7">{children}</p>
+    ),
     [BLOCKS.HEADING_1]: (_n: any, c: ReactNode) => <h1 className="text-3xl font-bold text-kaiju-navy mb-6 mt-8">{c}</h1>,
     [BLOCKS.HEADING_2]: (_n: any, c: ReactNode) => <h2 className="text-2xl font-bold text-kaiju-navy mb-4 mt-6">{c}</h2>,
     [BLOCKS.HEADING_3]: (_n: any, c: ReactNode) => <h3 className="text-xl font-semibold text-kaiju-navy mb-3 mt-4">{c}</h3>,
@@ -100,7 +102,7 @@ const richTextOptions: any = {
 
 const renderContent = (content: string | ContentfulDocument) =>
   typeof content === 'string'
-    ? <p className="text-kaiju-navy/80 leading-relaxed">{content}</p>
+    ? <p className="text-kaiju-navy/80 leading-7 whitespace-pre-line">{content}</p>
     : documentToReactComponents(content as ContentfulDocument, richTextOptions)
 
 /* Lightbox */
@@ -477,7 +479,8 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                   className="grid lg:grid-cols-3 gap-8">
                   <div className="lg:col-span-2 space-y-8">
                     <InfoCard icon={Sparkles} title="Character Story">
-                      <div className="prose prose-kaiju max-w-none">{renderContent(batch.characterDescription)}</div>
+                    <div className="prose prose-kaiju max-w-none prose-p:my-5 prose-p:leading-7 prose-ul:my-6 prose-ol:my-6">
+                    {renderContent(batch.characterDescription)}</div>
                       {batch.images.lifestyle.length > 0 && (
                         <InlineImageGallery images={batch.images.lifestyle} title="Character in Action"
                           onImageClick={(index) => openLightbox(batch.images.lifestyle, index)} />
@@ -485,7 +488,8 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                     </InfoCard>
 
                     <InfoCard icon={Package} title="Physical Design">
-                      <div className="prose prose-kaiju max-w-none">{renderContent(batch.physicalDescription)}</div>
+                    <div className="prose prose-kaiju max-w-none prose-p:my-5 prose-p:leading-7 prose-ul:my-6 prose-ol:my-6">
+                    {renderContent(batch.physicalDescription)}</div>
                       {batch.images.detail.length > 0 && (
                         <InlineImageGallery images={batch.images.detail} title="Design Details"
                           onImageClick={(index) => openLightbox(batch.images.detail, index)} />
@@ -494,7 +498,8 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
 
                     {batch.habitat && (
                       <InfoCard icon={Globe} title="Habitat">
-                        <div className="prose prose-kaiju max-w-none">{renderContent(batch.habitat)}</div>
+                        <div className="prose prose-kaiju max-w-none prose-p:my-5 prose-p:leading-7 prose-ul:my-6 prose-ol:my-6">
+                        {renderContent(batch.habitat)}</div>
                         {batch.images.concept.length > 0 && (
                           <InlineImageGallery images={batch.images.concept} title="Environmental Concept Art"
                             onImageClick={(index) => openLightbox(batch.images.concept, index)} />
@@ -563,7 +568,8 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
 
                   {batch.productionNotes && (
                     <InfoCard icon={Package} title="Production Notes" className="md:col-span-2">
-                      <div className="prose prose-kaiju max-w-none">{renderContent(batch.productionNotes)}</div>
+                      <div className="prose prose-kaiju max-w-none prose-p:my-5 prose-p:leading-7 prose-ul:my-6 prose-ol:my-6">
+                      {renderContent(batch.productionNotes)}</div>
                     </InfoCard>
                   )}
 
