@@ -1,6 +1,7 @@
-// src/lib/seo.ts - COMPLETELY FIXED FOR TYPESCRIPT COMPATIBILITY
+// src/lib/seo.ts - FIXED FOR RICH TEXT SUPPORT
 import type { Metadata } from 'next'
 import type { LocalKaijuBatch } from '@/lib/contentful'
+import type { Document } from '@contentful/rich-text-types'
 
 interface SEOConfig {
   title: string
@@ -16,6 +17,36 @@ const baseConfig = {
   siteUrl: 'https://cryptokaiju.io',
   defaultOgImage: '/images/og-default.jpg',
   twitterHandle: '@cryptokaijuio'
+}
+
+// 🆕 NEW: Helper function to extract plain text from rich text or string
+function extractPlainText(content: string | Document): string {
+  if (typeof content === 'string') {
+    return content
+  }
+  
+  // If it's a Document (rich text), extract plain text from all nodes
+  if (content && typeof content === 'object' && content.nodeType === 'document') {
+    const extractTextFromNode = (node: any): string => {
+      if (!node) return ''
+      
+      // Handle text nodes
+      if (node.nodeType === 'text') {
+        return node.value || ''
+      }
+      
+      // Handle other nodes with content
+      if (node.content && Array.isArray(node.content)) {
+        return node.content.map(extractTextFromNode).join('')
+      }
+      
+      return ''
+    }
+    
+    return content.content ? content.content.map(extractTextFromNode).join(' ') : ''
+  }
+  
+  return ''
 }
 
 // Page-specific configurations targeting our keywords
@@ -126,14 +157,16 @@ export function generatePageMetadata(path: string, customConfig?: Partial<SEOCon
   }
 }
 
-// Enhanced batch metadata generation with Contentful SEO
+// 🆕 UPDATED: Enhanced batch metadata generation with rich text support
 export function generateBatchMetadata(batch: LocalKaijuBatch): Metadata {
   // Use Contentful SEO fields if available, otherwise generate from batch data
   const seoTitle = batch.seo?.title || 
     `${batch.name} - ${batch.type} Collectible | CryptoKaiju`
   
+  // 🆕 FIXED: Extract plain text from characterDescription whether it's string or Document
+  const characterDescriptionText = extractPlainText(batch.characterDescription)
   const seoDescription = batch.seo?.description || 
-    `Discover ${batch.name}, a ${batch.rarity.toLowerCase()} ${batch.type.toLowerCase()} collectible from CryptoKaiju. ${batch.essence}. ${batch.characterDescription.substring(0, 100)}...`
+    `Discover ${batch.name}, a ${batch.rarity.toLowerCase()} ${batch.type.toLowerCase()} collectible from CryptoKaiju. ${batch.essence}. ${characterDescriptionText.substring(0, 100)}...`
   
   const seoKeywords = batch.seo?.keywords?.length ? batch.seo.keywords : [
     'Physical NFT',
@@ -246,13 +279,16 @@ export function generateLegacyBatchMetadata(slug: string, batchName?: string): M
   })
 }
 
-// Generate JSON-LD structured data with batch info (separate from Next.js metadata)
+// 🆕 UPDATED: Generate JSON-LD structured data with rich text support
 export function generateBatchStructuredData(batch: LocalKaijuBatch): object {
+  // Extract plain text for structured data
+  const characterDescriptionText = extractPlainText(batch.characterDescription)
+  
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: batch.name,
-    description: batch.characterDescription,
+    description: characterDescriptionText,
     image: batch.images.physical[0] || (typeof batch.images.nft === 'string' ? batch.images.nft : batch.images.nft?.[0]),
     brand: {
       '@type': 'Brand',
@@ -304,32 +340,41 @@ export function generateBatchStructuredData(batch: LocalKaijuBatch): object {
       isPartOf: {
         '@type': 'CollectionPage',
         name: batch.series.name,
-        description: batch.series.description
+        description: extractPlainText(batch.series.description || '')
       }
     })
   }
 }
 
-// Helper to get the best available title/description
+// 🆕 UPDATED: Helper to get the best available title/description with rich text support
 export function getBestSEOValue(
-  contentfulValue: string | undefined,
+  contentfulValue: string | Document | undefined,
   fallbackValue: string,
   maxLength?: number
 ): string {
-  const value = contentfulValue || fallbackValue
+  let value: string
+  
+  if (contentfulValue) {
+    value = extractPlainText(contentfulValue)
+  } else {
+    value = fallbackValue
+  }
+  
   return maxLength ? value.substring(0, maxLength) : value
 }
 
-// Generate social media preview data
+// 🆕 UPDATED: Generate social media preview data with rich text support
 export function generateSocialPreview(batch: LocalKaijuBatch): {
   title: string
   description: string
   image: string
   url: string
 } {
+  const characterDescriptionText = extractPlainText(batch.characterDescription)
+  
   return {
     title: getBestSEOValue(batch.seo?.openGraph?.title, `${batch.name} | CryptoKaiju`, 60),
-    description: getBestSEOValue(batch.seo?.openGraph?.description, batch.characterDescription, 160),
+    description: getBestSEOValue(batch.seo?.openGraph?.description, characterDescriptionText, 160),
     image: batch.seo?.openGraph?.image || batch.images.physical[0] || '/images/og-default.jpg',
     url: `${baseConfig.siteUrl}/kaijudex/${batch.slug}`
   }
