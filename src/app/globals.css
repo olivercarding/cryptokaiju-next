@@ -40,6 +40,13 @@
   
   /* Spacing */
   --spacing: 0.25rem;
+  
+  /* Rich Text Prose Variables */
+  --prose-spacing: 1.5rem;
+  --prose-heading-color: var(--color-kaiju-navy);
+  --prose-body-color: oklch(0.45 0.02 265);
+  --prose-muted-color: oklch(0.55 0.01 265);
+  --prose-border-color: oklch(0.90 0.01 265);
 }
 
 /* Custom gradient utility classes */
@@ -105,6 +112,365 @@
     opacity: 0.9;
     transform: translateY(-1px);
   }
+
+  /* ===================================================================== */
+  /* RICH TEXT PROSE STYLES FOR CONTENTFUL                                */
+  /* ===================================================================== */
+  
+  /* Base prose container */
+  .prose-kaiju {
+    font-family: var(--font-primary);
+    line-height: 1.7;
+    color: var(--prose-body-color);
+  }
+
+  /* Typography Hierarchy */
+  .prose-kaiju h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--prose-heading-color);
+    margin: 2rem 0 1rem 0;
+    line-height: 1.2;
+  }
+
+  .prose-kaiju h2 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--prose-heading-color);
+    margin: 2rem 0 1rem 0;
+    line-height: 1.3;
+  }
+
+  .prose-kaiju h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--prose-heading-color);
+    margin: 1.5rem 0 0.75rem 0;
+    line-height: 1.4;
+  }
+
+  .prose-kaiju h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--prose-heading-color);
+    margin: 1.5rem 0 0.75rem 0;
+    line-height: 1.4;
+  }
+
+  .prose-kaiju h5 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--prose-heading-color);
+    margin: 1.25rem 0 0.5rem 0;
+    line-height: 1.4;
+  }
+
+  .prose-kaiju h6 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--prose-heading-color);
+    margin: 1.25rem 0 0.5rem 0;
+    line-height: 1.4;
+  }
+
+  /* Paragraph styles */
+  .prose-kaiju p {
+    margin: 0 0 var(--prose-spacing) 0;
+    font-size: 1.125rem;
+    line-height: 1.7;
+    color: var(--prose-body-color);
+  }
+
+  .prose-kaiju p:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Text formatting */
+  .prose-kaiju strong {
+    font-weight: 700;
+    color: var(--prose-heading-color);
+  }
+
+  .prose-kaiju em {
+    font-style: italic;
+    color: var(--prose-muted-color);
+  }
+
+  .prose-kaiju u {
+    text-decoration: underline;
+    text-decoration-color: var(--color-kaiju-pink);
+    text-underline-offset: 0.2em;
+  }
+
+  /* Links */
+  .prose-kaiju a {
+    color: var(--color-kaiju-pink);
+    text-decoration: underline;
+    text-decoration-color: oklch(from var(--color-kaiju-pink) l c h / 0.3);
+    text-underline-offset: 0.15em;
+    font-weight: 500;
+    transition: all 0.2s ease;
+  }
+
+  .prose-kaiju a:hover {
+    color: var(--color-kaiju-red);
+    text-decoration-color: var(--color-kaiju-red);
+  }
+
+  /* Lists */
+  .prose-kaiju ul, 
+  .prose-kaiju ol {
+    margin: var(--prose-spacing) 0;
+    padding-left: 1.75rem;
+  }
+
+  .prose-kaiju ul {
+    list-style-type: disc;
+  }
+
+  .prose-kaiju ol {
+    list-style-type: decimal;
+  }
+
+  .prose-kaiju li {
+    margin: 0.5rem 0;
+    line-height: 1.7;
+    color: var(--prose-body-color);
+  }
+
+  .prose-kaiju li::marker {
+    color: var(--color-kaiju-pink);
+    font-weight: 600;
+  }
+
+  /* Nested lists */
+  .prose-kaiju ul ul,
+  .prose-kaiju ul ol,
+  .prose-kaiju ol ul,
+  .prose-kaiju ol ol {
+    margin: 0.5rem 0;
+  }
+
+  .prose-kaiju li > p {
+    margin: 0.5rem 0;
+  }
+
+  /* Blockquotes */
+  .prose-kaiju blockquote {
+    border-left: 4px solid var(--color-kaiju-pink);
+    background: linear-gradient(135deg, 
+      var(--color-kaiju-light-pink) 0%, 
+      var(--color-kaiju-white) 100%);
+    padding: 1.5rem 1.5rem 1.5rem 2rem;
+    margin: 2rem 0;
+    border-radius: 0 var(--radius-kaiju-md) var(--radius-kaiju-md) 0;
+    font-style: italic;
+    font-size: 1.125rem;
+    color: var(--prose-heading-color);
+    box-shadow: 0 4px 6px -1px oklch(from var(--color-kaiju-navy) l c h / 0.1);
+    position: relative;
+  }
+
+  .prose-kaiju blockquote::before {
+    content: '"';
+    position: absolute;
+    top: 0.5rem;
+    left: 1rem;
+    font-size: 3rem;
+    color: var(--color-kaiju-pink);
+    font-weight: bold;
+    line-height: 1;
+    opacity: 0.3;
+  }
+
+  .prose-kaiju blockquote p {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  .prose-kaiju blockquote > *:first-child {
+    margin-top: 0;
+  }
+
+  .prose-kaiju blockquote > *:last-child {
+    margin-bottom: 0;
+  }
+
+  /* Code styling */
+  .prose-kaiju code {
+    background: oklch(from var(--prose-border-color) l c h / 0.3);
+    color: var(--color-kaiju-pink);
+    padding: 0.25rem 0.5rem;
+    border-radius: var(--radius-kaiju-sm);
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.875em;
+    font-weight: 600;
+    border: 1px solid var(--prose-border-color);
+  }
+
+  .prose-kaiju pre {
+    background: var(--color-kaiju-navy);
+    color: var(--color-kaiju-white);
+    padding: 1.5rem;
+    border-radius: var(--radius-kaiju-md);
+    overflow-x: auto;
+    margin: var(--prose-spacing) 0;
+    box-shadow: 0 10px 15px -3px oklch(from var(--color-kaiju-navy) l c h / 0.1);
+    border: 1px solid oklch(from var(--color-kaiju-navy) l c h / 0.2);
+  }
+
+  .prose-kaiju pre code {
+    background: none;
+    color: inherit;
+    padding: 0;
+    border-radius: 0;
+    font-weight: 400;
+    border: none;
+    font-size: 0.875rem;
+  }
+
+  /* Images and figures */
+  .prose-kaiju img {
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--radius-kaiju-md);
+    box-shadow: 0 10px 25px -5px oklch(from var(--color-kaiju-navy) l c h / 0.1);
+    margin: 2rem auto;
+    display: block;
+  }
+
+  .prose-kaiju figure {
+    margin: 2rem 0;
+    text-align: center;
+  }
+
+  .prose-kaiju figcaption {
+    font-size: 0.875rem;
+    color: var(--prose-muted-color);
+    font-style: italic;
+    margin-top: 0.75rem;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  /* Tables */
+  .prose-kaiju table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: var(--prose-spacing) 0;
+    overflow: hidden;
+    border-radius: var(--radius-kaiju-md);
+    box-shadow: 0 4px 6px -1px oklch(from var(--color-kaiju-navy) l c h / 0.1);
+    border: 1px solid var(--prose-border-color);
+  }
+
+  .prose-kaiju th,
+  .prose-kaiju td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--prose-border-color);
+    font-size: 0.95rem;
+  }
+
+  .prose-kaiju th {
+    background: var(--prose-heading-color);
+    color: var(--color-kaiju-white);
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .prose-kaiju td {
+    background: var(--color-kaiju-white);
+  }
+
+  .prose-kaiju tr:nth-child(even) td {
+    background: oklch(from var(--prose-border-color) l c h / 0.3);
+  }
+
+  .prose-kaiju tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Horizontal rules */
+  .prose-kaiju hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, 
+      transparent 0%, 
+      var(--color-kaiju-pink) 50%, 
+      transparent 100%);
+    margin: 3rem 0;
+    border-radius: var(--radius-kaiju-pill);
+  }
+
+  /* Special content blocks */
+  .prose-kaiju .embedded-asset {
+    margin: 2rem 0;
+    border-radius: var(--radius-kaiju-md);
+    overflow: hidden;
+  }
+
+  .prose-kaiju .embedded-entry {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: oklch(from var(--color-kaiju-light-pink) l c h / 0.5);
+    border-radius: var(--radius-kaiju-md);
+    border-left: 4px solid var(--color-kaiju-pink);
+    box-shadow: 0 2px 4px -1px oklch(from var(--color-kaiju-navy) l c h / 0.05);
+  }
+
+  /* Error and loading states */
+  .prose-kaiju .content-error {
+    background: oklch(0.97 0.02 25);
+    border: 1px solid oklch(0.85 0.1 25);
+    color: oklch(0.35 0.25 25);
+    padding: 1rem;
+    border-radius: var(--radius-kaiju-sm);
+    margin: 1rem 0;
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .prose-kaiju .content-loading {
+    background: oklch(from var(--prose-border-color) l c h / 0.3);
+    height: 1.5rem;
+    border-radius: var(--radius-kaiju-sm);
+    margin: 0.5rem 0;
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Responsive typography */
+  @media (max-width: 768px) {
+    .prose-kaiju {
+      --prose-spacing: 1.25rem;
+    }
+    
+    .prose-kaiju h1 { font-size: 2rem; }
+    .prose-kaiju h2 { font-size: 1.75rem; }
+    .prose-kaiju h3 { font-size: 1.375rem; }
+    .prose-kaiju p { font-size: 1rem; }
+    
+    .prose-kaiju blockquote {
+      padding: 1rem 1rem 1rem 1.5rem;
+      font-size: 1rem;
+    }
+    
+    .prose-kaiju pre {
+      padding: 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .prose-kaiju table {
+      font-size: 0.875rem;
+    }
+    
+    .prose-kaiju th,
+    .prose-kaiju td {
+      padding: 0.75rem 0.5rem;
+    }
+  }
 }
 
 /* Font configuration */
@@ -135,6 +501,16 @@ body {
 
 ::-webkit-scrollbar-track {
   background: rgba(0, 0, 0, 0.05);
+}
+
+/* Pulse animation for loading states */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* Thirdweb ConnectButton styling to match our design system */
@@ -203,7 +579,7 @@ video {
   height: 100%;
 }
 
-/* Force GPU acceleration for smooth video playback */
+/* Force GPU acceleration for smooth video playbook */
 .video-container,
 .video-container video {
   will-change: transform;

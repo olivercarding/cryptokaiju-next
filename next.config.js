@@ -2,17 +2,30 @@
 const nextConfig = {
   trailingSlash: true,
   
-  // Image optimization with improved IPFS and OpenSea support
+  // Image optimization with improved IPFS, OpenSea, and Contentful support
   images: {
     remotePatterns: [
-      // Contentful images
+      // ENHANCED: Contentful images - Added all Contentful CDN domains
       {
         protocol: 'https',
         hostname: 'images.ctfassets.net',
         port: '',
         pathname: '/**',
       },
-      // FIXED: OpenSea domains - Added missing i2.seadn.io and other variants
+      {
+        protocol: 'https',
+        hostname: 'assets.ctfassets.net', // ADDED: Alternative Contentful CDN
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'downloads.ctfassets.net', // ADDED: For Contentful file downloads
+        port: '',
+        pathname: '/**',
+      },
+      
+      // OpenSea domains - Your existing ones
       {
         protocol: 'https',
         hostname: 'i.seadn.io',
@@ -21,7 +34,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'i2.seadn.io', // ADDED: This was missing and causing 400 errors
+        hostname: 'i2.seadn.io',
         port: '',
         pathname: '/**',
       },
@@ -33,7 +46,13 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'storage.opensea.io', // ADDED: Another OpenSea domain
+        hostname: 'storage.opensea.io',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'assets.opensea.io',
         port: '',
         pathname: '/**',
       },
@@ -43,10 +62,11 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      // IPFS gateways - UPDATED with reliable options (your primary first)
+      
+      // IPFS gateways - Your existing configuration
       {
         protocol: 'https',
-        hostname: 'cryptokaiju.mypinata.cloud', // Your primary - most important
+        hostname: 'cryptokaiju.mypinata.cloud',
         port: '',
         pathname: '/**',
       },
@@ -58,7 +78,7 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'cloudflare-ipfs.com', // FIXED: was cf-ipfs.com
+        hostname: 'cloudflare-ipfs.com',
         port: '',
         pathname: '/**',
       },
@@ -85,25 +105,22 @@ const nextConfig = {
         hostname: 'nftstorage.link',
         port: '',
         pathname: '/**',
-      },
-      // Additional OpenSea domains (cleanup)
-      {
-        protocol: 'https',
-        hostname: 'assets.opensea.io',
-        port: '',
-        pathname: '/**',
       }
     ],
-    // Improved image optimization settings
+    
+    // ENHANCED: Improved image optimization settings for rich text content
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
-    formats: ['image/webp'],
-    // ENHANCED: Better error handling for image optimization
-    dangerouslyAllowSVG: true,
+    minimumCacheTTL: 60 * 60 * 24 * 30, // ENHANCED: 30 days for better caching
+    formats: ['image/webp', 'image/avif'], // ADDED: AVIF support for better compression
     contentDispositionType: 'attachment',
+    
+    // ENHANCED: Better loader configuration for different content types
+    loader: 'default',
+    path: '/_next/image',
+    
     // Add unoptimized flag for development debugging
     unoptimized: process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_DEBUG_IMAGES === 'true',
   },
@@ -130,7 +147,6 @@ const nextConfig = {
             key: 'Cache-Control',
             value: 'public, max-age=86400, s-maxage=86400',
           },
-          // Add CORS headers for preflight
           {
             key: 'Access-Control-Max-Age',
             value: '86400',
@@ -158,6 +174,7 @@ const nextConfig = {
           },
         ],
       },
+      
       // ENHANCED: Add headers for all image requests with better caching
       {
         source: '/_next/image/:path*',
@@ -170,13 +187,28 @@ const nextConfig = {
             key: 'Access-Control-Allow-Origin',
             value: '*',
           },
-          // ADDED: Better error handling for images
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
         ],
       },
+      
+      // ADDED: Headers for Contentful assets with longer cache times
+      {
+        source: '/api/contentful/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=300, s-maxage=300', // 5 minutes for content
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
+      
       // Add headers for static assets
       {
         source: '/images/:path*',
@@ -187,10 +219,29 @@ const nextConfig = {
           },
         ],
       },
+      
+      // ADDED: Security headers for all pages
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
+          },
+        ],
+      },
     ]
   },
   
-  // ENHANCED: Improved webpack configuration with better error handling
+  // ENHANCED: Improved webpack configuration with better error handling and rich text optimization
   webpack: (config, { isServer, dev }) => {
     // Handle Node.js modules that don't work in the browser
     if (!isServer) {
@@ -215,14 +266,26 @@ const nextConfig = {
       }
     }
 
-    // ENHANCED: Ignore problematic modules and warnings (including BigInt serialization)
+    // ENHANCED: Ignore problematic modules and warnings
     config.ignoreWarnings = [
       { module: /node_modules\/pino\/lib\/tools\.js/ },
       { module: /node_modules\/pino-pretty/ },
       /Failed to parse source map/,
       /Critical dependency: the request of a dependency is an expression/,
-      /Do not know how to serialize a BigInt/, // ADDED: Ignore BigInt warnings if they persist
+      /Do not know how to serialize a BigInt/,
+      // ADDED: Ignore warnings from rich text dependencies
+      { module: /node_modules\/@contentful\/rich-text/ },
+      /Module not found: Can't resolve 'encoding'/,
     ]
+    
+    // ADDED: Optimize Contentful and rich text dependencies
+    if (!dev && !isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Use optimized builds for production
+        '@contentful/rich-text-react-renderer': '@contentful/rich-text-react-renderer/dist/rich-text-react-renderer.es.js',
+      }
+    }
     
     // Add optimization for production builds
     if (!dev) {
@@ -236,6 +299,20 @@ const nextConfig = {
               test: /[\\/]node_modules[\\/]/,
               name: 'vendors',
               chunks: 'all',
+            },
+            // ADDED: Separate chunk for Contentful dependencies
+            contentful: {
+              test: /[\\/]node_modules[\\/](@contentful|contentful)[\\/]/,
+              name: 'contentful',
+              chunks: 'all',
+              priority: 20,
+            },
+            // ADDED: Separate chunk for UI libraries
+            ui: {
+              test: /[\\/]node_modules[\\/](framer-motion|lucide-react)[\\/]/,
+              name: 'ui',
+              chunks: 'all',
+              priority: 15,
             },
           },
         },
@@ -255,14 +332,23 @@ const nextConfig = {
     ignoreDuringBuilds: false,
   },
 
-  // Experimental features to help with Web3 compatibility
+  // ENHANCED: Experimental features for better performance and rich text support
   experimental: {
     esmExternals: 'loose',
-    // ADDED: Better handling of large pages (useful for NFT collections)
-    largePageDataBytes: 128 * 1024, // 128KB
+    largePageDataBytes: 128 * 1024, // 128KB for rich content
+    // ADDED: Optimize package imports for faster builds
+    optimizePackageImports: [
+      '@contentful/rich-text-react-renderer',
+      '@contentful/rich-text-types',
+      'lucide-react',
+      'framer-motion',
+      'contentful',
+    ],
+    // ADDED: Better server components support
+    serverComponentsExternalPackages: ['contentful'],
   },
 
-  // Add redirects for legacy routes (already in vercel.json but good to have here too)
+  // Add redirects for legacy routes
   async redirects() {
     return [
       {
@@ -275,6 +361,28 @@ const nextConfig = {
         destination: '/my-kaiju',
         permanent: true,
       },
+      // ADDED: SEO redirects for better blog URLs
+      {
+        source: '/posts/:slug',
+        destination: '/blog/:slug',
+        permanent: true,
+      },
+      {
+        source: '/articles/:slug',
+        destination: '/blog/:slug',
+        permanent: true,
+      },
+    ]
+  },
+
+  // ENHANCED: Better rewrites for API optimization
+  async rewrites() {
+    return [
+      // Optional: Add rewrites for better API structure
+      {
+        source: '/sitemap.xml',
+        destination: '/api/sitemap',
+      },
     ]
   },
 
@@ -282,9 +390,22 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   
+  // ENHANCED: React configuration for better rich text performance
+  reactStrictMode: true,
+  swcMinify: true,
+  
   // Environment variables
   env: {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+
+  // ADDED: Output configuration for better deployment
+  output: 'standalone', // Remove this if you don't want standalone mode
+  
+  // ADDED: Better build configuration
+  generateBuildId: async () => {
+    // Use commit hash if available, otherwise use timestamp
+    return process.env.VERCEL_GIT_COMMIT_SHA || `build-${Date.now()}`
   },
 }
 
