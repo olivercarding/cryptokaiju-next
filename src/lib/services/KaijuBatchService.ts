@@ -1,4 +1,4 @@
-// src/lib/services/KaijuBatchService.ts - ENHANCED WITH SEO HELPERS
+// src/lib/services/KaijuBatchService.ts - FIXED FOR RICH TEXT SUPPORT
 import { 
   getAllKaijuBatches, 
   getKaijuBatchBySlug, 
@@ -9,6 +9,37 @@ import {
   type LocalKaijuBatch,
   type KaijuBatch as ContentfulKaijuBatch
 } from '@/lib/contentful'
+import type { Document } from '@contentful/rich-text-types'
+
+// 🆕 NEW: Helper function to extract plain text from rich text or string
+function extractPlainText(content: string | Document): string {
+  if (typeof content === 'string') {
+    return content
+  }
+  
+  // If it's a Document (rich text), extract plain text from all nodes
+  if (content && typeof content === 'object' && content.nodeType === 'document') {
+    const extractTextFromNode = (node: any): string => {
+      if (!node) return ''
+      
+      // Handle text nodes
+      if (node.nodeType === 'text') {
+        return node.value || ''
+      }
+      
+      // Handle other nodes with content
+      if (node.content && Array.isArray(node.content)) {
+        return node.content.map(extractTextFromNode).join('')
+      }
+      
+      return ''
+    }
+    
+    return content.content ? content.content.map(extractTextFromNode).join(' ') : ''
+  }
+  
+  return ''
+}
 
 class KaijuBatchService {
   private cache = new Map<string, LocalKaijuBatch[]>()
@@ -340,11 +371,11 @@ class KaijuBatchService {
   }
 
   /**
-   * Get the best SEO description for a batch (custom or generated)
+   * 🆕 FIXED: Get the best SEO description for a batch (custom or generated) - with rich text support
    */
   getBatchSEODescription(batch: LocalKaijuBatch): string {
     return batch.seo?.description || 
-      `Discover ${batch.name}, a ${batch.rarity.toLowerCase()} ${batch.type.toLowerCase()} collectible. ${batch.essence}. ${batch.characterDescription.substring(0, 100)}...`
+      `Discover ${batch.name}, a ${batch.rarity.toLowerCase()} ${batch.type.toLowerCase()} collectible. ${batch.essence}. ${extractPlainText(batch.characterDescription).substring(0, 100)}...`
   }
 
   /**
@@ -377,7 +408,7 @@ class KaijuBatchService {
   }
 
   /**
-   * Search batches by SEO-friendly terms
+   * 🆕 UPDATED: Search batches by SEO-friendly terms - with rich text support
    */
   async searchBatchesBySEO(searchTerm: string): Promise<LocalKaijuBatch[]> {
     if (!searchTerm.trim()) return []
@@ -390,14 +421,14 @@ class KaijuBatchService {
         const searchableText = [
           batch.name,
           batch.essence,
-          batch.characterDescription,
+          extractPlainText(batch.characterDescription), // 🆕 FIXED: Handle rich text
           batch.seo?.title,
           batch.seo?.description,
           ...(batch.seo?.keywords || []),
           batch.marketing?.tagline,
-          batch.marketing?.collectorsNote,
+          extractPlainText(batch.marketing?.collectorsNote || ''), // 🆕 FIXED: Handle rich text
           batch.series?.name,
-          batch.series?.description
+          extractPlainText(batch.series?.description || '') // 🆕 FIXED: Handle rich text
         ].filter(Boolean).join(' ').toLowerCase()
         
         return searchableText.includes(term)
@@ -440,7 +471,7 @@ class KaijuBatchService {
   } {
     return {
       tagline: batch.marketing?.tagline,
-      collectorsNote: batch.marketing?.collectorsNote,
+      collectorsNote: extractPlainText(batch.marketing?.collectorsNote || ''), // 🆕 FIXED: Handle rich text
       isHighValue: batch.rarity === 'Legendary' || batch.rarity === 'Ultra Rare',
       hasSpecialFeatures: (batch.features?.length || 0) > 0
     }
