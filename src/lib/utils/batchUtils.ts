@@ -1,5 +1,36 @@
-// src/lib/utils/batchUtils.ts - FIXED for dynamic Contentful integration
+// src/lib/utils/batchUtils.ts - FIXED for Rich Text Support
 import KaijuBatchService, { type KaijuBatch } from '@/lib/services/KaijuBatchService'
+import type { Document } from '@contentful/rich-text-types'
+
+// 🆕 NEW: Helper function to extract plain text from rich text or string
+function extractPlainText(content: string | Document): string {
+  if (typeof content === 'string') {
+    return content
+  }
+  
+  // If it's a Document (rich text), extract plain text from all nodes
+  if (content && typeof content === 'object' && content.nodeType === 'document') {
+    const extractTextFromNode = (node: any): string => {
+      if (!node) return ''
+      
+      // Handle text nodes
+      if (node.nodeType === 'text') {
+        return node.value || ''
+      }
+      
+      // Handle other nodes with content
+      if (node.content && Array.isArray(node.content)) {
+        return node.content.map(extractTextFromNode).join('')
+      }
+      
+      return ''
+    }
+    
+    return content.content ? content.content.map(extractTextFromNode).join(' ') : ''
+  }
+  
+  return ''
+}
 
 /**
  * Enhanced batch name to slug conversion with comprehensive mappings
@@ -154,7 +185,7 @@ export function batchPageExistsSync(batchName: string): boolean {
  */
 export function getBatchPageUrl(batchName: string): string {
   const slug = batchNameToSlug(batchName)
-  return `/kaijudex/${slug}`
+  return `/kaijudx/${slug}`
 }
 
 /**
@@ -245,7 +276,7 @@ export function clearBatchCache(): void {
 }
 
 /**
- * Search batches by name (fuzzy search)
+ * 🆕 FIXED: Search batches by name (fuzzy search) - with rich text support
  */
 export async function searchBatches(searchTerm: string): Promise<KaijuBatch[]> {
   if (!searchTerm.trim()) return []
@@ -257,7 +288,7 @@ export async function searchBatches(searchTerm: string): Promise<KaijuBatch[]> {
     return allBatches.filter(batch => 
       batch.name.toLowerCase().includes(term) ||
       batch.essence.toLowerCase().includes(term) ||
-      batch.characterDescription.toLowerCase().includes(term)
+      extractPlainText(batch.characterDescription).toLowerCase().includes(term) // 🆕 FIXED: Handle rich text
     )
   } catch (error) {
     console.error('Error searching batches:', error)
@@ -297,7 +328,7 @@ export function normalizeBatchName(batchName: string): string {
 }
 
 /**
- * NEW: Debug function to help troubleshoot batch linking issues
+ * 🆕 UPDATED: Debug function to help troubleshoot batch linking issues - with rich text support
  */
 export async function debugBatchLinking(batchName: string): Promise<void> {
   if (process.env.NODE_ENV !== 'development') return
@@ -320,6 +351,12 @@ export async function debugBatchLinking(batchName: string): Promise<void> {
   try {
     const batch = await getBatchByName(normalized)
     console.log(`Found batch:`, batch ? batch.name : 'Not found')
+    
+    if (batch) {
+      // Show how the character description looks (debug rich text)
+      const characterDesc = extractPlainText(batch.characterDescription)
+      console.log(`Character description (plain text): "${characterDesc.substring(0, 100)}..."`)
+    }
   } catch (error) {
     console.log(`Error finding batch:`, error)
   }
