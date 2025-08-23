@@ -1,4 +1,4 @@
-// src/components/pages/KaijudexPageClient.tsx - FIXED METHOD NAME
+// src/components/pages/KaijudexPageClient.tsx - RESTORED ORIGINAL DESIGN WITH CONTENTFUL INTEGRATION
 'use client'
 
 import { useState, useRef } from 'react'
@@ -7,10 +7,10 @@ import { Search, Database, Filter, Sparkles, Zap, Eye, Package, Star, Award } fr
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/layout/Header'
-import { type KaijuBatch } from '@/lib/services/KaijuBatchService'
+import { type LocalKaijuBatch } from '@/lib/contentful'
 
 interface KaijudexPageClientProps {
-  initialBatches: KaijuBatch[]
+  initialBatches: LocalKaijuBatch[]
   initialStats: {
     totalBatches: number
     plushCount: number
@@ -19,8 +19,8 @@ interface KaijudexPageClientProps {
   }
 }
 
-// FIXED: Enhanced polaroid card with corrected service method calls
-const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: number }) => {
+// RESTORED: Enhanced polaroid card with original sophisticated design
+const CharacterPolaroidCard = ({ batch, index }: { batch: LocalKaijuBatch; index: number }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [imageError, setImageError] = useState(false)
 
@@ -34,16 +34,22 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
   const rotations = ['-2deg', '1deg', '-1deg', '2deg', '-1.5deg', '1.5deg']
   const rotation = rotations[index % rotations.length]
 
-  // FIXED: Use direct property access instead of service methods
+  // UPDATED: Handle new Contentful image structure
   const primaryImage = batch.images.physical[0] || '/images/placeholder-kaiju.png'
-  const nftImage = typeof batch.images.nft === 'string' ? batch.images.nft : batch.images.nft?.[0]
+  
+  // Handle both single NFT image (string) and multiple NFT images (array)
+  const nftImage = Array.isArray(batch.images.nft) 
+    ? batch.images.nft[0] 
+    : batch.images.nft
   const hasNftImages = !!nftImage
   const firstNftImage = nftImage
 
-  // Get status and availability info directly from batch properties
+  // Get status and availability info from Contentful data
   const status = batch.availability === 'Mintable' ? 'Available' : 'Secondary Only'
   const isAvailable = batch.availability === 'Mintable'
-  const formattedPrice = batch.productInfo?.price ? `${batch.productInfo.price} ${batch.productInfo.currency || 'ETH'}` : null
+  const formattedPrice = batch.productInfo?.price 
+    ? `${batch.productInfo.price} ${batch.productInfo.currency || 'ETH'}` 
+    : null
 
   return (
     <motion.div
@@ -133,7 +139,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
               )}
             </motion.div>
 
-            {/* NFT images (back) - FIXED: simplified since we have single NFT image */}
+            {/* NFT images (back) */}
             {firstNftImage && (
               <motion.div
                 className="absolute inset-0"
@@ -240,7 +246,7 @@ const CharacterPolaroidCard = ({ batch, index }: { batch: KaijuBatch; index: num
   )
 }
 
-// Enhanced filter pills with new options
+// RESTORED: Enhanced filter pills with original styling
 const FilterPills = ({ 
   selectedType, 
   selectedRarity, 
@@ -390,9 +396,9 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
       <Header />
       
       <main className="text-kaiju-navy overflow-x-hidden">
-        {/* Hero Section - Dark with particles like home page */}
+        {/* RESTORED: Hero Section with original particle effects */}
         <section className="relative bg-gradient-to-br from-kaiju-navy via-kaiju-purple-dark to-kaiju-navy overflow-hidden pt-32 lg:pt-40 pb-16 lg:pb-20">
-          {/* Animated background elements */}
+          {/* RESTORED: Animated background elements */}
           <div className="absolute inset-0">
             <motion.div 
               className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_20%_50%,theme(colors.kaiju-pink/20)_0%,transparent_50%)]"
@@ -412,7 +418,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
             />
           </div>
 
-          {/* Floating particles */}
+          {/* RESTORED: Floating particles */}
           {[...Array(15)].map((_, i) => (
             <motion.div
               key={i}
@@ -452,7 +458,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
               </p>
             </motion.div>
 
-            {/* Enhanced stats showcase */}
+            {/* RESTORED: Enhanced stats showcase */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -481,7 +487,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
               ))}
             </motion.div>
 
-            {/* Enhanced filters */}
+            {/* RESTORED: Enhanced filters */}
             <FilterPills
               selectedType={selectedType}
               selectedRarity={selectedRarity}
@@ -494,7 +500,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
               onClearFilters={handleClearFilters}
             />
 
-            {/* Quick Links */}
+            {/* RESTORED: Quick Links */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -519,7 +525,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
           </div>
         </section>
 
-        {/* Gallery Section - Light like home page content sections */}
+        {/* RESTORED: Gallery Section with original styling */}
         <section className="bg-gradient-to-br from-kaiju-light-pink to-white py-20 px-6" ref={ref}>
           <div className="max-w-7xl mx-auto">
             <motion.div
@@ -565,7 +571,7 @@ export default function KaijudexPageClient({ initialBatches, initialStats }: Kai
               </motion.div>
             )}
 
-            {/* Bottom CTA */}
+            {/* RESTORED: Bottom CTA */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}

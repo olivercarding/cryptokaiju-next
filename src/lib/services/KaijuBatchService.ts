@@ -1,4 +1,4 @@
-// src/lib/services/KaijuBatchService.ts - FIXED FOR RICH TEXT SUPPORT
+// src/lib/services/KaijuBatchService.ts - ENHANCED WITH DEBUG LOGGING
 import { 
   getAllKaijuBatches, 
   getKaijuBatchBySlug, 
@@ -11,7 +11,7 @@ import {
 } from '@/lib/contentful'
 import type { Document } from '@contentful/rich-text-types'
 
-// 🆕 NEW: Helper function to extract plain text from rich text or string
+// Helper function to extract plain text from rich text or string
 function extractPlainText(content: string | Document): string {
   if (typeof content === 'string') {
     return content
@@ -48,7 +48,7 @@ class KaijuBatchService {
   private lastFetch = 0
 
   /**
-   * Get all batches with caching
+   * Get all batches with caching and enhanced debugging
    */
   async getAllBatches(): Promise<LocalKaijuBatch[]> {
     const cacheKey = 'all-batches'
@@ -56,14 +56,83 @@ class KaijuBatchService {
     
     // Check cache first
     if (this.cache.has(cacheKey) && (now - this.lastFetch) < this.CACHE_TTL) {
-      console.log('📦 Using cached batches')
+      console.log('📦 Using cached batches:', this.cache.get(cacheKey)!.length)
       return this.cache.get(cacheKey)!
     }
 
     try {
       console.log('🔄 Fetching batches from Contentful...')
+      console.log('🔧 Service Environment check:', {
+        hasSpaceId: !!process.env.CONTENTFUL_SPACE_ID,
+        hasAccessToken: !!process.env.CONTENTFUL_ACCESS_TOKEN,
+        spaceIdPrefix: process.env.CONTENTFUL_SPACE_ID?.substring(0, 8),
+        environment: process.env.NODE_ENV
+      })
+
       const contentfulBatches = await getAllKaijuBatches()
-      const localBatches = contentfulBatches.map(convertContentfulBatchToLocal)
+      console.log(`📦 Raw Contentful response: ${contentfulBatches.length} batches`)
+      
+      if (contentfulBatches.length === 0) {
+        console.warn('⚠️ No batches returned from Contentful - checking possible issues:')
+        console.warn('   - Are there published entries in Contentful?')
+        console.warn('   - Is the content type ID exactly "kaijuBatch"?')
+        console.warn('   - Are you using the correct Space ID and API token?')
+        return []
+      }
+
+      // Log first batch for debugging
+      if (contentfulBatches[0]) {
+        console.log('🔍 First batch raw data:', {
+          id: contentfulBatches[0].sys.id,
+          contentType: contentfulBatches[0].sys.contentType?.sys?.id,
+          fieldCount: Object.keys(contentfulBatches[0].fields || {}).length,
+          fields: Object.keys(contentfulBatches[0].fields || {}),
+          sampleFieldValues: {
+            batchId: contentfulBatches[0].fields.batchId,
+            name: contentfulBatches[0].fields.name,
+            type: contentfulBatches[0].fields.type,
+            discoveredDate: contentfulBatches[0].fields.discoveredDate,
+            discoveredDateType: typeof contentfulBatches[0].fields.discoveredDate
+          }
+        })
+      }
+      
+      // Convert to local format with error handling
+      const localBatches: LocalKaijuBatch[] = []
+      const conversionErrors: Array<{index: number, error: string, batchId?: string}> = []
+
+      for (let i = 0; i < contentfulBatches.length; i++) {
+        try {
+          const localBatch = convertContentfulBatchToLocal(contentfulBatches[i])
+          localBatches.push(localBatch)
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown conversion error'
+          conversionErrors.push({
+            index: i,
+            error: errorMessage,
+            batchId: contentfulBatches[i].fields.batchId
+          })
+          console.error(`❌ Failed to convert batch ${i}:`, errorMessage)
+        }
+      }
+
+      if (conversionErrors.length > 0) {
+        console.error(`❌ ${conversionErrors.length} batches failed to convert:`, conversionErrors)
+      }
+
+      console.log(`✅ Successfully converted ${localBatches.length}/${contentfulBatches.length} batches`)
+      
+      if (localBatches.length > 0) {
+        console.log('🔍 First converted batch:', {
+          id: localBatches[0].id,
+          name: localBatches[0].name,
+          type: localBatches[0].type,
+          rarity: localBatches[0].rarity,
+          discoveredDate: localBatches[0].discoveredDate,
+          imageCount: localBatches[0].images.physical.length,
+          hasNftImages: !!localBatches[0].images.nft
+        })
+      }
       
       // Update caches
       this.cache.set(cacheKey, localBatches)
@@ -75,10 +144,19 @@ class KaijuBatchService {
         this.batchCache.set(batch.id, batch)
       })
       
-      console.log(`✅ Fetched ${localBatches.length} batches from Contentful`)
+      console.log(`✅ Cached ${localBatches.length} batches successfully`)
       return localBatches
+      
     } catch (error) {
       console.error('❌ Error fetching batches from Contentful:', error)
+      
+      if (error instanceof Error) {
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack?.split('\n').slice(0, 5).join('\n')
+        })
+      }
       
       // Return cached data if available, even if stale
       if (this.cache.has(cacheKey)) {
@@ -87,14 +165,17 @@ class KaijuBatchService {
       }
       
       // Final fallback to empty array
+      console.warn('⚠️ Returning empty array - no cached data available')
       return []
     }
   }
 
   /**
-   * Get batch by slug with caching
+   * Get batch by slug with caching and enhanced debugging
    */
   async getBatchBySlug(slug: string): Promise<LocalKaijuBatch | undefined> {
+    console.log(`🔍 Looking for batch with slug: "${slug}"`)
+    
     // Check individual cache first
     if (this.batchCache.has(slug)) {
       console.log(`📦 Using cached batch: ${slug}`)
@@ -102,30 +183,38 @@ class KaijuBatchService {
     }
 
     try {
-      console.log(`🔄 Fetching batch ${slug} from Contentful...`)
+      console.log(`🔄 Fetching batch "${slug}" from Contentful...`)
       const contentfulBatch = await getKaijuBatchBySlug(slug)
       
       if (contentfulBatch) {
+        console.log(`📦 Found batch in Contentful:`, {
+          id: contentfulBatch.sys.id,
+          batchId: contentfulBatch.fields.batchId,
+          name: contentfulBatch.fields.name
+        })
+        
         const localBatch = convertContentfulBatchToLocal(contentfulBatch)
         this.batchCache.set(slug, localBatch)
         this.batchCache.set(localBatch.id, localBatch)
         
-        console.log(`✅ Fetched batch: ${localBatch.name}`)
+        console.log(`✅ Converted and cached batch: ${localBatch.name}`)
         return localBatch
       }
       
-      console.log(`❌ Batch not found: ${slug}`)
+      console.log(`❌ Batch not found in Contentful: "${slug}"`)
       return undefined
     } catch (error) {
-      console.error(`❌ Error fetching batch ${slug}:`, error)
+      console.error(`❌ Error fetching batch "${slug}":`, error)
       return undefined
     }
   }
 
   /**
-   * Get batch by ID with caching
+   * Get batch by ID with caching and enhanced debugging
    */
   async getBatchById(id: string): Promise<LocalKaijuBatch | undefined> {
+    console.log(`🔍 Looking for batch with ID: "${id}"`)
+    
     // Check individual cache first
     if (this.batchCache.has(id)) {
       console.log(`📦 Using cached batch: ${id}`)
@@ -133,22 +222,28 @@ class KaijuBatchService {
     }
 
     try {
-      console.log(`🔄 Fetching batch ${id} from Contentful...`)
+      console.log(`🔄 Fetching batch "${id}" from Contentful...`)
       const contentfulBatch = await getKaijuBatchById(id)
       
       if (contentfulBatch) {
+        console.log(`📦 Found batch in Contentful:`, {
+          sysId: contentfulBatch.sys.id,
+          batchId: contentfulBatch.fields.batchId,
+          name: contentfulBatch.fields.name
+        })
+        
         const localBatch = convertContentfulBatchToLocal(contentfulBatch)
         this.batchCache.set(id, localBatch)
         this.batchCache.set(localBatch.slug, localBatch)
         
-        console.log(`✅ Fetched batch: ${localBatch.name}`)
+        console.log(`✅ Converted and cached batch: ${localBatch.name}`)
         return localBatch
       }
       
-      console.log(`❌ Batch not found: ${id}`)
+      console.log(`❌ Batch not found in Contentful: "${id}"`)
       return undefined
     } catch (error) {
-      console.error(`❌ Error fetching batch ${id}:`, error)
+      console.error(`❌ Error fetching batch "${id}":`, error)
       return undefined
     }
   }
@@ -160,21 +255,27 @@ class KaijuBatchService {
     const cacheKey = `type-${type}`
     
     if (this.cache.has(cacheKey)) {
+      console.log(`📦 Using cached ${type} batches:`, this.cache.get(cacheKey)!.length)
       return this.cache.get(cacheKey)!
     }
 
     try {
+      console.log(`🔄 Fetching ${type} batches from Contentful...`)
       const contentfulBatches = await getKaijuBatchesByType(type)
       const localBatches = contentfulBatches.map(convertContentfulBatchToLocal)
       
       this.cache.set(cacheKey, localBatches)
+      console.log(`✅ Fetched and cached ${localBatches.length} ${type} batches`)
       return localBatches
     } catch (error) {
       console.error(`❌ Error fetching ${type} batches:`, error)
       
       // Fallback: filter from all batches if available
+      console.log(`🔄 Fallback: filtering from all batches...`)
       const allBatches = await this.getAllBatches()
-      return allBatches.filter(batch => batch.type === type)
+      const filtered = allBatches.filter(batch => batch.type === type)
+      console.log(`✅ Fallback found ${filtered.length} ${type} batches`)
+      return filtered
     }
   }
 
@@ -185,21 +286,27 @@ class KaijuBatchService {
     const cacheKey = `rarity-${rarity}`
     
     if (this.cache.has(cacheKey)) {
+      console.log(`📦 Using cached ${rarity} batches:`, this.cache.get(cacheKey)!.length)
       return this.cache.get(cacheKey)!
     }
 
     try {
+      console.log(`🔄 Fetching ${rarity} batches from Contentful...`)
       const contentfulBatches = await getKaijuBatchesByRarity(rarity)
       const localBatches = contentfulBatches.map(convertContentfulBatchToLocal)
       
       this.cache.set(cacheKey, localBatches)
+      console.log(`✅ Fetched and cached ${localBatches.length} ${rarity} batches`)
       return localBatches
     } catch (error) {
       console.error(`❌ Error fetching ${rarity} batches:`, error)
       
       // Fallback: filter from all batches if available
+      console.log(`🔄 Fallback: filtering from all batches...`)
       const allBatches = await this.getAllBatches()
-      return allBatches.filter(batch => batch.rarity === rarity)
+      const filtered = allBatches.filter(batch => batch.rarity === rarity)
+      console.log(`✅ Fallback found ${filtered.length} ${rarity} batches`)
+      return filtered
     }
   }
 
@@ -213,14 +320,18 @@ class KaijuBatchService {
     legendaryCount: number
   }> {
     try {
+      console.log('📊 Calculating collection stats...')
       const allBatches = await this.getAllBatches()
       
-      return {
+      const stats = {
         totalBatches: allBatches.length,
         plushCount: allBatches.filter(b => b.type === 'Plush').length,
         vinylCount: allBatches.filter(b => b.type === 'Vinyl').length,
         legendaryCount: allBatches.filter(b => b.rarity === 'Legendary').length,
       }
+
+      console.log('📊 Collection stats calculated:', stats)
+      return stats
     } catch (error) {
       console.error('❌ Error getting collection stats:', error)
       return {
@@ -247,6 +358,7 @@ class KaijuBatchService {
    */
   async preloadBatches(): Promise<void> {
     try {
+      console.log('🚀 Preloading batches...')
       await this.getAllBatches()
       console.log('🚀 Batches preloaded successfully')
     } catch (error) {
@@ -322,7 +434,7 @@ class KaijuBatchService {
       .replace(/^-|-$/g, '')
   }
 
-  // 🆕 NEW SEO-RELATED METHODS
+  // SEO-RELATED METHODS
 
   /**
    * Get batches optimized for SEO (featured first, then by priority)
@@ -371,7 +483,7 @@ class KaijuBatchService {
   }
 
   /**
-   * 🆕 FIXED: Get the best SEO description for a batch (custom or generated) - with rich text support
+   * Get the best SEO description for a batch (custom or generated) - with rich text support
    */
   getBatchSEODescription(batch: LocalKaijuBatch): string {
     return batch.seo?.description || 
@@ -408,7 +520,7 @@ class KaijuBatchService {
   }
 
   /**
-   * 🆕 UPDATED: Search batches by SEO-friendly terms - with rich text support
+   * Search batches by SEO-friendly terms - with rich text support
    */
   async searchBatchesBySEO(searchTerm: string): Promise<LocalKaijuBatch[]> {
     if (!searchTerm.trim()) return []
@@ -421,14 +533,14 @@ class KaijuBatchService {
         const searchableText = [
           batch.name,
           batch.essence,
-          extractPlainText(batch.characterDescription), // 🆕 FIXED: Handle rich text
+          extractPlainText(batch.characterDescription),
           batch.seo?.title,
           batch.seo?.description,
           ...(batch.seo?.keywords || []),
           batch.marketing?.tagline,
-          extractPlainText(batch.marketing?.collectorsNote || ''), // 🆕 FIXED: Handle rich text
+          extractPlainText(batch.marketing?.collectorsNote || ''),
           batch.series?.name,
-          extractPlainText(batch.series?.description || '') // 🆕 FIXED: Handle rich text
+          extractPlainText(batch.series?.description || '')
         ].filter(Boolean).join(' ').toLowerCase()
         
         return searchableText.includes(term)
@@ -471,7 +583,7 @@ class KaijuBatchService {
   } {
     return {
       tagline: batch.marketing?.tagline,
-      collectorsNote: extractPlainText(batch.marketing?.collectorsNote || ''), // 🆕 FIXED: Handle rich text
+      collectorsNote: extractPlainText(batch.marketing?.collectorsNote || ''),
       isHighValue: batch.rarity === 'Legendary' || batch.rarity === 'Ultra Rare',
       hasSpecialFeatures: (batch.features?.length || 0) > 0
     }

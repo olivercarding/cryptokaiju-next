@@ -1,4 +1,4 @@
-// src/lib/contentful.ts - UPDATED WITH RICH TEXT SUPPORT FOR KAIJU BATCHES
+// src/lib/contentful.ts - UPDATED WITH CORRECT FIELD TYPES FOR KAIJU BATCHES
 import type {
   Asset,
   AssetFile,
@@ -127,51 +127,45 @@ export interface AuthorSkeleton extends EntrySkeletonType {
   }
 }
 
-// 🆕 UPDATED: Enhanced Kaiju Batch Content Model with RICH TEXT fields
+// 🆕 UPDATED: Fixed Kaiju Batch Content Model to match actual Contentful fields
 export interface KaijuBatchSkeleton extends EntrySkeletonType {
   contentTypeId: 'kaijuBatch'
   fields: {
-    batchId: EntryFieldTypes.Text
+    batchId: EntryFieldTypes.Symbol  // Symbol in Contentful
     slug: EntryFieldTypes.Symbol
-    name: EntryFieldTypes.Text
-    type: EntryFieldTypes.Symbol // 'Plush' | 'Vinyl'
-    rarity: EntryFieldTypes.Symbol // 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary'
-    essence: EntryFieldTypes.Text
-    availability: EntryFieldTypes.Symbol // 'Secondary' | 'Mintable'
+    name: EntryFieldTypes.Symbol     // Symbol in Contentful
+    type: EntryFieldTypes.Symbol
+    rarity: EntryFieldTypes.Symbol
+    essence: EntryFieldTypes.Symbol
+    availability: EntryFieldTypes.Symbol
     colors?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
     
-    // 🆕 CHANGED: Rich Text fields (changed from Text to RichText)
-    characterDescription: EntryFieldTypes.RichText
-    physicalDescription: EntryFieldTypes.RichText
+    // Rich Text fields - MADE OPTIONAL since they're missing from entries
+    characterDescription?: EntryFieldTypes.RichText // Made optional
+    physicalDescription?: EntryFieldTypes.RichText // Optional since not required in Contentful
     habitat?: EntryFieldTypes.RichText
     productionNotes?: EntryFieldTypes.RichText
     
-    // Keep as text fields (short content)
+    // Other text/symbol fields
     materials?: EntryFieldTypes.Text
-    dimensions?: EntryFieldTypes.Text
+    dimensions?: EntryFieldTypes.Symbol
     features?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-    packagingStyle?: EntryFieldTypes.Text
+    packagingStyle?: EntryFieldTypes.Symbol
     
-    estimatedSupply: EntryFieldTypes.Number
-    discoveredDate: EntryFieldTypes.Symbol
+    estimatedSupply: EntryFieldTypes.Integer  // Integer in Contentful
+    discoveredDate: EntryFieldTypes.Date     // Date in Contentful
     secondaryMarketUrl?: EntryFieldTypes.Symbol
     backgroundColor?: EntryFieldTypes.Symbol
     
-    // Image fields - Enhanced to support multiple NFT images
-    physicalImages: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
-    
-    // NEW: Multiple NFT images support
+    // Image fields
+    physicalImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     nftImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
-    
-    // DEPRECATED: Single NFT image (kept for backward compatibility)
-    nftImage?: EntryFieldTypes.AssetLink | any
-    
     lifestyleImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     detailImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     conceptImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     packagingImages?: EntryFieldTypes.Array<EntryFieldTypes.AssetLink | any>
     
-    // NEW: SEO FIELDS
+    // SEO fields
     seoTitle?: EntryFieldTypes.Symbol
     seoDescription?: EntryFieldTypes.Text
     seoKeywords?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
@@ -181,7 +175,7 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     twitterTitle?: EntryFieldTypes.Symbol
     twitterDescription?: EntryFieldTypes.Text
     
-    // NEW: Additional product/marketing fields
+    // Product fields
     featured?: EntryFieldTypes.Boolean
     productManufacturer?: EntryFieldTypes.Symbol
     productPrice?: EntryFieldTypes.Number
@@ -193,17 +187,12 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     productMpn?: EntryFieldTypes.Symbol
     marketingTagline?: EntryFieldTypes.Symbol
     
-    // 🆕 CHANGED: Rich Text field (changed from Text to RichText)
     collectorsNote?: EntryFieldTypes.RichText
-    
-    featuredPriority?: EntryFieldTypes.Number
+    featuredPriority?: EntryFieldTypes.Integer
     isPartOfSeries?: EntryFieldTypes.Boolean
     seriesName?: EntryFieldTypes.Symbol
-    
-    // 🆕 CHANGED: Rich Text field (changed from Text to RichText) 
     seriesDescription?: EntryFieldTypes.RichText
-    
-    seriesPosition?: EntryFieldTypes.Number
+    seriesPosition?: EntryFieldTypes.Integer
   }
 }
 
@@ -373,7 +362,7 @@ export function toAssetArray(value: any): Asset[] {
   })
 }
 
-// 🆕 NEW: Helper function to extract rich text or fallback to string
+// Helper function to extract rich text or fallback to string
 export function extractRichTextOrString(field: any): string | Document {
   if (!field) return ''
   
@@ -479,9 +468,9 @@ export function isValidDocument(content: any): content is Document {
   )
 }
 
-// Enhanced Kaiju Batch type guard
+// 🆕 FIXED: More lenient Kaiju Batch type guard - characterDescription is now optional
 export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
-  return (
+  const isValid = (
     entry &&
     typeof entry === 'object' &&
     entry.fields &&
@@ -490,15 +479,39 @@ export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
     entry.fields.name &&
     entry.fields.type &&
     entry.fields.rarity &&
-    entry.fields.characterDescription &&
-    entry.fields.physicalDescription &&
-    typeof entry.fields.estimatedSupply === 'number' &&
+    entry.fields.estimatedSupply !== undefined &&
     entry.fields.discoveredDate
+    // ❌ REMOVED: entry.fields.characterDescription requirement (now optional)
   )
+  
+  // Debug logging for validation results
+  if (!isValid && process.env.NODE_ENV === 'development') {
+    console.log('❌ Batch validation failed:', {
+      hasEntry: !!entry,
+      hasFields: !!entry?.fields,
+      hasBatchId: !!entry?.fields?.batchId,
+      hasSlug: !!entry?.fields?.slug,
+      hasName: !!entry?.fields?.name,
+      hasType: !!entry?.fields?.type,
+      hasRarity: !!entry?.fields?.rarity,
+      hasCharDesc: !!entry?.fields?.characterDescription,
+      hasSupply: entry?.fields?.estimatedSupply !== undefined,
+      hasDate: !!entry?.fields?.discoveredDate,
+      availableFields: Object.keys(entry?.fields || {}),
+      discoveredDateType: typeof entry?.fields?.discoveredDate,
+      discoveredDateValue: entry?.fields?.discoveredDate
+    })
+  } else if (isValid && process.env.NODE_ENV === 'development') {
+    console.log('✅ Batch validation passed for:', entry?.fields?.name, {
+      hasCharDesc: !!entry?.fields?.characterDescription
+    })
+  }
+  
+  return isValid
 }
 
 /* ------------------------------------------------------------------ */
-/*  Local Kaiju Batch Interface (🆕 UPDATED for Rich Text support)   */
+/*  Local Kaiju Batch Interface                                      */
 /* ------------------------------------------------------------------ */
 
 export interface LocalKaijuBatch {
@@ -511,7 +524,7 @@ export interface LocalKaijuBatch {
   availability: 'Secondary' | 'Mintable'
   colors: string[]
   
-  // 🆕 UPDATED: Support both string and Document types for rich text fields
+  // Support both string and Document types for rich text fields
   characterDescription: string | Document
   physicalDescription: string | Document
   
@@ -524,7 +537,7 @@ export interface LocalKaijuBatch {
     packaging: string[]      
   }
   
-  // 🆕 UPDATED: Support both string and Document types for rich text fields
+  // Support both string and Document types for rich text fields
   habitat?: string | Document
   productionNotes?: string | Document
   
@@ -539,7 +552,7 @@ export interface LocalKaijuBatch {
   secondaryMarketUrl?: string
   backgroundColor?: string
   
-  // NEW: SEO FIELDS organized in logical groups
+  // SEO FIELDS organized in logical groups
   seo?: {
     title?: string
     description?: string
@@ -555,7 +568,7 @@ export interface LocalKaijuBatch {
     }
   }
   
-  // NEW: PRODUCT INFORMATION FIELDS
+  // PRODUCT INFORMATION FIELDS
   featured?: boolean
   productInfo?: {
     manufacturer?: string
@@ -568,32 +581,43 @@ export interface LocalKaijuBatch {
     mpn?: string
   }
   
-  // NEW: MARKETING FIELDS
+  // MARKETING FIELDS
   marketing?: {
     tagline?: string
-    collectorsNote?: string | Document  // 🆕 UPDATED: Support rich text
+    collectorsNote?: string | Document
     featuredPriority?: number
   }
   
-  // NEW: SERIES FIELDS
+  // SERIES FIELDS
   series?: {
     isPartOfSeries?: boolean
     name?: string
-    description?: string | Document     // 🆕 UPDATED: Support rich text
+    description?: string | Document
     position?: number
   }
 }
 
 /**
- * 🆕 UPDATED: Convert Contentful KaijuBatch to LocalKaijuBatch with Rich Text support
- * Enhanced to handle both single and multiple NFT images + all new SEO fields + rich text
+ * 🆕 FIXED: Convert Contentful KaijuBatch to LocalKaijuBatch with graceful handling of missing fields
  */
 export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatch {
   const fields = batch.fields
   
+  // Helper function to format date fields
+  const formatDateField = (dateValue: any): string => {
+    if (!dateValue) return ''
+    
+    // Handle both string and Date objects
+    const date = new Date(dateValue)
+    if (isNaN(date.getTime())) return String(dateValue) // Fallback to string if invalid date
+    
+    // Format as YYYY.MM.DD
+    return date.toISOString().split('T')[0].replace(/-/g, '.')
+  }
+  
   // Enhanced NFT image handling with backward compatibility
   const getNftImages = (): string | string[] | undefined => {
-    // Priority: use new nftImages array if available
+    // Use nftImages array if available
     if (fields.nftImages) {
       const nftImageUrls = toAssetArray(fields.nftImages)
         .map(asset => getAssetUrl(asset) || '')
@@ -604,54 +628,63 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
       }
     }
     
-    // Fallback: use legacy single nftImage field
-    if (fields.nftImage) {
-      const singleNftUrl = getAssetUrl(fields.nftImage)
-      return singleNftUrl || undefined
-    }
-    
     return undefined
   }
+  
+  // Helper to create fallback descriptions
+  const name = toStringValue(fields.name)
+  const type = toStringValue(fields.type)
+  const rarity = toStringValue(fields.rarity)
+  const essence = toStringValue(fields.essence)
   
   return {
     id: toStringValue(fields.batchId),
     slug: toStringValue(fields.slug),
-    name: toStringValue(fields.name),
-    type: toStringValue(fields.type) as 'Plush' | 'Vinyl',
-    rarity: toStringValue(fields.rarity) as 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary',
-    essence: toStringValue(fields.essence),
+    name: name,
+    type: type as 'Plush' | 'Vinyl',
+    rarity: rarity as 'Common' | 'Rare' | 'Ultra Rare' | 'Legendary',
+    essence: essence,
     availability: toStringValue(fields.availability) as 'Secondary' | 'Mintable',
     colors: toStringArray(fields.colors),
     
-    // 🆕 UPDATED: Use rich text extraction for these fields
-    characterDescription: extractRichTextOrString(fields.characterDescription),
-    physicalDescription: extractRichTextOrString(fields.physicalDescription),
+    // 🆕 FIXED: Handle missing characterDescription gracefully
+    characterDescription: fields.characterDescription 
+      ? extractRichTextOrString(fields.characterDescription)
+      : `Discover ${name}, a ${rarity.toLowerCase()} ${type.toLowerCase()} collectible from the CryptoKaiju universe. Embodying the essence of ${essence}, this unique collectible represents a perfect fusion of physical craftsmanship and digital innovation.`,
+    
+    physicalDescription: fields.physicalDescription 
+      ? extractRichTextOrString(fields.physicalDescription)
+      : `This ${type.toLowerCase()} collectible captures the essence of ${essence} in premium collectible form. Each piece is crafted with attention to detail and represents a unique entry in the CryptoKaiju collection.`,
     
     images: {
-      physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset) || '').filter(Boolean),
-      nft: getNftImages(), // Enhanced with backward compatibility
+      physical: toAssetArray(fields.physicalImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
+      nft: getNftImages(),
       lifestyle: toAssetArray(fields.lifestyleImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       detail: toAssetArray(fields.detailImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       concept: toAssetArray(fields.conceptImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
       packaging: toAssetArray(fields.packagingImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
     },
     
-    // 🆕 UPDATED: Use rich text extraction for these fields  
-    habitat: extractRichTextOrString(fields.habitat),
-    productionNotes: extractRichTextOrString(fields.productionNotes),
+    // Rich text fields with fallbacks
+    habitat: fields.habitat 
+      ? extractRichTextOrString(fields.habitat)
+      : undefined,
+    productionNotes: fields.productionNotes 
+      ? extractRichTextOrString(fields.productionNotes)
+      : undefined,
     
-    // Keep as regular strings
+    // Regular strings
     materials: toStringValue(fields.materials),
     dimensions: toStringValue(fields.dimensions),
     features: toStringArray(fields.features),
     packagingStyle: toStringValue(fields.packagingStyle),
     
     estimatedSupply: Number(fields.estimatedSupply) || 0,
-    discoveredDate: toStringValue(fields.discoveredDate),
+    discoveredDate: formatDateField(fields.discoveredDate),
     secondaryMarketUrl: toStringValue(fields.secondaryMarketUrl),
     backgroundColor: toStringValue(fields.backgroundColor),
     
-    // NEW: SEO FIELDS with proper organization
+    // SEO FIELDS with proper organization
     seo: {
       title: toStringValue(fields.seoTitle),
       description: toStringValue(fields.seoDescription),
@@ -659,7 +692,7 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
       openGraph: {
         title: toStringValue(fields.openGraphTitle),
         description: toStringValue(fields.openGraphDescription),
-        image: getAssetUrl(fields.openGraphImage) || undefined // FIXED: Convert null to undefined
+        image: getAssetUrl(fields.openGraphImage) || undefined
       },
       twitter: {
         title: toStringValue(fields.twitterTitle),
@@ -667,10 +700,10 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
       }
     },
     
-    // NEW: FEATURED STATUS
+    // FEATURED STATUS
     featured: fields.featured || false,
     
-    // NEW: PRODUCT INFORMATION
+    // PRODUCT INFORMATION
     productInfo: {
       manufacturer: toStringValue(fields.productManufacturer),
       price: fields.productPrice ? Number(fields.productPrice) : undefined,
@@ -682,18 +715,22 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
       mpn: toStringValue(fields.productMpn)
     },
     
-    // NEW: MARKETING INFORMATION
+    // MARKETING INFORMATION
     marketing: {
       tagline: toStringValue(fields.marketingTagline),
-      collectorsNote: extractRichTextOrString(fields.collectorsNote), // 🆕 UPDATED: Rich text support
+      collectorsNote: fields.collectorsNote 
+        ? extractRichTextOrString(fields.collectorsNote)
+        : undefined,
       featuredPriority: fields.featuredPriority ? Number(fields.featuredPriority) : undefined
     },
     
-    // NEW: SERIES INFORMATION
+    // SERIES INFORMATION
     series: {
       isPartOfSeries: fields.isPartOfSeries || false,
       name: toStringValue(fields.seriesName),
-      description: extractRichTextOrString(fields.seriesDescription), // 🆕 UPDATED: Rich text support
+      description: fields.seriesDescription 
+        ? extractRichTextOrString(fields.seriesDescription)
+        : undefined,
       position: fields.seriesPosition ? Number(fields.seriesPosition) : undefined
     }
   }
@@ -943,7 +980,7 @@ export async function getRecentBlogPosts(
 }
 
 /* ------------------------------------------------------------------ */
-/*  Public API - Kaiju Batches (Enhanced with SEO support)           */
+/*  Public API - Kaiju Batches                                       */
 /* ------------------------------------------------------------------ */
 
 /**
@@ -1056,7 +1093,7 @@ export async function getKaijuBatchesByRarity(rarity: 'Common' | 'Rare' | 'Ultra
 }
 
 /**
- * NEW: Get featured Kaiju batches for homepage/SEO
+ * Get featured Kaiju batches for homepage/SEO
  */
 export async function getFeaturedKaijuBatches(limit = 6): Promise<KaijuBatch[]> {
   return safeContentfulCall(
@@ -1076,7 +1113,7 @@ export async function getFeaturedKaijuBatches(limit = 6): Promise<KaijuBatch[]> 
 }
 
 /**
- * NEW: Get batches by series for related content
+ * Get batches by series for related content
  */
 export async function getKaijuBatchesBySeries(seriesName: string): Promise<KaijuBatch[]> {
   if (!seriesName) return []
