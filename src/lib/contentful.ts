@@ -1,4 +1,4 @@
-// src/lib/contentful.ts - FIXED TYPE COMPATIBILITY ISSUE.
+// src/lib/contentful.ts - UPDATED WITH RICH TEXT SUPPORT FOR KAIJU BATCHES
 import type {
   Asset,
   AssetFile,
@@ -127,7 +127,7 @@ export interface AuthorSkeleton extends EntrySkeletonType {
   }
 }
 
-// Enhanced Kaiju Batch Content Model with ALL SEO fields
+// 🆕 UPDATED: Enhanced Kaiju Batch Content Model with RICH TEXT fields
 export interface KaijuBatchSkeleton extends EntrySkeletonType {
   contentTypeId: 'kaijuBatch'
   fields: {
@@ -139,14 +139,19 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     essence: EntryFieldTypes.Text
     availability: EntryFieldTypes.Symbol // 'Secondary' | 'Mintable'
     colors?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
-    characterDescription: EntryFieldTypes.Text
-    physicalDescription: EntryFieldTypes.Text
-    habitat?: EntryFieldTypes.Text
+    
+    // 🆕 CHANGED: Rich Text fields (changed from Text to RichText)
+    characterDescription: EntryFieldTypes.RichText
+    physicalDescription: EntryFieldTypes.RichText
+    habitat?: EntryFieldTypes.RichText
+    productionNotes?: EntryFieldTypes.RichText
+    
+    // Keep as text fields (short content)
     materials?: EntryFieldTypes.Text
     dimensions?: EntryFieldTypes.Text
     features?: EntryFieldTypes.Array<EntryFieldTypes.Symbol>
     packagingStyle?: EntryFieldTypes.Text
-    productionNotes?: EntryFieldTypes.Text
+    
     estimatedSupply: EntryFieldTypes.Number
     discoveredDate: EntryFieldTypes.Symbol
     secondaryMarketUrl?: EntryFieldTypes.Symbol
@@ -187,11 +192,17 @@ export interface KaijuBatchSkeleton extends EntrySkeletonType {
     productGtin?: EntryFieldTypes.Symbol
     productMpn?: EntryFieldTypes.Symbol
     marketingTagline?: EntryFieldTypes.Symbol
-    collectorsNote?: EntryFieldTypes.Text
+    
+    // 🆕 CHANGED: Rich Text field (changed from Text to RichText)
+    collectorsNote?: EntryFieldTypes.RichText
+    
     featuredPriority?: EntryFieldTypes.Number
     isPartOfSeries?: EntryFieldTypes.Boolean
     seriesName?: EntryFieldTypes.Symbol
-    seriesDescription?: EntryFieldTypes.Text
+    
+    // 🆕 CHANGED: Rich Text field (changed from Text to RichText) 
+    seriesDescription?: EntryFieldTypes.RichText
+    
     seriesPosition?: EntryFieldTypes.Number
   }
 }
@@ -362,6 +373,21 @@ export function toAssetArray(value: any): Asset[] {
   })
 }
 
+// 🆕 NEW: Helper function to extract rich text or fallback to string
+export function extractRichTextOrString(field: any): string | Document {
+  if (!field) return ''
+  
+  const extracted = extractLocalizedValue(field)
+  
+  // Check if it's a rich text document
+  if (extracted && typeof extracted === 'object' && extracted.nodeType === 'document') {
+    return extracted as Document
+  }
+  
+  // Otherwise treat as string
+  return toStringValue(field)
+}
+
 /* ------------------------------------------------------------------ */
 /*  Type guards                                                       */
 /* ------------------------------------------------------------------ */
@@ -472,7 +498,7 @@ export function isValidKaijuBatch(entry: any): entry is KaijuBatch {
 }
 
 /* ------------------------------------------------------------------ */
-/*  Local Kaiju Batch Interface (Enhanced for SEO and multiple NFT)  */
+/*  Local Kaiju Batch Interface (🆕 UPDATED for Rich Text support)   */
 /* ------------------------------------------------------------------ */
 
 export interface LocalKaijuBatch {
@@ -484,8 +510,11 @@ export interface LocalKaijuBatch {
   essence: string
   availability: 'Secondary' | 'Mintable'
   colors: string[]
-  characterDescription: string  
-  physicalDescription: string   
+  
+  // 🆕 UPDATED: Support both string and Document types for rich text fields
+  characterDescription: string | Document
+  physicalDescription: string | Document
+  
   images: {
     physical: string[]        
     nft?: string | string[]  // Enhanced to support both single and multiple NFT images
@@ -494,12 +523,17 @@ export interface LocalKaijuBatch {
     concept: string[]        
     packaging: string[]      
   }
-  habitat?: string
+  
+  // 🆕 UPDATED: Support both string and Document types for rich text fields
+  habitat?: string | Document
+  productionNotes?: string | Document
+  
+  // Keep as strings (short content)
   materials?: string           
   dimensions?: string         
   features?: string[]         
   packagingStyle?: string     
-  productionNotes?: string   
+  
   estimatedSupply: number
   discoveredDate: string
   secondaryMarketUrl?: string
@@ -537,7 +571,7 @@ export interface LocalKaijuBatch {
   // NEW: MARKETING FIELDS
   marketing?: {
     tagline?: string
-    collectorsNote?: string
+    collectorsNote?: string | Document  // 🆕 UPDATED: Support rich text
     featuredPriority?: number
   }
   
@@ -545,14 +579,14 @@ export interface LocalKaijuBatch {
   series?: {
     isPartOfSeries?: boolean
     name?: string
-    description?: string
+    description?: string | Document     // 🆕 UPDATED: Support rich text
     position?: number
   }
 }
 
 /**
- * ENHANCED: Convert Contentful KaijuBatch to LocalKaijuBatch with full SEO support
- * Enhanced to handle both single and multiple NFT images + all new SEO fields
+ * 🆕 UPDATED: Convert Contentful KaijuBatch to LocalKaijuBatch with Rich Text support
+ * Enhanced to handle both single and multiple NFT images + all new SEO fields + rich text
  */
 export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatch {
   const fields = batch.fields
@@ -589,8 +623,9 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     availability: toStringValue(fields.availability) as 'Secondary' | 'Mintable',
     colors: toStringArray(fields.colors),
     
-    characterDescription: toStringValue(fields.characterDescription),
-    physicalDescription: toStringValue(fields.physicalDescription),
+    // 🆕 UPDATED: Use rich text extraction for these fields
+    characterDescription: extractRichTextOrString(fields.characterDescription),
+    physicalDescription: extractRichTextOrString(fields.physicalDescription),
     
     images: {
       physical: toAssetArray(fields.physicalImages).map(asset => getAssetUrl(asset) || '').filter(Boolean),
@@ -601,12 +636,15 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
       packaging: toAssetArray(fields.packagingImages || []).map(asset => getAssetUrl(asset) || '').filter(Boolean),
     },
     
-    habitat: toStringValue(fields.habitat),
+    // 🆕 UPDATED: Use rich text extraction for these fields  
+    habitat: extractRichTextOrString(fields.habitat),
+    productionNotes: extractRichTextOrString(fields.productionNotes),
+    
+    // Keep as regular strings
     materials: toStringValue(fields.materials),
     dimensions: toStringValue(fields.dimensions),
     features: toStringArray(fields.features),
     packagingStyle: toStringValue(fields.packagingStyle),
-    productionNotes: toStringValue(fields.productionNotes),
     
     estimatedSupply: Number(fields.estimatedSupply) || 0,
     discoveredDate: toStringValue(fields.discoveredDate),
@@ -647,7 +685,7 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     // NEW: MARKETING INFORMATION
     marketing: {
       tagline: toStringValue(fields.marketingTagline),
-      collectorsNote: toStringValue(fields.collectorsNote),
+      collectorsNote: extractRichTextOrString(fields.collectorsNote), // 🆕 UPDATED: Rich text support
       featuredPriority: fields.featuredPriority ? Number(fields.featuredPriority) : undefined
     },
     
@@ -655,7 +693,7 @@ export function convertContentfulBatchToLocal(batch: KaijuBatch): LocalKaijuBatc
     series: {
       isPartOfSeries: fields.isPartOfSeries || false,
       name: toStringValue(fields.seriesName),
-      description: toStringValue(fields.seriesDescription),
+      description: extractRichTextOrString(fields.seriesDescription), // 🆕 UPDATED: Rich text support
       position: fields.seriesPosition ? Number(fields.seriesPosition) : undefined
     }
   }
