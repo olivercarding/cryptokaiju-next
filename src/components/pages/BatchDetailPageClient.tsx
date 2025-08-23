@@ -74,17 +74,17 @@ const richTextOptions: any = {
     [BLOCKS.HEADING_1]: (_n: any, c: ReactNode) => <h1 className="text-3xl font-bold text-kaiju-navy mb-6 mt-8">{c}</h1>,
     [BLOCKS.HEADING_2]: (_n: any, c: ReactNode) => <h2 className="text-2xl font-bold text-kaiju-navy mb-4 mt-6">{c}</h2>,
     [BLOCKS.HEADING_3]: (_n: any, c: ReactNode) => <h3 className="text-xl font-semibold text-kaiju-navy mb-3 mt-4">{c}</h3>,
-    [BLOCKS.UL_LIST]: (_n, c) => (
+    [BLOCKS.UL_LIST]: (_n: any, c: ReactNode) => (
       <ul className="mb-4 list-disc list-outside pl-6 text-kaiju-navy/80 [&>li]:mb-2 [&>li>p]:m-0">
         {c}
       </ul>
     ),
-    [BLOCKS.OL_LIST]: (_n, c) => (
+    [BLOCKS.OL_LIST]: (_n: any, c: ReactNode) => (
       <ol className="mb-4 list-decimal list-outside pl-6 text-kaiju-navy/80 [&>li]:mb-2 [&>li>p]:m-0">
         {c}
       </ol>
     ),
-    [BLOCKS.LIST_ITEM]: (_n, c) => (
+    [BLOCKS.LIST_ITEM]: (_n: any, c: ReactNode) => (
       <li className="leading-relaxed">{c}</li>
     ),
     [BLOCKS.QUOTE]: (_n: any, c: ReactNode) => (
