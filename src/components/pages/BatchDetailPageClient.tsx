@@ -573,6 +573,14 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                     </InfoCard>
                   )}
 
+                  {batch.marketing?.collectorsNote && (
+                    <InfoCard icon={Star} title="Collectors Notes" className="md:col-span-2">
+                      <div className="prose prose-kaiju max-w-none prose-p:my-5 prose-p:leading-7 prose-ul:my-6 prose-ol:my-6">
+                        {renderContent(batch.marketing.collectorsNote)}
+                      </div>
+                    </InfoCard>
+                  )}
+
                   {(batch.packagingStyle || batch.images.packaging.length > 0) && (
                     <InfoCard icon={Package} title="Packaging" className="md:col-span-2">
                       {batch.packagingStyle && <p className="text-kaiju-navy/80 mb-4">{batch.packagingStyle}</p>}
