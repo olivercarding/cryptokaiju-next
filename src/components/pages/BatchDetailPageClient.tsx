@@ -410,7 +410,7 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                   </div>
 
                   <h1 className="text-4xl lg:text-5xl font-black text-white mb-4 handwritten">{batch.name}</h1>
-                  <p className="text-2xl text-kaiju-pink font-semibold italic mb-6">"{batch.essence}"</p>
+                  <p className="text-2xl text-white font-semibold italic mb-6">"{batch.essence}"</p>
 
                   {batch.marketing?.tagline && <p className="text-lg text-white/90 font-medium mb-6">{batch.marketing.tagline}</p>}
 
