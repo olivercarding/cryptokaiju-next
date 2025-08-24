@@ -501,7 +501,7 @@ export default function BatchDetailPageClient({ batch }: BatchDetailPageClientPr
                         <div className="prose prose-kaiju max-w-none prose-p:my-5 prose-p:leading-7 prose-ul:my-6 prose-ol:my-6">
                         {renderContent(batch.habitat)}</div>
                         {batch.images.concept.length > 0 && (
-                          <InlineImageGallery images={batch.images.concept} title="Environmental Concept Art"
+                          <InlineImageGallery images={batch.images.concept} title="Concept Art & Production"
                             onImageClick={(index) => openLightbox(batch.images.concept, index)} />
                         )}
                       </InfoCard>
